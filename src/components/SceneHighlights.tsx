@@ -8,7 +8,7 @@ interface SceneHighlightsProps {
 
 export const SceneHighlights: React.FC<SceneHighlightsProps> = ({ data }) => {
     return (
-        <section className="relative w-full h-screen min-h-[700px] bg-[#020408] overflow-hidden border-t border-white/5">
+        <section className="relative w-full min-h-[600px] md:h-screen md:min-h-[700px] bg-[#020408] overflow-hidden border-t border-white/5">
 
             {/* Full Screen Image */}
             <div className="absolute inset-0">

@@ -33,14 +33,14 @@ export const PastSponsors: React.FC<PastSponsorsProps> = ({ data }) => {
         </div>
 
         {/* CTA Buttons */}
-        <div className="flex flex-col sm:flex-row gap-6 items-center justify-center w-full">
-          <button className="shiny-cta group min-w-[280px] shadow-xl shadow-brand-blue/5">
+        <div className="flex flex-col sm:flex-row gap-4 sm:gap-6 items-center justify-center w-full px-4 sm:px-0">
+          <button className="shiny-cta group w-full sm:w-auto min-w-0 sm:min-w-[280px] shadow-xl shadow-brand-blue/5 justify-center">
             <span className="relative z-10 flex items-center justify-center gap-2">
               Sponsor DeAI Summit 2026
               <i className="ri-arrow-right-line text-base transition-transform group-hover:translate-x-1"></i>
             </span>
           </button>
-          <button className="px-8 py-4 rounded-full bg-transparent border border-black/10 text-black font-bold text-sm tracking-wide hover:border-black hover:bg-white transition-all min-w-[280px] flex items-center justify-center gap-2">
+          <button className="w-full sm:w-auto px-6 py-4 rounded-full bg-transparent border border-black/10 text-black font-bold text-sm tracking-wide hover:border-black hover:bg-white transition-all min-w-0 sm:min-w-[280px] flex items-center justify-center gap-2">
             Request Sponsorship Deck
             <i className="ri-download-line text-base"></i>
           </button>

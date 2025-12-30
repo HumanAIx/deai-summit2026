@@ -31,7 +31,7 @@ const MarqueeItem: React.FC<MarqueeItemProps> = ({ label, iconType }) => (
 export const Marquee: React.FC<MarqueeProps> = ({ data }) => {
   return (
     <section className="w-full z-20 mt-20 relative overflow-hidden mask-gradient-fade">
-      <div className="flex animate-marquee hover:[animation-play-state:paused] w-max gap-16 items-center opacity-40 grayscale hover:grayscale-0 transition-all duration-700">
+      <div className="flex animate-marquee hover:[animation-play-state:paused] w-max gap-8 md:gap-16 items-center opacity-40 grayscale hover:grayscale-0 transition-all duration-700">
         {/* First Loop */}
         {data.map((item, index) => (
           <MarqueeItem key={`1-${index}`} label={item.label} iconType={item.iconType} />
