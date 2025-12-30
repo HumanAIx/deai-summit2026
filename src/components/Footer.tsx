@@ -26,7 +26,7 @@ export const Footer: React.FC<FooterProps> = ({ data, navData, onShowToast }) =>
     };
 
     return (
-        <footer className="relative w-full py-24 px-6 bg-[#F2F4F7] text-slate-900 border-t border-black/5 overflow-hidden">
+        <footer className="relative w-full py-12 md:py-24 px-4 md:px-6 bg-[#F2F4F7] text-slate-900 border-t border-black/5 overflow-hidden">
 
             {/* Background elements */}
             <div className="absolute top-0 left-0 w-full h-[1px] bg-gradient-to-r from-transparent via-black/10 to-transparent"></div>

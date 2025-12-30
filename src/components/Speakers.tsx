@@ -58,7 +58,7 @@ export const Speakers: React.FC<SpeakersProps> = ({ speakersData, partnersData }
     const s = speakersData;
 
     return (
-        <section id="agenda" className="relative w-full py-32 px-4 bg-[#F0F0EF] text-black overflow-hidden">
+        <section id="agenda" className="relative w-full py-20 md:py-32 px-4 bg-[#F0F0EF] text-black overflow-hidden">
 
             {/* Background radial gradient for depth */}
             <div className="absolute top-0 left-1/2 -translate-x-1/2 w-full h-[1200px] bg-[radial-gradient(circle_at_center,rgba(255,255,255,0.8)_0%,transparent_70%)] pointer-events-none" />
@@ -116,21 +116,21 @@ export const Speakers: React.FC<SpeakersProps> = ({ speakersData, partnersData }
                 </div>
 
                 {/* Mobile View: Simple Stack */}
-                <div className="md:hidden flex flex-col gap-4 mb-20 w-full max-w-sm">
+                <div className="md:hidden flex flex-col gap-4 mb-12 w-full max-w-sm px-2">
                     {speakersData.map(s => <SpeakerCard key={s.id} speaker={s} />)}
                 </div>
 
                 {/* Headline - Fixed layout to prevent 4-line break */}
-                <div className="text-center max-w-6xl px-4 space-y-6 mb-24 relative z-40">
-                    <h2 className="text-4xl md:text-6xl lg:text-7xl font-display font-bold tracking-tight text-[#020408] leading-[1.05]">
+                <div className="text-center max-w-6xl px-4 space-y-4 md:space-y-6 mb-16 md:mb-24 relative z-40">
+                    <h2 className="text-3xl md:text-6xl lg:text-7xl font-display font-bold tracking-tight text-[#020408] leading-[1.1] md:leading-[1.05]">
                         The Most Senior Global Line Up
                         <span className="block text-brand-blue mt-2">in the Decentralized AI Industry</span>
                     </h2>
                 </div>
 
                 {/* Trusted By Caption */}
-                <div className="w-full text-center mb-10">
-                    <p className="text-xs font-bold tracking-[0.2em] text-gray-400 uppercase">
+                <div className="w-full text-center mb-8 md:mb-10">
+                    <p className="text-[0.65rem] md:text-xs font-bold tracking-[0.2em] text-gray-400 uppercase">
                         Trusted by 160+ Product Development Teams
                     </p>
                 </div>

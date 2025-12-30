@@ -14,30 +14,8 @@ import { PastSponsors } from '@/components/PastSponsors';
 import { Footer } from '@/components/Footer';
 import { Toast } from '@/components/Toast';
 
-// Import JSON Data Structure
-import heroData from '@/data/hero.json';
-import navigationData from '@/data/navigation.json';
-import speakersConfig from '@/data/speakers.json';
-import statsData from '@/data/stats.json';
-import marqueeData from '@/data/marquee.json';
-import aboutData from '@/data/about.json';
-import highlightsData from '@/data/highlights.json';
-import networkingData from '@/data/networking.json';
-import partnersData from '@/data/partners.json';
-import footerData from '@/data/footer.json';
-
-import {
-  HeroConfig,
-  NavigationConfig,
-  SpeakersConfig,
-  StatItem,
-  MarqueeItem,
-  AboutConfig,
-  HighlightsConfig,
-  NetworkingItem,
-  PartnerItem,
-  FooterConfig
-} from '@/config/types';
+// Import Site Config
+import { siteConfig } from '@/config/site';
 
 export default function Home() {
   const [toast, setToast] = useState({ visible: false, message: '' });
@@ -54,47 +32,48 @@ export default function Home() {
     <div className="min-h-screen relative w-full selection:bg-brand-cyan/30 selection:text-brand-cyan font-sans">
       <Navbar
         onShowToast={showToast}
-        data={navigationData as NavigationConfig}
+        data={siteConfig.navigation}
       />
 
       <main className="w-full mx-auto">
-        <Hero data={heroData as HeroConfig} />
+        <Hero data={siteConfig.hero} />
 
         {/* Dark transition section for Marquee */}
         <div className="bg-[#020408] border-t border-white/5 pb-12 pt-12">
-          <Marquee data={marqueeData as MarqueeItem[]} />
+          <Marquee data={siteConfig.marquee} />
         </div>
 
         {/* Light Stats Section */}
-        <Stats data={statsData.items as StatItem[]} />
+        <Stats data={siteConfig.stats} />
 
         {/* Light Speakers Section (Featured Cloud) */}
         {/* Note: Speakers component takes both speakers list and partners list for the 'Trusted By' section */}
         <Speakers
-          speakersData={(speakersConfig as SpeakersConfig).featured}
-          partnersData={partnersData as PartnerItem[]}
+          speakersData={siteConfig.speakers.featured}
+          partnersData={siteConfig.partners}
         />
 
         {/* Dark Video Section */}
-        <AboutVideo data={aboutData as AboutConfig} />
+        <AboutVideo data={siteConfig.about} />
 
         {/* Full Screen Image Highlights */}
-        <SceneHighlights data={highlightsData as HighlightsConfig} />
+        {/* Pass the whole config object since the component expects HighlightsConfig */}
+        <SceneHighlights data={siteConfig.highlights} />
 
         {/* Light Grid Speakers Section (Leading Voices) */}
-        <LeadingVoices data={(speakersConfig as SpeakersConfig).leading} />
+        <LeadingVoices data={siteConfig.speakers.leading} />
 
         {/* Dark Networking Section */}
-        <Networking data={networkingData as NetworkingItem[]} />
+        <Networking data={siteConfig.networking} />
 
         {/* Sponsors Logo Grid */}
-        <PastSponsors data={partnersData as PartnerItem[]} />
+        <PastSponsors data={siteConfig.partners} />
       </main>
 
       <Footer
         onShowToast={showToast}
-        navData={navigationData as NavigationConfig}
-        data={footerData as FooterConfig}
+        navData={siteConfig.navigation}
+        data={siteConfig.footer}
       />
 
       <Toast

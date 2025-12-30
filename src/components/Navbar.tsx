@@ -29,7 +29,7 @@ export const Navbar: React.FC<NavbarProps> = ({ onShowToast, data }) => {
 
   return (
     <>
-      <nav className="fixed left-1/2 -translate-x-1/2 top-6 z-50 flex items-center justify-between w-[95%] max-w-5xl rounded-full px-3 py-2 border border-white/10 bg-[#020408]/80 backdrop-blur-xl shadow-2xl shadow-brand-cyan/5 transition-all duration-300">
+      <nav className="fixed left-1/2 -translate-x-1/2 top-4 md:top-6 z-50 flex items-center justify-between w-[95%] max-w-5xl rounded-full px-3 py-2 border border-white/10 bg-[#020408]/80 backdrop-blur-xl shadow-2xl shadow-brand-cyan/5 transition-all duration-300">
 
         {/* Logo */}
         <Link href="/" className="flex items-center gap-2 pl-2 group">
@@ -85,7 +85,7 @@ export const Navbar: React.FC<NavbarProps> = ({ onShowToast, data }) => {
 
         {/* Action */}
         <div className="flex items-center gap-3">
-          <a href={data.actionButton.link} className="hidden sm:flex text-xs font-semibold text-[#020408] bg-white hover:bg-brand-cyan/10 hover:text-white transition-all rounded-full px-6 py-2.5">
+          <a href={data.actionButton.link} className="hidden md:flex text-xs font-semibold text-[#020408] bg-white hover:bg-brand-cyan/10 hover:text-white transition-all rounded-full px-6 py-2.5">
             {data.actionButton.label}
           </a>
           <button

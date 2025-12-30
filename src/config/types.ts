@@ -56,6 +56,18 @@ export interface StatItem {
     label: string;
 }
 
+export interface QuoteConfig {
+    text: string;
+    author: string;
+    role: string;
+    image: string;
+}
+
+export interface StatsConfig {
+    quote: QuoteConfig;
+    items: StatItem[];
+}
+
 export interface MarqueeItem {
     label: string;
     iconType: string;
@@ -128,7 +140,7 @@ export interface SiteConfig {
     hero: HeroConfig;
     navigation: NavigationConfig;
     speakers: SpeakersConfig;
-    stats: StatItem[];
+    stats: StatsConfig;
     marquee: MarqueeItem[];
     about: AboutConfig;
     highlights: HighlightsConfig;

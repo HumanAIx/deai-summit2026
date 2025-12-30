@@ -2,26 +2,25 @@ import { SiteConfig } from './types';
 
 export const siteConfig: SiteConfig = {
     hero: {
-        backgroundImage: "https://images.unsplash.com/photo-1540575467063-178a50c2df87?q=80&w=2070&auto=format&fit=crop",
-        badge: "The Future of AI is Decentralized",
-        headline: "The Dawn of <br/> <span class=\"text-transparent bg-clip-text bg-gradient-to-r from-brand-blue via-brand-cyan to-brand-teal animate-gradient-x\">Agentic Intelligence</span>",
-        subheadline: "Join the leading minds in AI, Blockchain, and DAO governance to forge the open infrastructure of tomorrow. Experience the first summit dedicated to autonomous agents and decentralized compute.",
-        location: "Mediterranean Conference Centre, Valletta",
-        date: "October 24-26, 2026",
+        backgroundImage: "https://images.unsplash.com/photo-1544531586-fde5298cdd40?q=80&w=2070&auto=format&fit=crop",
+        badge: "Malta Edition 2026",
+        headline: "The First Global<br />DeAI Summit",
+        subheadline: "Where decentralized intelligence meets institutional capital.",
+        location: "Valletta, Malta",
+        date: "November 2026",
         ctaPrimary: {
-            label: "Secure Your Spot",
-            link: "#tickets"
+            label: "JOIN WAITLIST",
+            link: "#"
         },
         ctaSecondary: {
-            label: "View Agenda",
-            link: "#agenda"
+            label: "SPONSORSHIP DECK",
+            link: "#"
         }
     },
     navigation: {
         main: [
             { label: "Agenda", href: "#agenda" },
             { label: "Speakers", href: "#leading-voices" },
-            { label: "Networking", href: "#networking" },
             { label: "Sponsors", href: "#sponsors" }
         ],
         legal: [
@@ -31,10 +30,10 @@ export const siteConfig: SiteConfig = {
         ],
         actionButton: {
             label: "Tickets",
-            link: "#tickets"
+            link: "#"
         },
-        contactEmail: "partnership@deai-summit.com",
-        socialsLink: "https://twitter.com/Human_AIx"
+        contactEmail: "contact@deaisummit.org",
+        socialsLink: "https://linktr.ee/humanaix"
     },
     speakers: {
         featured: [
@@ -128,28 +127,40 @@ export const siteConfig: SiteConfig = {
             }
         ]
     },
-    stats: [
-        {
-            number: "$50B+",
-            label: "Assets under management represented by attending funds."
+    stats: {
+        quote: {
+            text: "HumanAIx is advancing the open infrastructure for decentralized AI — where compute, data, and intelligence are governed by the many, not the few.",
+            author: "Roberts Daniel",
+            role: "Marketing Director, Orbit",
+            image: "https://images.unsplash.com/photo-1519085360753-af0119f7cbe7?q=80&w=200&auto=format&fit=crop"
         },
-        {
-            number: "96%",
-            label: "Attendees report meeting a future partner or client."
-        },
-        {
-            number: "150+",
-            label: "International journalists covering the event live from the venue."
-        },
-        {
-            number: "120+",
-            label: "Leading voices shaping the future of digital assets."
-        },
-        {
-            number: "1,200+",
-            label: "Participating companies driving the ecosystem forward."
-        }
-    ],
+        items: [
+            {
+                number: "2,500+",
+                label: "Capped and sold out attendees joining from over 40 countries."
+            },
+            {
+                number: "$50B+",
+                label: "Assets under management represented by attending funds."
+            },
+            {
+                number: "96%",
+                label: "Attendees report meeting a future partner or client."
+            },
+            {
+                number: "150+",
+                label: "International journalists covering the event live from the venue."
+            },
+            {
+                number: "120+",
+                label: "Leading voices shaping the future of digital assets."
+            },
+            {
+                number: "1,200+",
+                label: "Participating companies driving the ecosystem forward."
+            }
+        ]
+    },
     marquee: [
         { label: "NEXUS", iconType: "diamond" },
         { label: "ORBITAL", iconType: "circle-dashed" },
@@ -175,12 +186,7 @@ export const siteConfig: SiteConfig = {
                 id: "venue",
                 title: "Mediterranean <br/>Conference Centre",
                 subtitle: "Valletta | Malta",
-                position: {
-                    top: "35%",
-                    left: "5%",
-                    mdLeft: "8%",
-                    lgLeft: "12%"
-                },
+                position: { top: "35%", left: "5%", mdLeft: "8%", lgLeft: "12%" },
                 type: "left-aligned"
             },
             {

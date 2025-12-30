@@ -56,7 +56,7 @@ export const Networking: React.FC<NetworkingProps> = ({ data }) => {
                 <div className="w-full flex flex-col items-center gap-12">
 
                     {/* Central Image Window */}
-                    <div className="relative w-full max-w-5xl aspect-[16/9] rounded-2xl overflow-hidden border border-black/5 shadow-[0_20px_60px_rgba(0,0,0,0.05)] bg-[#F5F5F5] group">
+                    <div className="relative w-full max-w-5xl aspect-[4/5] md:aspect-[16/9] rounded-2xl overflow-hidden border border-black/5 shadow-[0_20px_60px_rgba(0,0,0,0.05)] bg-[#F5F5F5] group">
 
                         {/* Dynamic Image */}
                         <div className="relative w-full h-full">
@@ -72,7 +72,7 @@ export const Networking: React.FC<NetworkingProps> = ({ data }) => {
                                         className="object-cover group-hover:scale-105 transition-transform duration-[2s]"
                                     />
                                     {/* Fade to white gradient */}
-                                    <div className="absolute inset-0 bg-gradient-to-t from-white via-transparent to-transparent opacity-40"></div>
+                                    <div className="absolute inset-0 bg-gradient-to-t from-white via-transparent to-transparent opacity-90 md:opacity-40"></div>
                                 </div>
                             ))}
                         </div>
