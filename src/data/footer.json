@@ -1,0 +1,19 @@
+{
+    "brandDescription": "The premier gathering for the decentralized AI ecosystem. Malta 2026.",
+    "stats": [
+        {
+            "value": "2.5K+",
+            "label": "Attendees"
+        },
+        {
+            "value": "$50B",
+            "label": "AUM"
+        }
+    ],
+    "socials": {
+        "twitter": "https://x.com/Human_AIx",
+        "linkedin": "https://www.linkedin.com/company/human-ai-x/posts/?feedView=all",
+        "youtube": "https://www.youtube.com/@Human_AIx"
+    },
+    "copyright": "© 2026 DeAI Summit. Malta."
+}

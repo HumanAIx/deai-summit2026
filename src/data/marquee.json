@@ -1,0 +1,22 @@
+[
+    {
+        "label": "NEXUS",
+        "iconType": "diamond"
+    },
+    {
+        "label": "ORBITAL",
+        "iconType": "circle-dashed"
+    },
+    {
+        "label": "SYNTH",
+        "iconType": "square"
+    },
+    {
+        "label": "CORE",
+        "iconType": "circle-dot"
+    },
+    {
+        "label": "FLUX",
+        "iconType": "bracket"
+    }
+]

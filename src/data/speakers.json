@@ -1,0 +1,92 @@
+{
+    "featured": [
+        {
+            "id": 1,
+            "name": "Sarah Jenkins",
+            "role": "CEO, EtherTrust",
+            "image": "https://images.unsplash.com/photo-1494790108377-be9c29b29330?q=80&w=200&auto=format&fit=crop"
+        },
+        {
+            "id": 2,
+            "name": "Marcus Reid",
+            "role": "CTO, BlockStream",
+            "image": "https://images.unsplash.com/photo-1500648767791-00dcc994a43e?q=80&w=200&auto=format&fit=crop"
+        },
+        {
+            "id": 3,
+            "name": "Alex Thorne",
+            "role": "Founder, ChainPulse",
+            "image": "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?q=80&w=200&auto=format&fit=crop"
+        },
+        {
+            "id": 4,
+            "name": "Elena Rodriguez",
+            "role": "Lead Dev, Solana Core",
+            "image": "https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?q=80&w=200&auto=format&fit=crop"
+        },
+        {
+            "id": 5,
+            "name": "David Chen",
+            "role": "Partner, Sequoia",
+            "image": "https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?q=80&w=200&auto=format&fit=crop"
+        }
+    ],
+    "leading": [
+        {
+            "name": "Barry Silbert",
+            "role": "CEO",
+            "company": "DCG",
+            "image": "https://images.unsplash.com/photo-1560250097-0b93528c311a?q=80&w=400&auto=format&fit=crop",
+            "icon": "ri-box-3-line"
+        },
+        {
+            "name": "Cathie Wood",
+            "role": "CEO",
+            "company": "ARK Invest",
+            "image": "https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?q=80&w=400&auto=format&fit=crop",
+            "icon": "ri-flashlight-line"
+        },
+        {
+            "name": "Charles Hoskinson",
+            "role": "Co-Founder",
+            "company": "Input Output",
+            "image": "https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?q=80&w=400&auto=format&fit=crop",
+            "icon": "ri-share-line"
+        },
+        {
+            "name": "Jenny Johnson",
+            "role": "CEO",
+            "company": "Franklin Templeton",
+            "image": "https://images.unsplash.com/photo-1580489944761-15a19d654956?q=80&w=400&auto=format&fit=crop",
+            "icon": "ri-global-line"
+        },
+        {
+            "name": "Sergey Nazarov",
+            "role": "Co-Founder",
+            "company": "Chainlink",
+            "image": "https://images.unsplash.com/photo-1519085360753-af0119f7cbe7?q=80&w=400&auto=format&fit=crop",
+            "icon": "ri-database-2-line"
+        },
+        {
+            "name": "Joseph Lubin",
+            "role": "CEO & Founder",
+            "company": "Consensys",
+            "image": "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?q=80&w=400&auto=format&fit=crop",
+            "icon": "ri-stack-line"
+        },
+        {
+            "name": "Stani Kulechov",
+            "role": "Founder",
+            "company": "Aave",
+            "image": "https://images.unsplash.com/photo-1500648767791-00dcc994a43e?q=80&w=400&auto=format&fit=crop",
+            "icon": "ri-cpu-line"
+        },
+        {
+            "name": "Silvio Micali",
+            "role": "Founder",
+            "company": "Algorand",
+            "image": "https://images.unsplash.com/photo-1506794778202-cad84cf45f1d?q=80&w=400&auto=format&fit=crop",
+            "icon": "ri-command-line"
+        }
+    ]
+}
