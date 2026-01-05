@@ -5,17 +5,23 @@ import { NavigationConfig } from '@/config/types';
 
 interface NavbarProps {
   onShowToast: (message: string) => void;
+  onOpenContact?: () => void;
   data: NavigationConfig;
 }
 
-export const Navbar: React.FC<NavbarProps> = ({ onShowToast, data }) => {
+export const Navbar: React.FC<NavbarProps> = ({ onShowToast, onOpenContact, data }) => {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
 
   const handleContactClick = (e: React.MouseEvent) => {
     e.preventDefault();
-    navigator.clipboard.writeText(data.contactEmail);
-    onShowToast("Email copied to clipboard");
-    setIsMenuOpen(false);
+    if (onOpenContact) {
+      onOpenContact();
+      setIsMenuOpen(false);
+    } else {
+      navigator.clipboard.writeText(data.contactEmail);
+      onShowToast("Email copied to clipboard");
+      setIsMenuOpen(false);
+    }
   };
 
   const handleNavClick = (e: React.MouseEvent<HTMLAnchorElement>, id: string) => {

@@ -4,9 +4,10 @@ import { HeroConfig } from '@/config/types';
 
 interface HeroProps {
   data: HeroConfig;
+  onOpenContact?: () => void;
 }
 
-export const Hero: React.FC<HeroProps> = ({ data }) => {
+export const Hero: React.FC<HeroProps> = ({ data, onOpenContact }) => {
   return (
     <section className="relative w-full min-h-screen flex flex-col items-center justify-center overflow-hidden bg-[#F2F4F7] pt-24 pb-12 md:py-0">
 
@@ -71,7 +72,10 @@ export const Hero: React.FC<HeroProps> = ({ data }) => {
 
         {/* CTA Buttons */}
         <div className="flex flex-col sm:flex-row gap-4 md:gap-6 pt-4 md:pt-6 items-center w-full sm:w-auto animate-fade-in-up [animation-delay:600ms] opacity-0 fill-mode-forwards">
-          <button className="shiny-cta group transform hover:scale-105 transition-transform duration-300 shadow-xl shadow-brand-blue/10 w-full sm:w-auto justify-center">
+          <button
+            onClick={onOpenContact}
+            className="shiny-cta group transform hover:scale-105 transition-transform duration-300 shadow-xl shadow-brand-blue/10 w-full sm:w-auto justify-center"
+          >
             <span className="relative z-10 flex items-center justify-center gap-3 font-bold text-sm md:text-base tracking-wide py-3 md:py-0">
               {data.ctaPrimary.label}
               <i className="ri-arrow-right-line text-lg md:text-xl transition-transform group-hover:translate-x-1"></i>

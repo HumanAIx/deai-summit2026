@@ -12,6 +12,7 @@ import { LeadingVoices } from '@/components/LeadingVoices';
 import { Networking } from '@/components/Networking';
 import { PastSponsors } from '@/components/PastSponsors';
 import { Footer } from '@/components/Footer';
+import { ContactModal } from '@/components/ContactModal';
 import { Toast } from '@/components/Toast';
 
 // Import Site Config
@@ -19,6 +20,7 @@ import { siteConfig } from '@/config/site';
 
 export default function Home() {
   const [toast, setToast] = useState({ visible: false, message: '' });
+  const [isContactOpen, setIsContactOpen] = useState(false);
 
   const showToast = (message: string) => {
     setToast({ visible: true, message });
@@ -28,15 +30,20 @@ export default function Home() {
     setToast(prev => ({ ...prev, visible: false }));
   };
 
+  const handleOpenContact = () => {
+    setIsContactOpen(true);
+  };
+
   return (
     <div className="min-h-screen relative w-full selection:bg-brand-cyan/30 selection:text-brand-cyan font-sans">
       <Navbar
         onShowToast={showToast}
+        onOpenContact={handleOpenContact}
         data={siteConfig.navigation}
       />
 
       <main className="w-full mx-auto">
-        <Hero data={siteConfig.hero} />
+        <Hero data={siteConfig.hero} onOpenContact={handleOpenContact} />
 
         {/* Dark transition section for Marquee */}
         <div className="bg-[#020408] border-t border-white/5 pb-12 pt-12">
@@ -72,8 +79,14 @@ export default function Home() {
 
       <Footer
         onShowToast={showToast}
+        onOpenContact={handleOpenContact}
         navData={siteConfig.navigation}
         data={siteConfig.footer}
+      />
+
+      <ContactModal
+        isOpen={isContactOpen}
+        onClose={() => setIsContactOpen(false)}
       />
 
       <Toast
