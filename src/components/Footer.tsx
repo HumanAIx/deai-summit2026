@@ -7,14 +7,19 @@ interface FooterProps {
     data: FooterConfig;
     navData: NavigationConfig;
     onShowToast: (message: string) => void;
+    onOpenContact?: () => void;
 }
 
-export const Footer: React.FC<FooterProps> = ({ data, navData, onShowToast }) => {
+export const Footer: React.FC<FooterProps> = ({ data, navData, onShowToast, onOpenContact }) => {
 
     const handleCopyEmail = (e: React.MouseEvent) => {
         e.preventDefault();
-        navigator.clipboard.writeText(navData.contactEmail);
-        onShowToast("Email copied to clipboard");
+        if (onOpenContact) {
+            onOpenContact();
+        } else {
+            navigator.clipboard.writeText(navData.contactEmail);
+            onShowToast("Email copied to clipboard");
+        }
     };
 
     const handleNavClick = (e: React.MouseEvent<HTMLAnchorElement>, id: string) => {
