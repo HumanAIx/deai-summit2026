@@ -33,7 +33,11 @@ export const siteConfig: SiteConfig = {
             link: "#"
         },
         contactEmail: "contact@deaisummit.org",
-        socialsLink: "https://linktr.ee/humanaix"
+        socials: {
+            twitter: "https://x.com/Human_AIx",
+            linkedin: "https://www.linkedin.com/company/humanaix/",
+            youtube: "https://www.youtube.com/@HumanAIx"
+        }
     },
     speakers: {
         featured: [
@@ -70,60 +74,60 @@ export const siteConfig: SiteConfig = {
         ],
         leading: [
             {
-                name: "Barry Silbert",
-                role: "CEO",
-                company: "DCG",
-                image: "https://images.unsplash.com/photo-1560250097-0b93528c311a?q=80&w=400&auto=format&fit=crop",
-                icon: "ri-box-3-line"
+                name: "Dr. Li",
+                role: "Founder and CEO",
+                company: "OORT",
+                image: "https://cdn.prod.website-files.com/684bd887005afeaa302406a0/688a5d50582e13e9e031ca07_committee-01.avif",
+                icon: "ri-user-line"
             },
             {
-                name: "Cathie Wood",
-                role: "CEO",
-                company: "ARK Invest",
-                image: "https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?q=80&w=400&auto=format&fit=crop",
-                icon: "ri-flashlight-line"
+                name: "Dr. Mike O'Sullivan",
+                role: "Senior Lecturer & Researcher",
+                company: "University of Auckland",
+                image: "https://cdn.prod.website-files.com/684bd887005afeaa302406a0/68a36e8409eabcf2d86afa40_mikeOSul_bw.jpeg",
+                icon: "ri-user-line"
             },
             {
-                name: "Charles Hoskinson",
-                role: "Co-Founder",
-                company: "Input Output",
-                image: "https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?q=80&w=400&auto=format&fit=crop",
-                icon: "ri-share-line"
+                name: "Dr. Abeer S. Al-Humaimeedy",
+                role: "Vice Dean",
+                company: "King Saud University",
+                image: "https://cdn.prod.website-files.com/684bd887005afeaa302406a0/68a375b3fa03ae248f700e3d_image_bw.jpg",
+                icon: "ri-user-line"
             },
             {
-                name: "Jenny Johnson",
-                role: "CEO",
-                company: "Franklin Templeton",
-                image: "https://images.unsplash.com/photo-1580489944761-15a19d654956?q=80&w=400&auto=format&fit=crop",
-                icon: "ri-global-line"
+                name: "Sean Yang",
+                role: "Co-Founder and CTO",
+                company: "OORT",
+                image: "https://cdn.prod.website-files.com/684bd887005afeaa302406a0/6883407e0abdffcdfaf30827_aix-team-01%20(1).avif",
+                icon: "ri-user-line"
             },
             {
-                name: "Sergey Nazarov",
-                role: "Co-Founder",
-                company: "Chainlink",
-                image: "https://images.unsplash.com/photo-1519085360753-af0119f7cbe7?q=80&w=400&auto=format&fit=crop",
-                icon: "ri-database-2-line"
-            },
-            {
-                name: "Joseph Lubin",
-                role: "CEO & Founder",
-                company: "Consensys",
-                image: "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?q=80&w=400&auto=format&fit=crop",
-                icon: "ri-stack-line"
-            },
-            {
-                name: "Stani Kulechov",
+                name: "Michelle Tsing",
                 role: "Founder",
-                company: "Aave",
-                image: "https://images.unsplash.com/photo-1500648767791-00dcc994a43e?q=80&w=400&auto=format&fit=crop",
-                icon: "ri-cpu-line"
+                company: "Governance Research Institute",
+                image: "https://cdn.prod.website-files.com/684bd887005afeaa302406a0/68acaf3450a2cc6a1f03e496_michelle_bw.png",
+                icon: "ri-user-line"
             },
             {
-                name: "Silvio Micali",
+                name: "James Kingstone",
+                role: "Director DAO SPV",
+                company: "CDOT",
+                image: "https://cdn.prod.website-files.com/684bd887005afeaa302406a0/68a36d9c11a9dede6c588015_jameskings_bw.jpeg",
+                icon: "ri-user-line"
+            },
+            {
+                name: "Dr Ioannis Revolidis",
+                role: "Director",
+                company: "DLT Centre",
+                image: "https://cdn.prod.website-files.com/684bd887005afeaa302406a0/68a73f43a75d2ee4d2075dfc_joannisrev_bw.jpeg",
+                icon: "ri-user-line"
+            },
+            {
+                name: "Tamaghna Basu",
                 role: "Founder",
-                company: "Algorand",
-                image: "https://images.unsplash.com/photo-1506794778202-cad84cf45f1d?q=80&w=400&auto=format&fit=crop",
-                icon: "ri-command-line"
+                company: "Detasecure",
+                image: "https://cdn.prod.website-files.com/684bd887005afeaa302406a0/68a36d9cc07dd8f9ab8bd1ca_basu_bw.jpeg",
+                icon: "ri-user-line"
             }
         ]
     },

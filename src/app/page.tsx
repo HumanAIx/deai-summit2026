@@ -13,6 +13,7 @@ import { Networking } from '@/components/Networking';
 import { PastSponsors } from '@/components/PastSponsors';
 import { Footer } from '@/components/Footer';
 import { ContactModal } from '@/components/ContactModal';
+import { SpeakerApplicationModal } from '@/components/SpeakerApplicationModal';
 import { Toast } from '@/components/Toast';
 
 // Import Site Config
@@ -21,6 +22,7 @@ import { siteConfig } from '@/config/site';
 export default function Home() {
   const [toast, setToast] = useState({ visible: false, message: '' });
   const [isContactOpen, setIsContactOpen] = useState(false);
+  const [isSpeakerModalOpen, setIsSpeakerModalOpen] = useState(false);
 
   const showToast = (message: string) => {
     setToast({ visible: true, message });
@@ -32,6 +34,10 @@ export default function Home() {
 
   const handleOpenContact = () => {
     setIsContactOpen(true);
+  };
+
+  const handleOpenSpeakerApp = () => {
+    setIsSpeakerModalOpen(true);
   };
 
   return (
@@ -70,6 +76,17 @@ export default function Home() {
         {/* Light Grid Speakers Section (Leading Voices) */}
         <LeadingVoices data={siteConfig.speakers.leading} />
 
+        {/* Speaker Call to Action - Temporary placement until user decides */}
+        <div className="w-full bg-[#F0F0EF] pb-20 flex justify-center">
+          <button
+            onClick={handleOpenSpeakerApp}
+            className="px-8 py-3 rounded-full border border-black bg-white text-black hover:bg-black hover:text-white transition-all duration-300 text-sm font-bold shadow-md hover:shadow-xl flex items-center gap-2"
+          >
+            <i className="ri-mic-line"></i>
+            Apply to Speak
+          </button>
+        </div>
+
         {/* Dark Networking Section */}
         <Networking data={siteConfig.networking} />
 
@@ -87,6 +104,11 @@ export default function Home() {
       <ContactModal
         isOpen={isContactOpen}
         onClose={() => setIsContactOpen(false)}
+      />
+
+      <SpeakerApplicationModal
+        isOpen={isSpeakerModalOpen}
+        onClose={() => setIsSpeakerModalOpen(false)}
       />
 
       <Toast

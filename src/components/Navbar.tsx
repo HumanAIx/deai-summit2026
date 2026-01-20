@@ -77,16 +77,36 @@ export const Navbar: React.FC<NavbarProps> = ({ onShowToast, onOpenContact, data
           {/* Visual Divider */}
           <div className="h-4 w-px bg-white/10"></div>
 
-          {/* Socials Link */}
-          <a
-            href={data.socialsLink}
-            target="_blank"
-            rel="noopener noreferrer"
-            className="flex items-center gap-2 text-sm font-medium text-white hover:text-brand-cyan transition-colors"
-          >
-            Socials
-            <i className="ri-arrow-right-up-line text-xs opacity-70"></i>
-          </a>
+          {/* Social Icons */}
+          <div className="flex items-center gap-4 border-l border-white/10 pl-6 ml-2">
+            <a
+              href={data.socials.twitter}
+              target="_blank"
+              rel="noreferrer"
+              className="text-white/60 hover:text-white transition-colors"
+              aria-label="Follow us on X"
+            >
+              <i className="ri-twitter-x-line text-lg"></i>
+            </a>
+            <a
+              href={data.socials.linkedin}
+              target="_blank"
+              rel="noreferrer"
+              className="text-white/60 hover:text-white transition-colors"
+              aria-label="Follow us on LinkedIn"
+            >
+              <i className="ri-linkedin-fill text-lg"></i>
+            </a>
+            <a
+              href={data.socials.youtube}
+              target="_blank"
+              rel="noreferrer"
+              className="text-white/60 hover:text-white transition-colors"
+              aria-label="Subscribe on YouTube"
+            >
+              <i className="ri-youtube-fill text-lg"></i>
+            </a>
+          </div>
         </div>
 
         {/* Action */}
@@ -127,16 +147,35 @@ export const Navbar: React.FC<NavbarProps> = ({ onShowToast, onOpenContact, data
 
             <div className="w-full h-px bg-white/10 my-2"></div>
 
-            <a
-              href={data.socialsLink}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="flex items-center justify-center gap-2 text-xl font-medium text-white hover:text-brand-cyan transition-colors"
-              onClick={() => setIsMenuOpen(false)}
-            >
-              Socials
-              <i className="ri-arrow-right-up-line text-base opacity-70"></i>
-            </a>
+            <div className="flex items-center justify-center gap-6">
+              <a
+                href={data.socials.twitter}
+                target="_blank"
+                rel="noreferrer"
+                className="text-white/60 hover:text-white transition-colors"
+                onClick={() => setIsMenuOpen(false)}
+              >
+                <i className="ri-twitter-x-line text-2xl"></i>
+              </a>
+              <a
+                href={data.socials.linkedin}
+                target="_blank"
+                rel="noreferrer"
+                className="text-white/60 hover:text-white transition-colors"
+                onClick={() => setIsMenuOpen(false)}
+              >
+                <i className="ri-linkedin-fill text-2xl"></i>
+              </a>
+              <a
+                href={data.socials.youtube}
+                target="_blank"
+                rel="noreferrer"
+                className="text-white/60 hover:text-white transition-colors"
+                onClick={() => setIsMenuOpen(false)}
+              >
+                <i className="ri-youtube-fill text-2xl"></i>
+              </a>
+            </div>
 
             <a href={data.actionButton.link} onClick={() => setIsMenuOpen(false)} className="mt-4 flex w-full justify-center text-sm font-semibold text-[#020408] bg-white hover:bg-white/90 transition-all rounded-full px-8 py-3">
               Get {data.actionButton.label}

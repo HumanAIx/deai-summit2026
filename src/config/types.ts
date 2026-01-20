@@ -28,7 +28,11 @@ export interface NavigationConfig {
         link: string;
     };
     contactEmail: string;
-    socialsLink: string;
+    socials: {
+        twitter: string;
+        linkedin: string;
+        youtube: string;
+    };
 }
 
 export interface Speaker {

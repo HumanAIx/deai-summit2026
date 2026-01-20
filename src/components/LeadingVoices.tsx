@@ -39,7 +39,7 @@ export const LeadingVoices: React.FC<LeadingVoicesProps> = ({ data }) => {
               {/* Logo Placeholder */}
               <div className="mt-auto pt-6 border-t border-black/5 w-full flex justify-center text-black/60 group-hover:text-black">
                 <div className="flex items-center gap-2">
-                  <i className={`${speaker.icon} text-2xl`}></i>
+                  {/* <i className={`${speaker.icon} text-2xl`}></i> */}
                   <span className="font-bold text-sm tracking-tight">{speaker.company}</span>
                 </div>
               </div>
