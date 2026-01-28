@@ -59,7 +59,7 @@ export const ContactModal: React.FC<ContactModalProps> = ({ isOpen, onClose }) =
 
                 {/* Form */}
                 <div className="p-8">
-                    <form className="space-y-5" onSubmit={(e) => {
+                    <form className="space-y-5" onSubmit={async (e) => {
                         e.preventDefault();
                         const formData = new FormData(e.currentTarget);
                         const data = {
@@ -69,12 +69,44 @@ export const ContactModal: React.FC<ContactModalProps> = ({ isOpen, onClose }) =
                             inquiryType: formData.get('inquiryType'),
                             message: formData.get('message'),
                         };
-                        console.log('----------------------------------------');
-                        console.log('📩 New Contact Form Submission:');
-                        console.log(data);
-                        console.log('----------------------------------------');
-                        alert('Form submitted! Check the developer console for the captured data.');
-                        handleClose();
+
+                        try {
+                            const submitBtn = e.currentTarget.querySelector('button[type="submit"]');
+                            if (submitBtn) {
+                                submitBtn.setAttribute('disabled', 'true');
+                                submitBtn.innerHTML = 'Sending...';
+                            }
+
+                            const response = await fetch('/api/contact', {
+                                method: 'POST',
+                                headers: {
+                                    'Content-Type': 'application/json',
+                                },
+                                body: JSON.stringify(data),
+                            });
+
+                            const result = await response.json();
+
+                            if (response.ok) {
+                                alert('Message sent successfully!');
+                                handleClose();
+                            } else {
+                                alert(result.error || 'Failed to send message. Please try again.');
+                            }
+
+                            if (submitBtn) {
+                                submitBtn.removeAttribute('disabled');
+                                submitBtn.innerHTML = `<span>Send Message</span><i class="ri-send-plane-fill group-hover:translate-x-1 transition-transform"></i>`;
+                            }
+                        } catch (error) {
+                            console.error('Error submitting form:', error);
+                            alert('An unexpected error occurred. Please try again.');
+                            const submitBtn = e.currentTarget.querySelector('button[type="submit"]');
+                            if (submitBtn) {
+                                submitBtn.removeAttribute('disabled');
+                                submitBtn.innerHTML = `<span>Send Message</span><i class="ri-send-plane-fill group-hover:translate-x-1 transition-transform"></i>`;
+                            }
+                        }
                     }}>
 
                         <div className="grid grid-cols-2 gap-4">
@@ -138,7 +170,7 @@ export const ContactModal: React.FC<ContactModalProps> = ({ isOpen, onClose }) =
                             ></textarea>
                         </div>
 
-                        <button className="w-full py-4 bg-brand-dark text-white font-bold rounded-xl shadow-lg hover:shadow-xl hover:bg-slate-800 transform active:scale-[0.98] transition-all flex items-center justify-center gap-2 group">
+                        <button type="submit" className="w-full py-4 bg-brand-dark text-white font-bold rounded-xl shadow-lg hover:shadow-xl hover:bg-slate-800 transform active:scale-[0.98] transition-all flex items-center justify-center gap-2 group disabled:opacity-70 disabled:cursor-not-allowed">
                             <span>Send Message</span>
                             <i className="ri-send-plane-fill group-hover:translate-x-1 transition-transform"></i>
                         </button>

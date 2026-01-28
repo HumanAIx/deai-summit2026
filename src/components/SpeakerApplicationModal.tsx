@@ -59,7 +59,7 @@ export const SpeakerApplicationModal: React.FC<SpeakerApplicationModalProps> = (
 
                 {/* Form */}
                 <div className="p-8 max-h-[70vh] overflow-y-auto">
-                    <form className="space-y-5" onSubmit={(e) => {
+                    <form className="space-y-5" onSubmit={async (e) => {
                         e.preventDefault();
                         const formData = new FormData(e.currentTarget);
                         const data = {
@@ -70,12 +70,44 @@ export const SpeakerApplicationModal: React.FC<SpeakerApplicationModalProps> = (
                             topic: formData.get('topic'),
                             bio: formData.get('bio'),
                         };
-                        console.log('----------------------------------------');
-                        console.log('🎤 New Speaker Application:');
-                        console.log(data);
-                        console.log('----------------------------------------');
-                        alert('Application submitted! Check the developer console for the captured data.');
-                        handleClose();
+
+                        try {
+                            const submitBtn = e.currentTarget.querySelector('button[type="submit"]');
+                            if (submitBtn) {
+                                submitBtn.setAttribute('disabled', 'true');
+                                submitBtn.innerHTML = 'Sending...';
+                            }
+
+                            const response = await fetch('/api/speakers', {
+                                method: 'POST',
+                                headers: {
+                                    'Content-Type': 'application/json',
+                                },
+                                body: JSON.stringify(data),
+                            });
+
+                            const result = await response.json();
+
+                            if (response.ok) {
+                                alert('Application submitted successfully!');
+                                handleClose();
+                            } else {
+                                alert(result.error || 'Failed to submit application. Please try again.');
+                            }
+
+                            if (submitBtn) {
+                                submitBtn.removeAttribute('disabled');
+                                submitBtn.innerHTML = `<span>Submit Application</span><i class="ri-send-plane-fill group-hover:translate-x-1 transition-transform"></i>`;
+                            }
+                        } catch (error) {
+                            console.error('Error submitting application:', error);
+                            alert('An unexpected error occurred. Please try again.');
+                            const submitBtn = e.currentTarget.querySelector('button[type="submit"]');
+                            if (submitBtn) {
+                                submitBtn.removeAttribute('disabled');
+                                submitBtn.innerHTML = `<span>Submit Application</span><i class="ri-send-plane-fill group-hover:translate-x-1 transition-transform"></i>`;
+                            }
+                        }
                     }}>
 
                         <div className="grid grid-cols-2 gap-4">
@@ -145,7 +177,7 @@ export const SpeakerApplicationModal: React.FC<SpeakerApplicationModalProps> = (
                             ></textarea>
                         </div>
 
-                        <button className="w-full py-4 bg-brand-dark text-white font-bold rounded-xl shadow-lg hover:shadow-xl hover:bg-slate-800 transform active:scale-[0.98] transition-all flex items-center justify-center gap-2 group">
+                        <button type="submit" className="w-full py-4 bg-brand-dark text-white font-bold rounded-xl shadow-lg hover:shadow-xl hover:bg-slate-800 transform active:scale-[0.98] transition-all flex items-center justify-center gap-2 group disabled:opacity-70 disabled:cursor-not-allowed">
                             <span>Submit Application</span>
                             <i className="ri-send-plane-fill group-hover:translate-x-1 transition-transform"></i>
                         </button>

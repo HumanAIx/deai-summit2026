@@ -4,7 +4,7 @@ export const siteConfig: SiteConfig = {
     hero: {
         backgroundImage: "https://images.unsplash.com/photo-1544531586-fde5298cdd40?q=80&w=2070&auto=format&fit=crop",
         badge: "Malta Edition 2026",
-        headline: "The First Global<br />DeAI Summit",
+        headline: "The Inflection point of AI",
         subheadline: "Where decentralized intelligence meets institutional capital.",
         location: "Valletta, Malta",
         date: "November 2026",
