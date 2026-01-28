@@ -74,8 +74,8 @@ export const Navbar: React.FC<NavbarProps> = ({ onShowToast, onOpenContact, data
             </button>
           </div>
 
-          {/* Visual Divider */}
-          <div className="h-4 w-px bg-white/10"></div>
+
+
 
           {/* Social Icons */}
           <div className="flex items-center gap-4 border-l border-white/10 pl-6 ml-2">
@@ -145,7 +145,6 @@ export const Navbar: React.FC<NavbarProps> = ({ onShowToast, onOpenContact, data
               Contact Us
             </button>
 
-            <div className="w-full h-px bg-white/10 my-2"></div>
 
             <div className="flex items-center justify-center gap-6">
               <a
