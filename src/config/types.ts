@@ -162,7 +162,6 @@ export interface SiteConfig {
     about: AboutConfig;
     highlights: HighlightsConfig;
     networking: NetworkingItem[];
-    networking: NetworkingItem[];
     partners: PartnerItem[];
     closing: ClosingConfig;
     footer: FooterConfig;
