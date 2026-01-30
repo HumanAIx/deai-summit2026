@@ -63,6 +63,22 @@ export const AboutVideo: React.FC<AboutVideoProps> = ({ data }) => {
                     <p className="text-base md:text-lg lg:text-xl text-white/60 font-light leading-relaxed max-w-3xl mx-auto px-4">
                         {data.description}
                     </p>
+
+                    {/* Bullet Points */}
+                    {data.bulletPoints && (
+                        <div className="mt-12 grid gap-4 max-w-2xl mx-auto text-left px-4">
+                            {data.bulletPoints.map((point, index) => (
+                                <div key={index} className="flex items-start gap-4 p-4 rounded-lg bg-white/5 border border-white/10 hover:bg-white/10 transition-colors duration-300">
+                                    <div className="flex-shrink-0 mt-1">
+                                        <i className="ri-check-line text-brand-cyan"></i>
+                                    </div>
+                                    <span className="text-white/80 text-sm md:text-base font-light">
+                                        {point}
+                                    </span>
+                                </div>
+                            ))}
+                        </div>
+                    )}
                 </div>
 
                 {/* CTA Buttons */}

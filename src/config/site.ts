@@ -4,16 +4,20 @@ export const siteConfig: SiteConfig = {
     hero: {
         backgroundImage: "https://images.unsplash.com/photo-1544531586-fde5298cdd40?q=80&w=2070&auto=format&fit=crop",
         badge: "Malta Edition 2026",
-        headline: "The Inflection point of AI",
-        subheadline: "Where decentralized intelligence meets institutional capital.",
+        headline: "The Global Inflection Point for AI Governance",
+        subheadline: "Where frontier AI, decentralized systems, and global regulators confront the future of intelligence.",
         location: "Valletta, Malta",
         date: "November 2026",
         ctaPrimary: {
-            label: "JOIN WAITLIST",
+            label: "Join the Waitlist",
             link: "#"
         },
         ctaSecondary: {
-            label: "SPONSORSHIP DECK",
+            label: "Apply to Be a Speaker",
+            link: "#"
+        },
+        ctaTertiary: {
+            label: "Become a Sponsor",
             link: "#"
         }
     },
@@ -133,44 +137,46 @@ export const siteConfig: SiteConfig = {
     },
     stats: {
         quote: {
-            text: "HumanAIx is advancing the open infrastructure for decentralized AI — where compute, data, and intelligence are governed by the many, not the few.",
-            author: "Roberts Daniel",
-            role: "Marketing Director, Orbit",
+            text: "A deliberately capped convening of the people shaping AI’s next decade.",
+            author: "DeAI Summit",
+            role: "Organizing Committee",
             image: "https://images.unsplash.com/photo-1519085360753-af0119f7cbe7?q=80&w=200&auto=format&fit=crop"
         },
         items: [
             {
-                number: "2,500+",
-                label: "Capped and sold out attendees joining from over 40 countries."
+                number: "10,000",
+                label: "Hand-selected delegates from over 40 countries."
             },
             {
                 number: "$50B+",
-                label: "Assets under management represented by attending funds."
+                label: "Assets represented by funds actively deploying into AI infrastructure."
             },
             {
-                number: "96%",
-                label: "Attendees report meeting a future partner or client."
+                number: "100+",
+                label: "International journalists and policy media present."
             },
             {
-                number: "150+",
-                label: "International journalists covering the event live from the venue."
+                number: "67+",
+                label: "Speakers across frontier AI, decentralized systems, policy, and academia."
             },
             {
-                number: "120+",
-                label: "Leading voices shaping the future of digital assets."
-            },
-            {
-                number: "1,200+",
-                label: "Participating companies driving the ecosystem forward."
+                number: "100+",
+                label: "Participating companies across AI, Web3, enterprise, and research."
             }
         ]
     },
     marquee: [
-        { label: "NEXUS", iconType: "diamond" },
-        { label: "ORBITAL", iconType: "circle-dashed" },
-        { label: "SYNTH", iconType: "square" },
-        { label: "CORE", iconType: "circle-dot" },
-        { label: "FLUX", iconType: "bracket" }
+        { label: "NEO", logo: "https://cdn.prod.website-files.com/684bd887005afeaa302406a0/684bd926581b01cf841eb3cd_neo_color_dark.avif" },
+        { label: "OORT", logo: "https://cdn.prod.website-files.com/684bd887005afeaa302406a0/684bd926581b01cf841eb3a6_oort-1.avif" },
+        { label: "XYO", logo: "https://cdn.prod.website-files.com/684bd887005afeaa302406a0/684bd926581b01cf841eb3a2_xyo-1.avif" },
+        { label: "IO.NET", logo: "https://cdn.prod.website-files.com/684bd887005afeaa302406a0/684bd926581b01cf841eb39e_io-1.avif" },
+        { label: "YGG", logo: "https://cdn.prod.website-files.com/684bd887005afeaa302406a0/684bd926581b01cf841eb39a_ygg-1.avif" },
+        { label: "SUPERMOON", logo: "https://cdn.prod.website-files.com/684bd887005afeaa302406a0/684bd926581b01cf841eb394_moon-1.avif" },
+        { label: "DeTaSECURE", logo: "https://cdn.prod.website-files.com/684bd887005afeaa302406a0/684bd926581b01cf841eb397_dc-1.avif" },
+        { label: "HOLO", logo: "https://cdn.prod.website-files.com/684bd887005afeaa302406a0/684bd926581b01cf841eb3ac_holo.avif" },
+        { label: "UNYT", logo: "https://cdn.prod.website-files.com/684bd887005afeaa302406a0/684bd926581b01cf841eb38c_units-1.svg" },
+        { label: "AI.KIDO", logo: "https://cdn.prod.website-files.com/684bd887005afeaa302406a0/684bd926581b01cf841eb38d_kiddo-1.avif" },
+        { label: "OASIS", logo: "https://cdn.prod.website-files.com/684bd887005afeaa302406a0/684bd926581b01cf841eb385_oasis-1.avif" }
     ],
     about: {
         sectionTitle: "What is DeAI Summit?",
@@ -178,8 +184,14 @@ export const siteConfig: SiteConfig = {
         badge: "Live from Valletta 2026",
         overlayTitle: "Forging the next era of Intelligence",
         galleryLabel: "Summit Keynote Gallery",
-        mainStatement: "At DeAI Summit, we don't run a conference; <span class=\"font-bold\">we build the room that matters.</span>",
-        description: "We're stripping away the noise. No endless panels, no crowded halls—just the people you actually need to meet. We're turning Valletta's waterfront into a space designed for real conversation, where the next big breakthroughs in Decentralized AI will happen over dinner, not during a slide deck.",
+        mainStatement: "As AI regulation accelerates globally and centralized models face mounting challenges around trust, compliance, and control, DeAI Summit convenes a forum where frontier AI labs, decentralized AI ecosystems, and policymakers confront these questions together.",
+        description: "We strip away noise, optics, and performative panels. What remains is focused dialogue, structured disagreement, and outcomes that shape how AI is governed, built, and deployed.",
+        bulletPoints: [
+            "A neutral, sovereign forum inside the EU for AI governance debate.",
+            "Direct dialogue between frontier labs, decentralized networks, and regulators.",
+            "Serious technical and policy discourse without PR theater.",
+            "A setting where disagreement is expected, structured, and productive."
+        ],
         ctaPrimary: "Attend DeAI Summit",
         ctaSecondary: "Sponsor DeAI Summit"
     },
@@ -222,30 +234,30 @@ export const siteConfig: SiteConfig = {
     networking: [
         {
             id: 0,
-            title: "Knowledge Sharing",
-            description: "Curated seating arrangements to ensure you meet the right people over world-class cuisine.",
-            icon: "ri-restaurant-line",
+            title: "Curated Seating",
+            description: "Engineered seating arrangements based on shared technical, regulatory, or investment context.",
+            icon: "ri-armchair-line",
             image: "https://images.unsplash.com/photo-1559339352-11d035aa65de?q=80&w=1974&auto=format&fit=crop"
         },
         {
             id: 1,
-            title: "VIP & Investor Dinners",
-            description: "Exclusive evening gatherings connecting founders with capital in intimate, private settings.",
-            icon: "ri-goblet-line",
+            title: "Closed-Door Roundtables",
+            description: "Small-group discussions under Chatham House rules for high-stakes governance and technical debates.",
+            icon: "ri-discuss-line",
             image: "https://images.unsplash.com/photo-1519671482538-518b5c2eb061?q=80&w=2072&auto=format&fit=crop"
         },
         {
             id: 2,
-            title: "Expert Roundtables",
-            description: "Deep-dive discussions on specific verticals led by industry pioneers in small groups.",
-            icon: "ri-group-line",
+            title: "Private Dinners",
+            description: "Off-agenda evening gatherings enabling candid conversations between founders, frontier labs, and capital allocators.",
+            icon: "ri-goblet-line",
             image: "https://images.unsplash.com/photo-1556761175-5973dc0f32e7?q=80&w=2664&auto=format&fit=crop"
         },
         {
             id: 3,
-            title: "1-on-1 Networking",
-            description: "Dedicated spaces and apps to facilitate high-value individual meetings throughout the summit.",
-            icon: "ri-chat-3-line",
+            title: "One-on-One Engagement",
+            description: "Dedicated time and spaces for focused bilateral meetings throughout the summit.",
+            icon: "ri-user-voice-line",
             image: "https://images.unsplash.com/photo-1511632765486-a01980e01a18?q=80&w=2070&auto=format&fit=crop"
         }
     ],
@@ -262,11 +274,17 @@ export const siteConfig: SiteConfig = {
         { name: "AI.KIDO", logo: "https://cdn.prod.website-files.com/684bd887005afeaa302406a0/684bd926581b01cf841eb38d_kiddo-1.avif" },
         { name: "OASIS", logo: "https://cdn.prod.website-files.com/684bd887005afeaa302406a0/684bd926581b01cf841eb385_oasis-1.avif" }
     ],
+    closing: {
+        statement: "AI has reached a global inflection point. Questions of transparency, accountability, safety, and governance are no longer theoretical. They are now shaping regulation, capital allocation, and the future of innovation itself.",
+        description: "We find ourselves in the midst of the debate between the indiscriminate advance of AI in every aspect of life and the repercussions it will bring in the future. That inflection point will be the key point for the discussion in this summit. DeAI Summit is where those solutions are challenged, tested, and refined.",
+        cta: "Join us in Malta",
+        location: "Valletta, Malta"
+    },
     footer: {
         brandDescription: "The premier gathering for the decentralized AI ecosystem. Malta 2026.",
         stats: [
-            { value: "2.5K+", label: "Attendees" },
-            { value: "$50B", label: "AUM" }
+            { value: "10K", label: "Delegates" },
+            { value: "$50B+", label: "AUM" }
         ],
         socials: {
             twitter: "https://x.com/Human_AIx",

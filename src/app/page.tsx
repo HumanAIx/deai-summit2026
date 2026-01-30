@@ -59,12 +59,7 @@ export default function Home() {
         {/* Light Stats Section */}
         <Stats data={siteConfig.stats} />
 
-        {/* Light Speakers Section (Featured Cloud) */}
-        {/* Note: Speakers component takes both speakers list and partners list for the 'Trusted By' section */}
-        <Speakers
-          speakersData={siteConfig.speakers.featured}
-          partnersData={siteConfig.partners}
-        />
+
 
         {/* Dark Video Section */}
         <AboutVideo data={siteConfig.about} />
@@ -73,6 +68,12 @@ export default function Home() {
         {/* Pass the whole config object since the component expects HighlightsConfig */}
         <SceneHighlights data={siteConfig.highlights} />
 
+        {/* Light Speakers Section (Featured Cloud) */}
+        {/* Note: Speakers component takes both speakers list and partners list for the 'Trusted By' section */}
+        <Speakers
+          speakersData={siteConfig.speakers.featured}
+          partnersData={siteConfig.partners}
+        />
         {/* Light Grid Speakers Section (Leading Voices) */}
         <LeadingVoices data={siteConfig.speakers.leading} />
 

@@ -21,28 +21,40 @@ const getIcon = (type: string) => {
   }
 }
 
-const MarqueeItem: React.FC<MarqueeItemProps> = ({ label, iconType }) => (
-  <div className="flex items-center gap-2 text-white">
-    {getIcon(iconType)}
-    <span className="font-mono text-sm tracking-widest">{label}</span>
+const MarqueeItem: React.FC<MarqueeItemProps & { logo?: string }> = ({ label, iconType, logo }) => (
+  <div className="flex items-center justify-center min-w-[140px] md:min-w-[200px] px-4">
+    {logo ? (
+      <div className="relative w-full h-[40px] md:h-[60px] flex items-center justify-center">
+        <img
+          src={logo}
+          alt={label}
+          className="max-w-[120px] md:max-w-[160px] max-h-full w-auto object-contain brightness-0 invert opacity-100"
+        />
+      </div>
+    ) : (
+      <div className="flex items-center gap-4 text-white">
+        {iconType && getIcon(iconType)}
+        <span className="font-mono text-sm tracking-widest">{label}</span>
+      </div>
+    )}
   </div>
 );
 
 export const Marquee: React.FC<MarqueeProps> = ({ data }) => {
   return (
-    <section className="w-full z-20 mt-20 relative overflow-hidden mask-gradient-fade">
-      <div className="flex animate-marquee hover:[animation-play-state:paused] w-max gap-8 md:gap-16 items-center opacity-40 grayscale hover:grayscale-0 transition-all duration-700">
+    <section className="w-full z-20  relative overflow-hidden mask-gradient-fade bg-[#020408] border-t border-white/5 py-8">
+      <div className="flex animate-marquee hover:[animation-play-state:paused] w-max gap-1 items-center">
         {/* First Loop */}
         {data.map((item, index) => (
-          <MarqueeItem key={`1-${index}`} label={item.label} iconType={item.iconType} />
+          <MarqueeItem key={`1-${index}`} label={item.label} iconType={item.iconType || 'circle'} logo={item.logo} />
         ))}
         {/* Second Loop for seamless scroll */}
         {data.map((item, index) => (
-          <MarqueeItem key={`2-${index}`} label={item.label} iconType={item.iconType} />
+          <MarqueeItem key={`2-${index}`} label={item.label} iconType={item.iconType || 'circle'} logo={item.logo} />
         ))}
         {/* Third Loop for extra width safety */}
         {data.map((item, index) => (
-          <MarqueeItem key={`3-${index}`} label={item.label} iconType={item.iconType} />
+          <MarqueeItem key={`3-${index}`} label={item.label} iconType={item.iconType || 'circle'} logo={item.logo} />
         ))}
       </div>
     </section>

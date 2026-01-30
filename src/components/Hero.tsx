@@ -86,6 +86,13 @@ export const Hero: React.FC<HeroProps> = ({ data, onOpenContact }) => {
             {data.ctaSecondary.label}
             <i className="ri-download-line text-lg md:text-xl"></i>
           </button>
+
+          {data.ctaTertiary && (
+            <button className="px-6 py-3 md:px-8 md:py-4 rounded-full text-sm md:text-base font-bold text-slate-800 hover:text-brand-cyan transition-colors border border-transparent hover:border-brand-cyan/30 flex items-center justify-center gap-3 w-full sm:w-auto whitespace-nowrap">
+              {data.ctaTertiary.label}
+              <i className="ri-hand-heart-line text-lg md:text-xl"></i>
+            </button>
+          )}
         </div>
       </div>
     </section>
