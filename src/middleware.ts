@@ -22,9 +22,9 @@ export function middleware(request: NextRequest) {
         request.nextUrl.pathname.includes('.'); // File extensions
 
     // If it's the home page and not in preview mode, rewrite to coming soon
-    // if (request.nextUrl.pathname === '/' && !isPreview && !isExcluded) {
-    //     return NextResponse.rewrite(new URL('/coming-soon', request.url));
-    // }
+    if (request.nextUrl.pathname === '/' && !isPreview && !isExcluded) {
+        return NextResponse.rewrite(new URL('/coming-soon', request.url));
+    }
 
     return NextResponse.next();
 }
