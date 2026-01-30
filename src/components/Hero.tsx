@@ -5,9 +5,10 @@ import { HeroConfig } from '@/config/types';
 interface HeroProps {
   data: HeroConfig;
   onOpenContact?: () => void;
+  onOpenSpeakerApp?: () => void;
 }
 
-export const Hero: React.FC<HeroProps> = ({ data, onOpenContact }) => {
+export const Hero: React.FC<HeroProps> = ({ data, onOpenContact, onOpenSpeakerApp }) => {
   return (
     <section className="relative w-full min-h-screen flex flex-col items-center justify-center overflow-hidden bg-[#F2F4F7] pt-24 pb-12 md:py-0">
 
@@ -82,7 +83,10 @@ export const Hero: React.FC<HeroProps> = ({ data, onOpenContact }) => {
             </span>
           </button>
 
-          <button className="px-6 py-3 md:px-8 md:py-4 rounded-full text-sm md:text-base font-bold text-slate-800 hover:text-brand-blue transition-colors border border-black/10 hover:border-brand-blue/30 bg-white/50 hover:bg-white backdrop-blur-sm flex items-center justify-center gap-3 shadow-sm w-full sm:w-auto whitespace-nowrap">
+          <button
+            onClick={onOpenSpeakerApp}
+            className="px-6 py-3 md:px-8 md:py-4 rounded-full text-sm md:text-base font-bold text-slate-800 hover:text-brand-blue transition-colors border border-black/10 hover:border-brand-blue/30 bg-white/50 hover:bg-white backdrop-blur-sm flex items-center justify-center gap-3 shadow-sm w-full sm:w-auto whitespace-nowrap"
+          >
             {data.ctaSecondary.label}
             <i className="ri-download-line text-lg md:text-xl"></i>
           </button>

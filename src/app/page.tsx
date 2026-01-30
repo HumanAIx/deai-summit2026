@@ -49,7 +49,11 @@ export default function Home() {
       />
 
       <main className="w-full mx-auto">
-        <Hero data={siteConfig.hero} onOpenContact={handleOpenContact} />
+        <Hero
+          data={siteConfig.hero}
+          onOpenContact={handleOpenContact}
+          onOpenSpeakerApp={handleOpenSpeakerApp}
+        />
 
         {/* Dark transition section for Marquee */}
         <div className="bg-[#020408] border-t border-white/5 pb-12 pt-12">
