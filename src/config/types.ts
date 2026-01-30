@@ -13,6 +13,10 @@ export interface HeroConfig {
         label: string;
         link: string;
     };
+    ctaTertiary?: {
+        label: string;
+        link: string;
+    };
 }
 
 export interface NavigationItem {
@@ -74,7 +78,8 @@ export interface StatsConfig {
 
 export interface MarqueeItem {
     label: string;
-    iconType: string;
+    iconType?: string;
+    logo?: string;
 }
 
 export interface AboutConfig {
@@ -85,6 +90,7 @@ export interface AboutConfig {
     galleryLabel: string;
     mainStatement: string;
     description: string;
+    bulletPoints: string[];
     ctaPrimary: string;
     ctaSecondary: string;
 }
@@ -140,6 +146,13 @@ export interface FooterConfig {
     copyright: string;
 }
 
+export interface ClosingConfig {
+    statement: string;
+    description: string;
+    cta: string;
+    location: string;
+}
+
 export interface SiteConfig {
     hero: HeroConfig;
     navigation: NavigationConfig;
@@ -150,5 +163,6 @@ export interface SiteConfig {
     highlights: HighlightsConfig;
     networking: NetworkingItem[];
     partners: PartnerItem[];
+    closing: ClosingConfig;
     footer: FooterConfig;
 }
