@@ -105,13 +105,7 @@ export const siteConfig: SiteConfig = {
                 image: "https://cdn.prod.website-files.com/684bd887005afeaa302406a0/6883407e0abdffcdfaf30827_aix-team-01%20(1).avif",
                 icon: "ri-user-line"
             },
-            {
-                name: "Michelle Tsing",
-                role: "Founder",
-                company: "Governance Research Institute",
-                image: "https://cdn.prod.website-files.com/684bd887005afeaa302406a0/68acaf3450a2cc6a1f03e496_michelle_bw.png",
-                icon: "ri-user-line"
-            },
+
             {
                 name: "James Kingstone",
                 role: "Director DAO SPV",
@@ -127,11 +121,39 @@ export const siteConfig: SiteConfig = {
                 icon: "ri-user-line"
             },
             {
-                name: "Tamaghna Basu",
+                name: "Dr. Xue (Steve) Liu",
+                role: "Assoc. VP of Research",
+                company: "MBZUAI",
+                image: "/placeholder.png",
+                icon: "ri-brain-line"
+            },
+            {
+                name: "Prof. Joshua Ellul",
+                role: "Associate Professor",
+                company: "University of Malta",
+                image: "/placeholder.png",
+                icon: "ri-links-line"
+            },
+            {
+                name: "Prof. André Xuereb",
+                role: "Full Professor of Physics",
+                company: "University of Malta",
+                image: "/placeholder.png",
+                icon: "ri-atom-line"
+            },
+            {
+                name: "Dr. Aaron Farrugia",
                 role: "Founder",
-                company: "Detasecure",
-                image: "https://cdn.prod.website-files.com/684bd887005afeaa302406a0/68a36d9cc07dd8f9ab8bd1ca_basu_bw.jpeg",
-                icon: "ri-user-line"
+                company: "Economiq Ltd",
+                image: "/placeholder.png",
+                icon: "ri-government-line"
+            },
+            {
+                name: "Prof. Alexiei Dingli",
+                role: "Full Professor of Applied AI",
+                company: "University of Malta",
+                image: "/placeholder.png",
+                icon: "ri-robot-line"
             }
         ]
     },
