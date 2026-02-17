@@ -121,38 +121,38 @@ export const siteConfig: SiteConfig = {
                 icon: "ri-user-line"
             },
             {
-                name: "Dr. Xue (Steve) Liu",
-                role: "Assoc. VP of Research",
-                company: "MBZUAI",
-                image: "/placeholder.png",
-                icon: "ri-brain-line"
-            },
-            {
                 name: "Prof. Joshua Ellul",
                 role: "Associate Professor",
                 company: "University of Malta",
-                image: "/placeholder.png",
+                image: "/Joshua Ellul.jpg",
                 icon: "ri-links-line"
-            },
-            {
+            }, {
                 name: "Prof. André Xuereb",
                 role: "Full Professor of Physics",
                 company: "University of Malta",
-                image: "/placeholder.png",
+                image: "/André Xuereb.jpg",
                 icon: "ri-atom-line"
             },
+            {
+                name: "Dr. Xue (Steve) Liu",
+                role: "Assoc. VP of Research",
+                company: "MBZUAI",
+                image: "/Steve-Liu_main1.jpg",
+                icon: "ri-brain-line"
+            },
+
             {
                 name: "Dr. Aaron Farrugia",
                 role: "Founder",
                 company: "Economiq Ltd",
-                image: "/placeholder.png",
+                image: "/Dr. Aaron Farrugia.jpg",
                 icon: "ri-government-line"
             },
             {
                 name: "Prof. Alexiei Dingli",
                 role: "Full Professor of Applied AI",
                 company: "University of Malta",
-                image: "/placeholder.png",
+                image: "/Prof. Alexiei Dingli.jpg",
                 icon: "ri-robot-line"
             }
         ]
