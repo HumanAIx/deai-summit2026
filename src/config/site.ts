@@ -7,9 +7,9 @@ export const siteConfig: SiteConfig = {
         headline: "The Global Inflection Point for AI Governance",
         subheadline: "Where frontier AI, decentralized systems, and global regulators confront the future of intelligence.",
         location: "Valletta, Malta",
-        date: "November 2026",
+        date: "28-30 October, 2026",
         ctaPrimary: {
-            label: "Join the Waitlist",
+            label: "Apply for the Start-up competition",
             link: "#"
         },
         ctaSecondary: {
@@ -166,19 +166,19 @@ export const siteConfig: SiteConfig = {
         },
         items: [
             {
-                number: "10,000",
-                label: "Hand-selected delegates from over 40 countries."
+                number: "5,000",
+                label: "elite international delegates from over 50+ countries"
             },
             {
                 number: "$50B+",
-                label: "Assets represented by funds actively deploying into AI infrastructure."
+                label: "in assets represented by funds actively deploying into AI infrastructure "
             },
             {
                 number: "100+",
                 label: "International journalists and policy media present."
             },
             {
-                number: "67+",
+                number: "60+",
                 label: "Speakers across frontier AI, decentralized systems, policy, and academia."
             },
             {
@@ -202,7 +202,7 @@ export const siteConfig: SiteConfig = {
     ],
     about: {
         sectionTitle: "What is DeAI Summit?",
-        coverImage: "https://images.unsplash.com/photo-1540575861501-7cf05a4b125a?q=80&w=2070&auto=format&fit=crop",
+        coverImage: "/whatisdeaisummit.jpg",
         badge: "Live from Valletta 2026",
         overlayTitle: "Forging the next era of Intelligence",
         galleryLabel: "Summit Keynote Gallery",
