@@ -1,36 +1,73 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# DeAI Summit 2026 - Conference OS
 
-## Getting Started
+Welcome to the **DeAI Summit 2026** landing page project. This codebase is designed as a "Conference OS"—a data-driven, reusable architecture where the entire site's content is managed via a central configuration file.
 
-First, run the development server:
+## 🚀 Getting Started
 
+### Prerequisites
+- Node.js (Latest LTS recommended)
+- npm or yarn
+
+### Installation
 ```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
+npm install
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+### Development
+Run the development server:
+```bash
+npm run dev
+```
+Open [http://localhost:3000](http://localhost:3000) to view the site.
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+---
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+## 🛠 Project Architecture
 
-## Learn More
+This project follow a modular, configuration-first approach:
 
-To learn more about Next.js, take a look at the following resources:
+### 1. Central Configuration (CRITICAL)
+The entire site is controlled by:
+- **`src/config/site.ts`**: This is where you edit text, images, speaker lists, and navigation links. 
+- **`src/config/types.ts`**: Contains the TypeScript interfaces for the site configuration.
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+> [!IMPORTANT]
+> **Always edit `src/config/site.ts` to update content.** Do not create duplicate `site.ts` files in the root `src/` directory, as they will be ignored by the build.
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+### 2. Components
+Located in `src/components/`, these are reusable UI blocks:
+- `Hero.tsx`: Main landing section.
+- `AboutVideo.tsx`: The "What is DeAI Summit" section with video/gallery.
+- `Speakers.tsx` & `LeadingVoices.tsx`: Speaker display components.
+- `SceneHighlights.tsx`: Interactive image hotspots.
+- `Marquee.tsx`: Scrolling partner/logo bar.
 
-## Deploy on Vercel
+### 3. Styling
+- **Tailwind CSS**: All styling is handled via Tailwind utility classes.
+- **`tailwind.config.ts`**: Contains brand-specific colors (`brand-blue`, `brand-cyan`, etc.) and custom animations.
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+### 4. Logic & State
+- **`src/app/page.tsx`**: The main entry point that passes the `siteConfig` data down to the components.
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+---
+
+## 📝 How to Edit
+
+| Target | Action |
+| :--- | :--- |
+| **Speaker List** | Update the `speakers` array in `src/config/site.ts`. |
+| **Hero Content** | Edit the `hero` object in `src/config/site.ts`. |
+| **Partner Logos** | Update the `partners` array in `src/config/site.ts`. |
+| **Site Colors** | Modify constants in `tailwind.config.ts`. |
+| **New Section** | Create a component in `src/components/` and add it to `src/app/page.tsx`. |
+
+---
+
+## 🚢 Deployment
+
+The project is optimized for deployment on **Vercel**. Every push to the main branch will trigger a build and deployment.
+
+---
+
+## 📞 Support
+If you have questions about the component logic, check the existing props in `src/types.ts` to see how data flows from the config into the UI.
