@@ -202,7 +202,7 @@ export const siteConfig: SiteConfig = {
     ],
     about: {
         sectionTitle: "What is DeAI Summit?",
-        coverImage: "/whatisdeaisummit.jpg",
+        coverImage: "/whatisdeaiSummit.jpg",
         badge: "Live from Valletta 2026",
         overlayTitle: "Forging the next era of Intelligence",
         galleryLabel: "Summit Keynote Gallery",
