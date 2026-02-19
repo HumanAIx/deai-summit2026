@@ -1,5 +1,7 @@
 import { NextResponse } from 'next/server';
-import sgMail from '@sendgrid/mail';
+import { Resend } from 'resend';
+
+const resend = new Resend(process.env.RESEND_API_KEY);
 
 export async function POST(request: Request) {
     try {
@@ -14,48 +16,49 @@ export async function POST(request: Request) {
             );
         }
 
-        const apiKey = process.env.SENDGRID_API_KEY;
-        const fromEmail = process.env.SENDGRID_FROM_EMAIL;
-        const toEmail = process.env.SENDGRID_TO_EMAIL || fromEmail;
+        const fromEmail = process.env.RESEND_FROM_EMAIL || 'onboarding@resend.dev';
+        const fromName = process.env.RESEND_FROM_NAME || 'DeAI Summit';
+        const toEmail = process.env.RESEND_TO_EMAIL || fromEmail;
 
-        if (!apiKey || !fromEmail) {
-            console.error('SendGrid API key or From Email is missing');
+        if (!process.env.RESEND_API_KEY) {
+            console.error('Resend API key is missing');
             return NextResponse.json(
                 { error: 'Server configuration error' },
                 { status: 500 }
             );
         }
 
-        sgMail.setApiKey(apiKey);
-
         const emailContent = `
-      <strong>New Speaker Application</strong><br><br>
-      <strong>Name:</strong> ${firstName} ${lastName}<br>
-      <strong>Email:</strong> ${email}<br>
-      <strong>Portfolio/LinkedIn:</strong> ${portfolio || 'N/A'}<br>
-      <strong>Topic:</strong> ${topic}<br>
-      <strong>Bio:</strong><br>
-      ${bio.replace(/\n/g, '<br>')}
-    `;
+            <strong>New Speaker Application</strong><br><br>
+            <strong>Name:</strong> ${firstName} ${lastName}<br>
+            <strong>Email:</strong> ${email}<br>
+            <strong>Portfolio/LinkedIn:</strong> ${portfolio || 'N/A'}<br>
+            <strong>Topic:</strong> ${topic}<br>
+            <strong>Bio:</strong><br>
+            ${bio.replace(/\n/g, '<br>')}
+        `;
 
-        const msg = {
+        const { data, error } = await resend.emails.send({
+            from: `${fromName} <${fromEmail}>`,
             to: toEmail,
-            from: fromEmail,
             subject: `[DEAI Summit] Speaker App: ${firstName} ${lastName}`,
             html: emailContent,
             replyTo: email,
-        };
+        });
 
-        await sgMail.send(msg);
-
-        return NextResponse.json({ success: true, message: 'Application submitted successfully' });
-    } catch (error: any) {
-        console.error('SendGrid Error:', error);
-        if (error.response) {
-            console.error(error.response.body);
+        if (error) {
+            console.error('Resend Error:', error);
+            return NextResponse.json(
+                { error: 'Failed to submit application' },
+                { status: 500 }
+            );
         }
+
+        return NextResponse.json({ success: true, message: 'Application submitted successfully', id: data?.id });
+    } catch (error: any) {
+        console.error('Internal Error:', error);
         return NextResponse.json(
-            { error: 'Failed to submit application' },
+            { error: 'Internal server error' },
             { status: 500 }
         );
     }

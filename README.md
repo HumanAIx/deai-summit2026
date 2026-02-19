@@ -46,6 +46,16 @@ Located in `src/components/`, these are reusable UI blocks:
 - **Tailwind CSS**: All styling is handled via Tailwind utility classes.
 - **`tailwind.config.ts`**: Contains brand-specific colors (`brand-blue`, `brand-cyan`, etc.) and custom animations.
 
+### 3. Setup Environment Variables
+Create a `.env.local` file in the root directory and add the following:
+```env
+# Resend Configuration
+RESEND_API_KEY=re_your_api_key
+RESEND_FROM_NAME=DeAI Summit
+RESEND_FROM_EMAIL=contact@deaisummit.com
+RESEND_TO_EMAIL=contact@deaisummit.com
+```
+
 ### 4. Logic & State
 - **`src/app/page.tsx`**: The main entry point that passes the `siteConfig` data down to the components.
 
@@ -63,11 +73,11 @@ Located in `src/components/`, these are reusable UI blocks:
 
 ---
 
-## 🚢 Deployment
+## 🌐 Domain Verification
 
-The project is optimized for deployment on **Vercel**. Every push to the main branch will trigger a build and deployment.
+To make emails work from `contact@deaisummit.org`, the domain ownership must be verified in the Resend dashboard:
 
----
-
-## 📞 Support
-If you have questions about the component logic, check the existing props in `src/types.ts` to see how data flows from the config into the UI.
+1.  Log in to the [Resend Dashboard](https://resend.com/domains).
+2.  Add `deaisummit.org` as a domain.
+3.  Add the DNS records provided by Resend to your domain provider (e.g., Squarespace).
+4.  Once the status turns to **"Verified"**, the contact forms will start working immediately.
