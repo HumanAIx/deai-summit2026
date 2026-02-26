@@ -159,7 +159,7 @@ export const siteConfig: SiteConfig = {
         quote: {
             text: "A deliberately capped convening of the people shaping AI’s next decade.",
             author: "HumanAIx",
-            role: "Organizing Committee",
+            role: "Organizer",
             image: "/humanaix-logo.png"
         },
         items: [
@@ -193,7 +193,6 @@ export const siteConfig: SiteConfig = {
         { label: "Norm Partners", logo: "/sponsors/partners-logo/norm_partners.png" },
         { label: "Solus Group", logo: "/sponsors/partners-logo/solus.webp" },
         { label: "WASA", logo: "/sponsors/partners-logo/wasa.png" },
-        { label: "Intercognitive", logo: "/sponsors/partners-logo/intercognitive.svg" },
         { label: "Supermoon", logo: "/sponsors/partners-logo/supermoon.png" }
     ],
     about: {
@@ -287,7 +286,6 @@ export const siteConfig: SiteConfig = {
         { name: "Norm Partners", logo: "/sponsors/partners-logo/norm_partners.png" },
         { name: "Solus Group", logo: "/sponsors/partners-logo/solus.webp" },
         { name: "WASA", logo: "/sponsors/partners-logo/wasa.png" },
-        { name: "Intercognitive", logo: "/sponsors/partners-logo/intercognitive.svg" },
         { name: "Supermoon", logo: "/sponsors/partners-logo/supermoon.png" }
     ],
     closing: {
