@@ -14,19 +14,19 @@ export const PastSponsors: React.FC<PastSponsorsProps> = ({ data, onOpenContact 
 
         {/* Headline */}
         <h2 className="text-3xl md:text-4xl lg:text-5xl font-display font-bold text-center mb-16 tracking-tight text-[#1a1a1a]">
-          Our Sponsors
+          Our Sponsors & Partners
         </h2>
 
         {/* Logo Grid */}
         <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-8 lg:gap-12 w-full max-w-6xl mb-20">
           {data.map((sponsor, index) => (
-            <div key={index} className="group flex items-center justify-center p-4 h-24 bg-white/50 hover:bg-white rounded-xl transition-all duration-300 border border-transparent hover:border-black/5 hover:shadow-sm">
-              <div className="relative w-full h-full max-h-10 max-w-[140px]">
+            <div key={index} className="group flex items-center justify-center p-6 h-28 bg-white hover:bg-gray-50 rounded-2xl transition-all duration-300 border border-gray-200 hover:border-gray-300 hover:shadow-md">
+              <div className="relative w-full h-full max-h-12 max-w-[150px]">
                 <Image
                   src={sponsor.logo}
                   alt={sponsor.name}
                   fill
-                  className="object-contain grayscale opacity-60 group-hover:grayscale-0 group-hover:opacity-100 transition-all duration-500 mix-blend-multiply"
+                  className="object-contain grayscale opacity-70 group-hover:grayscale-0 group-hover:opacity-100 transition-all duration-500"
                 />
               </div>
             </div>
