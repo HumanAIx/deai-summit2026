@@ -4,9 +4,10 @@ import { PartnerItem } from '@/config/types';
 
 interface PastSponsorsProps {
   data: PartnerItem[];
+  onOpenContact: () => void;
 }
 
-export const PastSponsors: React.FC<PastSponsorsProps> = ({ data }) => {
+export const PastSponsors: React.FC<PastSponsorsProps> = ({ data, onOpenContact }) => {
   return (
     <section id="sponsors" className="relative w-full py-24 px-6 bg-[#F0F0EF] text-black border-t border-gray-200">
       <div className="max-w-7xl mx-auto flex flex-col items-center">
@@ -34,13 +35,10 @@ export const PastSponsors: React.FC<PastSponsorsProps> = ({ data }) => {
 
         {/* CTA Buttons */}
         <div className="flex flex-col sm:flex-row gap-4 sm:gap-6 items-center justify-center w-full px-4 sm:px-0">
-          <button className="shiny-cta group w-full sm:w-auto min-w-0 sm:min-w-[280px] shadow-xl shadow-brand-blue/5 justify-center">
-            <span className="relative z-10 flex items-center justify-center gap-2">
-              Sponsor DeAI Summit 2026
-              <i className="ri-arrow-right-line text-base transition-transform group-hover:translate-x-1"></i>
-            </span>
-          </button>
-          <button className="w-full sm:w-auto px-6 py-4 rounded-full bg-transparent border border-black/10 text-black font-bold text-sm tracking-wide hover:border-black hover:bg-white transition-all min-w-0 sm:min-w-[280px] flex items-center justify-center gap-2">
+          <button
+            onClick={onOpenContact}
+            className="w-full sm:w-auto px-6 py-4 rounded-full bg-transparent border border-black/10 text-black font-bold text-sm tracking-wide hover:border-black hover:bg-white transition-all min-w-0 sm:min-w-[280px] flex items-center justify-center gap-2"
+          >
             Request Sponsorship Deck
             <i className="ri-download-line text-base"></i>
           </button>

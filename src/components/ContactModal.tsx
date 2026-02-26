@@ -167,7 +167,7 @@ export const ContactModal: React.FC<ContactModalProps> = ({ isOpen, onClose }) =
                         </div>
 
                         <div className="space-y-1.5">
-                            <label className="text-xs font-semibold uppercase tracking-wider text-slate-500">Inquiry Type</label>
+                            <label className="text-xs font-semibold uppercase tracking-wider text-slate-500">What are you interested in?</label>
                             <div className="relative">
                                 <select
                                     name="inquiryType"
@@ -183,13 +183,12 @@ export const ContactModal: React.FC<ContactModalProps> = ({ isOpen, onClose }) =
                         </div>
 
                         <div className="space-y-1.5">
-                            <label className="text-xs font-semibold uppercase tracking-wider text-slate-500">Message</label>
+                            <label className="text-xs font-semibold uppercase tracking-wider text-slate-500">Comments</label>
                             <textarea
                                 name="message"
                                 rows={4}
-                                required
                                 className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl text-slate-900 focus:outline-none focus:ring-2 focus:ring-brand-blue/20 focus:border-brand-blue transition-all resize-none"
-                                placeholder="How can we help you?"
+                                placeholder="..."
                             ></textarea>
                         </div>
 
