@@ -13,6 +13,7 @@ import { PastSponsors } from '@/components/PastSponsors';
 import { Footer } from '@/components/Footer';
 import { ContactModal } from '@/components/ContactModal';
 import { SpeakerApplicationModal } from '@/components/SpeakerApplicationModal';
+import { WaitlistModal } from '@/components/WaitlistModal';
 import { Toast } from '@/components/Toast';
 
 // Import Site Config
@@ -22,6 +23,7 @@ export const LandingPage = () => {
     const [toast, setToast] = useState({ visible: false, message: '' });
     const [isContactOpen, setIsContactOpen] = useState(false);
     const [isSpeakerModalOpen, setIsSpeakerModalOpen] = useState(false);
+    const [isWaitlistOpen, setIsWaitlistOpen] = useState(false);
 
     const showToast = (message: string) => {
         setToast({ visible: true, message });
@@ -48,7 +50,7 @@ export const LandingPage = () => {
             />
 
             <main className="w-full mx-auto">
-                <Hero data={siteConfig.hero} onOpenContact={handleOpenContact} />
+                <Hero data={siteConfig.hero} onOpenContact={handleOpenContact} onOpenSpeakerApp={handleOpenSpeakerApp} onOpenWaitlist={() => setIsWaitlistOpen(true)} />
 
                 {/* Dark transition section for Marquee */}
                 <div className="bg-[#020408] border-t border-white/5 pb-12 pt-12">
@@ -102,6 +104,11 @@ export const LandingPage = () => {
             <SpeakerApplicationModal
                 isOpen={isSpeakerModalOpen}
                 onClose={() => setIsSpeakerModalOpen(false)}
+            />
+
+            <WaitlistModal
+                isOpen={isWaitlistOpen}
+                onClose={() => setIsWaitlistOpen(false)}
             />
 
             <Toast
