@@ -8,10 +8,10 @@ export default function PrivacyPage() {
     return (
         <main className="min-h-screen bg-white">
             <Navbar data={siteConfig.navigation} onOpenContact={() => { }} onShowToast={() => { }} />
-            <div className="pt-32 pb-24 px-6 md:px-12 max-w-4xl mx-auto text-slate-900">
-                <h1 className="text-4xl md:text-5xl font-bold mb-8">Data Protection / Data Privacy Scope</h1>
+            <div className="pt-40 pb-32 px-6 md:px-16 max-w-4xl mx-auto text-slate-900">
+                <h1 className="text-4xl md:text-5xl font-bold mb-10 leading-tight">Data Protection / Data Privacy Scope</h1>
 
-                <div className="prose prose-slate max-w-none prose-headings:font-semibold prose-a:text-brand-blue">
+                <div className="prose prose-slate max-w-none prose-headings:font-semibold prose-a:text-brand-blue prose-p:leading-relaxed prose-p:text-slate-700 prose-li:text-slate-700 prose-h2:mt-12 prose-h3:mt-8">
                     <p>This privacy policy clarifies the use, scope and purpose of the collection and use of personal data by the controller HumanAIx Association, a non-profit association organized under Swiss law, with its registered office at Bundesstrasse 3, 6302 Zug, Switzerland, hereinafter referred to as "HumanAIx" (hereinafter referred to as &quot;we&quot;) on this website (hereinafter referred to as &quot;website&quot;).</p>
                     <p>We take your privacy very seriously and will treat your personal information confidentially and in accordance with the law. Due to technological advancements, updates of legal acts and the continued evolution of this website, changes may be made to this Privacy Policy. We encourage you to review the Privacy Policy periodically. We will not process your personal data for any new purposes without notifying you in advance.</p>
 

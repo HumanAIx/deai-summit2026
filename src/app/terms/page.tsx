@@ -8,10 +8,10 @@ export default function TermsPage() {
     return (
         <main className="min-h-screen bg-white">
             <Navbar data={siteConfig.navigation} onOpenContact={() => { }} onShowToast={() => { }} />
-            <div className="pt-32 pb-24 px-6 md:px-12 max-w-4xl mx-auto text-slate-900">
-                <h1 className="text-4xl md:text-5xl font-bold mb-8">General Terms &amp; Conditions</h1>
+            <div className="pt-40 pb-32 px-6 md:px-16 max-w-4xl mx-auto text-slate-900">
+                <h1 className="text-4xl md:text-5xl font-bold mb-10 leading-tight">General Terms &amp; Conditions</h1>
 
-                <div className="prose prose-slate max-w-none prose-headings:font-semibold prose-a:text-brand-blue">
+                <div className="prose prose-slate max-w-none prose-headings:font-semibold prose-a:text-brand-blue prose-p:leading-relaxed prose-p:text-slate-700 prose-li:text-slate-700 prose-h2:mt-12 prose-h3:mt-8">
                     <p>With a binding booking for an event organized by HumanAIx Association, a non-profit association organized under Swiss law, with its registered office at Bundesstrasse 3, 6302 Zug, Switzerland, hereinafter referred to as "HumanAIx", I accept the General Terms &amp; Conditions of HumanAIx. The booking by sponsors/partners and/or event attendees (hereinafter jointly: customers) is binding. These General Terms &amp; Conditions are valid for the booking of HumanAIx&apos;s event.</p>
 
                     <h2 className="text-2xl mt-8 mb-4">(1) SPONSORS AND PARTNERS</h2>
