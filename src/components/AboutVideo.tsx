@@ -73,18 +73,7 @@ export const AboutVideo: React.FC<AboutVideoProps> = ({ data }) => {
                     )}
                 </div>
 
-                {/* CTA Buttons */}
-                <div className="flex flex-col sm:flex-row gap-6 mt-16 w-full justify-center">
-                    <button className="shiny-cta group min-w-[200px]">
-                        <span className="relative z-10 flex items-center justify-center gap-2">
-                            {data.ctaPrimary}
-                        </span>
-                    </button>
 
-                    <button className="px-8 py-4 rounded-full border border-white/10 text-white font-medium text-sm hover:bg-white hover:text-black transition-all duration-300 min-w-[200px]">
-                        {data.ctaSecondary}
-                    </button>
-                </div>
 
             </div>
         </section>
