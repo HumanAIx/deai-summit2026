@@ -23,7 +23,6 @@ export const siteConfig: SiteConfig = {
     },
     navigation: {
         main: [
-            { label: "Agenda", href: "/agenda" },
             { label: "Speakers", href: "#leading-voices" },
             { label: "Partners", href: "#sponsors" }
         ],

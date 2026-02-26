@@ -37,10 +37,17 @@ export const PastSponsors: React.FC<PastSponsorsProps> = ({ data, onOpenContact 
         <div className="flex flex-col sm:flex-row gap-4 sm:gap-6 items-center justify-center w-full px-4 sm:px-0">
           <button
             onClick={onOpenContact}
-            className="w-full sm:w-auto px-6 py-4 rounded-full bg-transparent border border-black/10 text-black font-bold text-sm tracking-wide hover:border-black hover:bg-white transition-all min-w-0 sm:min-w-[280px] flex items-center justify-center gap-2"
+            className="px-8 py-3 rounded-full border border-black bg-white text-black hover:bg-black hover:text-white transition-all duration-300 text-sm font-bold shadow-md hover:shadow-xl flex items-center gap-2"
           >
+            <i className="ri-vip-diamond-line"></i>
+            Become a Sponsor
+          </button>
+          <button
+            onClick={onOpenContact}
+            className="px-8 py-3 rounded-full border border-black bg-white text-black hover:bg-black hover:text-white transition-all duration-300 text-sm font-bold shadow-md hover:shadow-xl flex items-center gap-2"
+          >
+            <i className="ri-download-line"></i>
             Request Sponsorship Deck
-            <i className="ri-download-line text-base"></i>
           </button>
         </div>
 
