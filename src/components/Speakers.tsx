@@ -29,13 +29,6 @@ export const Speakers: React.FC<SpeakersProps> = ({ speakersData, partnersData }
 
             <div className="max-w-7xl mx-auto flex flex-col items-center">
 
-                {/* Headline - Fixed layout to prevent 4-line break */}
-                <div className="text-center max-w-6xl px-4 space-y-4 md:space-y-6 mb-16 md:mb-24 relative z-40">
-                    <h2 className="text-3xl md:text-6xl lg:text-7xl font-display font-bold tracking-tight text-[#020408] leading-[1.1] md:leading-[1.05]">
-                        The Most Senior Global Line Up
-                        <span className="block text-brand-blue mt-2">in the Decentralized AI Industry</span>
-                    </h2>
-                </div>
 
                 {/* Trusted By Caption */}
                 <div className="w-full text-center mb-8 md:mb-10">
@@ -51,11 +44,6 @@ export const Speakers: React.FC<SpeakersProps> = ({ speakersData, partnersData }
                     ))}
                 </div>
 
-                <div className="mt-20 text-center">
-                    <button className="px-8 py-3 rounded-full border border-black/10 bg-white hover:bg-black hover:text-white transition-all duration-300 text-sm font-semibold shadow-sm hover:shadow-xl">
-                        View Full Agenda
-                    </button>
-                </div>
 
             </div>
         </section>
