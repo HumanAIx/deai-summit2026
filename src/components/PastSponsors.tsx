@@ -26,7 +26,7 @@ export const PastSponsors: React.FC<PastSponsorsProps> = ({ data, onOpenContact 
                   src={sponsor.logo}
                   alt={sponsor.name}
                   fill
-                  className="object-contain grayscale opacity-70 group-hover:grayscale-0 group-hover:opacity-100 transition-all duration-500"
+                  className="object-contain opacity-80 group-hover:opacity-100 transition-all duration-500"
                 />
               </div>
             </div>
