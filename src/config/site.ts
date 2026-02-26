@@ -159,7 +159,7 @@ export const siteConfig: SiteConfig = {
         quote: {
             text: "A deliberately capped convening of the people shaping AI’s next decade.",
             author: "HumanAIx",
-            role: "Organizer",
+            role: "Host",
             image: "/humanaix-logo.png"
         },
         items: [
