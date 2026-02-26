@@ -52,6 +52,24 @@ export const Networking: React.FC<NetworkingProps> = ({ data }) => {
                     </h2>
                 </div>
 
+                {/* Cards Grid - no images */}
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 w-full mt-4">
+                    {data.map((item, index) => (
+                        <div
+                            key={item.id}
+                            className="group relative flex flex-col p-6 rounded-2xl bg-white border border-slate-100 shadow-sm hover:shadow-md hover:border-brand-blue/20 transition-all duration-300"
+                        >
+                            <span className="text-xs font-mono text-slate-400 mb-4">
+                                {String(index + 1).padStart(2, '0')}
+                            </span>
+                            <h3 className="text-lg font-bold text-slate-900 mb-3 leading-tight">{item.title}</h3>
+                            <i className={`${item.icon} text-2xl text-brand-blue mb-4`}></i>
+                            <p className="text-sm text-slate-500 leading-relaxed">{item.description}</p>
+                            <div className="absolute bottom-0 left-0 h-[2px] w-0 group-hover:w-full bg-brand-blue rounded-b-2xl transition-all duration-500"></div>
+                        </div>
+                    ))}
+                </div>
+
             </div>
         </section>
     );
