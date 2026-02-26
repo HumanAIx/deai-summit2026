@@ -91,7 +91,7 @@ export const LandingPage = () => {
                 <Networking data={siteConfig.networking} />
 
                 {/* Sponsors Logo Grid */}
-                <PastSponsors data={siteConfig.partners} />
+                <PastSponsors data={siteConfig.partners} onOpenContact={handleOpenContact} />
             </main>
 
             <Footer
