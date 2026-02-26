@@ -188,11 +188,6 @@ export const siteConfig: SiteConfig = {
     marquee: [
         { label: "AAIS", logo: "/sponsors/partners-logo/aais.png" },
         { label: "Aethir", logo: "/sponsors/partners-logo/aethir.png" },
-        { label: "Economiq", logo: "/sponsors/partners-logo/economiq.jpeg" },
-        { label: "LFG", logo: "/sponsors/partners-logo/lfg.jpg" },
-        { label: "Norm Partners", logo: "/sponsors/partners-logo/norm_partners.png" },
-        { label: "Solus Group", logo: "/sponsors/partners-logo/solus.webp" },
-        { label: "WASA", logo: "/sponsors/partners-logo/wasa.png" },
         { label: "Supermoon", logo: "/sponsors/partners-logo/supermoon.png" }
     ],
     about: {
