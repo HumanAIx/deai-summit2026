@@ -108,7 +108,7 @@ export default function TermsPage() {
                     <p>HumanAIx does not tolerate any behavior that is degrading to any gender, race, sexual orientation or disability, or any behavior that would violate Anti-Harassment and Non-Discrimination legislation and rules of the European Union or laws at the location of the event venue, or standards of business conduct. In short, the entire experience at the venue must reflect core standards which promote tolerance, respectful behavior and collaboration!</p>
                 </div>
             </div>
-            <Footer data={siteConfig.footer} navData={siteConfig.navigation} onShowToast={() => { }} />
+            <Footer data={siteConfig.footer} navData={siteConfig.navigation} onShowToast={() => { }} onOpenContact={() => { }} />
         </main>
     )
 }

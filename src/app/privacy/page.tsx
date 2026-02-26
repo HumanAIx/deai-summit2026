@@ -93,7 +93,7 @@ export default function PrivacyPage() {
                     <p className="mt-8 italic text-slate-500">This Privacy Policy was last updated on 23 February 2026.</p>
                 </div>
             </div>
-            <Footer data={siteConfig.footer} navData={siteConfig.navigation} onShowToast={() => { }} />
+            <Footer data={siteConfig.footer} navData={siteConfig.navigation} onShowToast={() => { }} onOpenContact={() => { }} />
         </main>
     )
 }
