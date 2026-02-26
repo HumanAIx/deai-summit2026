@@ -80,15 +80,6 @@ export const Navbar: React.FC<NavbarProps> = ({ onShowToast, onOpenContact, data
           {/* Social Icons */}
           <div className="flex items-center gap-4 border-l border-white/10 pl-6 ml-2">
             <a
-              href={data.socials.twitter}
-              target="_blank"
-              rel="noreferrer"
-              className="text-white/60 hover:text-white transition-colors"
-              aria-label="Follow us on X"
-            >
-              <i className="ri-twitter-x-line text-lg"></i>
-            </a>
-            <a
               href={data.socials.linkedin}
               target="_blank"
               rel="noreferrer"
@@ -96,15 +87,6 @@ export const Navbar: React.FC<NavbarProps> = ({ onShowToast, onOpenContact, data
               aria-label="Follow us on LinkedIn"
             >
               <i className="ri-linkedin-fill text-lg"></i>
-            </a>
-            <a
-              href={data.socials.youtube}
-              target="_blank"
-              rel="noreferrer"
-              className="text-white/60 hover:text-white transition-colors"
-              aria-label="Subscribe on YouTube"
-            >
-              <i className="ri-youtube-fill text-lg"></i>
             </a>
           </div>
         </div>
@@ -148,15 +130,6 @@ export const Navbar: React.FC<NavbarProps> = ({ onShowToast, onOpenContact, data
 
             <div className="flex items-center justify-center gap-6">
               <a
-                href={data.socials.twitter}
-                target="_blank"
-                rel="noreferrer"
-                className="text-white/60 hover:text-white transition-colors"
-                onClick={() => setIsMenuOpen(false)}
-              >
-                <i className="ri-twitter-x-line text-2xl"></i>
-              </a>
-              <a
                 href={data.socials.linkedin}
                 target="_blank"
                 rel="noreferrer"
@@ -164,15 +137,6 @@ export const Navbar: React.FC<NavbarProps> = ({ onShowToast, onOpenContact, data
                 onClick={() => setIsMenuOpen(false)}
               >
                 <i className="ri-linkedin-fill text-2xl"></i>
-              </a>
-              <a
-                href={data.socials.youtube}
-                target="_blank"
-                rel="noreferrer"
-                className="text-white/60 hover:text-white transition-colors"
-                onClick={() => setIsMenuOpen(false)}
-              >
-                <i className="ri-youtube-fill text-2xl"></i>
               </a>
             </div>
 

@@ -23,9 +23,9 @@ export const siteConfig: SiteConfig = {
     },
     navigation: {
         main: [
-            { label: "Agenda", href: "#agenda" },
+            { label: "Agenda", href: "/agenda" },
             { label: "Speakers", href: "#leading-voices" },
-            { label: "Sponsors", href: "#sponsors" }
+            { label: "Partners", href: "#sponsors" }
         ],
         legal: [
             "Terms",
@@ -39,7 +39,7 @@ export const siteConfig: SiteConfig = {
         contactEmail: "contact@deaisummit.org",
         socials: {
             twitter: "https://x.com/Human_AIx",
-            linkedin: "https://www.linkedin.com/company/humanaix/",
+            linkedin: "https://www.linkedin.com/company/deai-summit/",
             youtube: "https://www.youtube.com/@HumanAIx"
         }
     },
@@ -310,7 +310,7 @@ export const siteConfig: SiteConfig = {
         ],
         socials: {
             twitter: "https://x.com/Human_AIx",
-            linkedin: "https://www.linkedin.com/company/human-ai-x/posts/?feedView=all",
+            linkedin: "https://www.linkedin.com/company/deai-summit/",
             youtube: "https://www.youtube.com/@Human_AIx"
         },
         copyright: "© 2026 DeAI Summit. Malta."
