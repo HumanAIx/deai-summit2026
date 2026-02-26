@@ -281,7 +281,17 @@ export const siteConfig: SiteConfig = {
         { name: "Norm Partners", logo: "/sponsors/partners-logo/norm_partners.png" },
         { name: "Solus Group", logo: "/sponsors/partners-logo/solus.webp" },
         { name: "WASA", logo: "/sponsors/partners-logo/wasa.png" },
-        { name: "Supermoon", logo: "/sponsors/partners-logo/supermoon.png" }
+        { name: "Supermoon", logo: "/sponsors/partners-logo/supermoon.png" },
+        { name: "Neo", logo: "https://cdn.prod.website-files.com/684bd887005afeaa302406a0/684bd926581b01cf841eb3cd_neo_color_dark.avif" },
+        { name: "OORT", logo: "https://cdn.prod.website-files.com/684bd887005afeaa302406a0/684bd926581b01cf841eb3a6_oort-1.avif" },
+        { name: "XYO", logo: "https://cdn.prod.website-files.com/684bd887005afeaa302406a0/684bd926581b01cf841eb3a2_xyo-1.avif" },
+        { name: "IO.NET", logo: "https://cdn.prod.website-files.com/684bd887005afeaa302406a0/684bd926581b01cf841eb39e_io-1.avif" },
+        { name: "YGG", logo: "https://cdn.prod.website-files.com/684bd887005afeaa302406a0/684bd926581b01cf841eb39a_ygg-1.avif" },
+        { name: "DeTaSECURE", logo: "https://cdn.prod.website-files.com/684bd887005afeaa302406a0/684bd926581b01cf841eb397_dc-1.avif" },
+        { name: "Holo", logo: "https://cdn.prod.website-files.com/684bd887005afeaa302406a0/684bd926581b01cf841eb3ac_holo.avif" },
+        { name: "Unyt", logo: "https://cdn.prod.website-files.com/684bd887005afeaa302406a0/684bd926581b01cf841eb38c_units-1.svg" },
+        { name: "AI.KIDO", logo: "https://cdn.prod.website-files.com/684bd887005afeaa302406a0/684bd926581b01cf841eb38d_kiddo-1.avif" },
+        { name: "OASIS", logo: "https://cdn.prod.website-files.com/684bd887005afeaa302406a0/684bd926581b01cf841eb385_oasis-1.avif" }
     ],
     closing: {
         statement: "AI has reached a global inflection point. Questions of transparency, accountability, safety, and governance are no longer theoretical. They are now shaping regulation, capital allocation, and the future of innovation itself.",
