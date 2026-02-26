@@ -98,7 +98,7 @@ export const Footer: React.FC<FooterProps> = ({ data, navData, onShowToast, onOp
                 {/* Large Footer Cards */}
                 <div className="lg:col-span-4 flex flex-col sm:flex-row gap-4 mt-8 lg:mt-0">
                     {/* Sponsor Card */}
-                    <a href="#sponsors" onClick={(e) => handleNavClick(e, '#sponsors')} className="flex-1 group relative p-6 rounded-2xl border border-white bg-white shadow-sm hover:shadow-md transition-all overflow-hidden h-32 flex flex-col justify-between">
+                    <button onClick={(e) => { e.preventDefault(); if (onOpenContact) onOpenContact(); }} className="flex-1 group relative p-6 rounded-2xl border border-white bg-white shadow-sm hover:shadow-md transition-all overflow-hidden h-32 flex flex-col justify-between text-left">
                         <div className="flex justify-between items-start z-10 relative">
                             <span className="font-medium text-sm text-slate-900">Become a Sponsor</span>
                             <i className="ri-arrow-right-up-line text-base text-slate-400 group-hover:text-brand-blue transition-colors"></i>
@@ -107,7 +107,7 @@ export const Footer: React.FC<FooterProps> = ({ data, navData, onShowToast, onOp
                             <i className="ri-vip-diamond-line text-2xl text-brand-blue/60 group-hover:text-brand-blue transition-colors"></i>
                         </div>
                         <div className="absolute inset-0 bg-gradient-to-br from-brand-blue/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity"></div>
-                    </a>
+                    </button>
 
                     {/* Contact Card */}
                     <button onClick={handleCopyEmail} className="flex-1 group relative p-6 rounded-2xl border border-white bg-white shadow-sm hover:shadow-md transition-all overflow-hidden h-32 flex flex-col justify-between text-left w-full">
@@ -130,14 +130,8 @@ export const Footer: React.FC<FooterProps> = ({ data, navData, onShowToast, onOp
             <div className="relative z-10 max-w-7xl mx-auto mt-16 pt-8 border-t border-brand-blue/10 flex flex-col md:flex-row justify-between items-center gap-4">
                 <span className="text-xs font-mono text-slate-400">{data.copyright}</span>
                 <div className="flex gap-6 items-center">
-                    <a href={data.socials.twitter} target="_blank" rel="noopener noreferrer">
-                        <i className="ri-twitter-x-line text-[40px] text-slate-300 hover:text-slate-900 cursor-pointer transition-colors"></i>
-                    </a>
                     <a href={data.socials.linkedin} target="_blank" rel="noopener noreferrer">
                         <i className="ri-linkedin-fill text-[40px] text-slate-300 hover:text-slate-900 cursor-pointer transition-colors"></i>
-                    </a>
-                    <a href={data.socials.youtube} target="_blank" rel="noopener noreferrer">
-                        <i className="ri-youtube-fill text-[40px] text-slate-300 hover:text-slate-900 cursor-pointer transition-colors"></i>
                     </a>
                 </div>
             </div>

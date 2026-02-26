@@ -29,8 +29,7 @@ export const siteConfig: SiteConfig = {
         ],
         legal: [
             "Terms",
-            "Privacy",
-            "Code of Conduct"
+            "Privacy"
         ],
         actionButton: {
             label: "Tickets",
