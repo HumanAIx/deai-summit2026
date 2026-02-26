@@ -4,7 +4,6 @@ import React, { useState } from 'react';
 import { Navbar } from '@/components/Navbar';
 import { Hero } from '@/components/Hero';
 import { Marquee } from '@/components/Marquee';
-import { Speakers } from '@/components/Speakers';
 import { Stats } from '@/components/Stats';
 import { AboutVideo } from '@/components/AboutVideo';
 import { SceneHighlights } from '@/components/SceneHighlights';
@@ -59,12 +58,6 @@ export const LandingPage = () => {
                 {/* Light Stats Section */}
                 <Stats data={siteConfig.stats} />
 
-                {/* Light Speakers Section (Featured Cloud) */}
-                {/* Note: Speakers component takes both speakers list and partners list for the 'Trusted By' section */}
-                <Speakers
-                    speakersData={siteConfig.speakers.featured}
-                    partnersData={siteConfig.partners}
-                />
 
                 {/* Dark Video Section */}
                 <AboutVideo data={siteConfig.about} />
