@@ -6,7 +6,7 @@ import { siteConfig } from '@/config/site';
 export default function TermsPage() {
     return (
         <main className="min-h-screen bg-white">
-            <Navbar data={siteConfig.navigation.main} onOpenContact={() => { }} onShowToast={() => { }} />
+            <Navbar data={siteConfig.navigation} onOpenContact={() => { }} onShowToast={() => { }} />
             <div className="pt-32 pb-24 px-6 md:px-12 max-w-4xl mx-auto text-slate-900">
                 <h1 className="text-4xl md:text-5xl font-bold mb-8">General Terms &amp; Conditions</h1>
 
