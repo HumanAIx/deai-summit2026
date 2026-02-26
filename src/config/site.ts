@@ -28,8 +28,8 @@ export const siteConfig: SiteConfig = {
             { label: "Partners", href: "#sponsors" }
         ],
         legal: [
-            "Terms",
-            "Privacy"
+            { label: "Terms", href: "/terms" },
+            { label: "Privacy", href: "/privacy" }
         ],
         actionButton: {
             label: "Tickets",

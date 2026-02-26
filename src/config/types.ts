@@ -26,7 +26,7 @@ export interface NavigationItem {
 
 export interface NavigationConfig {
     main: NavigationItem[];
-    legal: string[];
+    legal: NavigationItem[];
     actionButton: {
         label: string;
         link: string;

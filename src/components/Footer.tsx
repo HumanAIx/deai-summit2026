@@ -90,7 +90,7 @@ export const Footer: React.FC<FooterProps> = ({ data, navData, onShowToast, onOp
                     <h4 className="font-medium text-xs uppercase tracking-widest text-slate-400">Legal</h4>
                     <ul className="flex flex-col gap-3">
                         {navData.legal.map((item) => (
-                            <li key={item}><a href="#" className="text-sm font-light text-slate-600 hover:text-brand-blue transition-colors">{item}</a></li>
+                            <li key={item.label}><a href={item.href} className="text-sm font-light text-slate-600 hover:text-brand-blue transition-colors">{item.label}</a></li>
                         ))}
                     </ul>
                 </div>
