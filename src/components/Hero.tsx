@@ -10,7 +10,7 @@ interface HeroProps {
 
 export const Hero: React.FC<HeroProps> = ({ data, onOpenContact, onOpenSpeakerApp }) => {
   return (
-    <section className="relative w-full min-h-screen flex flex-col items-center justify-center overflow-hidden bg-[#F2F4F7] pt-24 pb-24 md:pb-16 md:pt-0">
+    <section className="relative w-full min-h-screen flex flex-col items-center justify-center overflow-hidden bg-[#F2F4F7] pt-32 pb-24 md:pt-28 md:pb-16">
 
       {/* --- HERO BACKGROUND START --- */}
       <div className="absolute inset-0 z-0 w-full h-full">
