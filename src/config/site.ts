@@ -187,7 +187,6 @@ export const siteConfig: SiteConfig = {
     },
     marquee: [
         { label: "AAIS", logo: "/sponsors/partners-logo/aais.png" },
-        { label: "Aethir", logo: "/sponsors/partners-logo/aethir.png" },
         { label: "Supermoon", logo: "/sponsors/partners-logo/supermoon.png" }
     ],
     about: {
@@ -275,7 +274,6 @@ export const siteConfig: SiteConfig = {
     ],
     partners: [
         { name: "AAIS", logo: "/sponsors/partners-logo/aais.png" },
-        { name: "Aethir", logo: "/sponsors/partners-logo/aethir.png" },
         { name: "Economiq", logo: "/sponsors/partners-logo/economiq.jpeg" },
         { name: "LFG", logo: "/sponsors/partners-logo/lfg.jpg" },
         { name: "Norm Partners", logo: "/sponsors/partners-logo/norm_partners.png" },
