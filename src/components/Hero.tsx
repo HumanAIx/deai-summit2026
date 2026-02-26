@@ -73,15 +73,6 @@ export const Hero: React.FC<HeroProps> = ({ data, onOpenContact, onOpenSpeakerAp
 
         {/* CTA Buttons */}
         <div className="flex flex-col sm:flex-row gap-4 md:gap-6 pt-4 md:pt-6 items-center w-full sm:w-auto animate-fade-in-up [animation-delay:600ms] opacity-0 fill-mode-forwards">
-          <button
-            onClick={onOpenContact}
-            className="shiny-cta group transform hover:scale-105 transition-transform duration-300 shadow-xl shadow-brand-blue/10 w-full sm:w-auto justify-center"
-          >
-            <span className="relative z-10 flex items-center justify-center gap-3 font-bold text-sm md:text-base tracking-wide py-3 md:py-0">
-              {data.ctaPrimary.label}
-              <i className="ri-arrow-right-line text-lg md:text-xl transition-transform group-hover:translate-x-1"></i>
-            </span>
-          </button>
 
           <button
             onClick={onOpenSpeakerApp}
@@ -92,7 +83,16 @@ export const Hero: React.FC<HeroProps> = ({ data, onOpenContact, onOpenSpeakerAp
           </button>
 
           {data.ctaTertiary && (
-            <button className="px-6 py-3 md:px-8 md:py-4 rounded-full text-sm md:text-base font-bold text-slate-800 hover:text-brand-cyan transition-colors border border-transparent hover:border-brand-cyan/30 flex items-center justify-center gap-3 w-full sm:w-auto whitespace-nowrap">
+            <button
+              onClick={() => {
+                if (onOpenContact) {
+                  onOpenContact();
+                  // Simulate setting the inquiry drop-down to Sponsors if we had direct control, 
+                  // but just opening the modal is sufficient.
+                }
+              }}
+              className="px-6 py-3 md:px-8 md:py-4 rounded-full text-sm md:text-base font-bold text-slate-800 hover:text-brand-cyan transition-colors border border-transparent hover:border-brand-cyan/30 flex items-center justify-center gap-3 w-full sm:w-auto whitespace-nowrap"
+            >
               {data.ctaTertiary.label}
               <i className="ri-hand-heart-line text-lg md:text-xl"></i>
             </button>

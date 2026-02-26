@@ -65,6 +65,8 @@ export const ContactModal: React.FC<ContactModalProps> = ({ isOpen, onClose }) =
                         const data = {
                             firstName: formData.get('firstName'),
                             lastName: formData.get('lastName'),
+                            company: formData.get('company'),
+                            phone: formData.get('phone'),
                             email: formData.get('email'),
                             inquiryType: formData.get('inquiryType'),
                             message: formData.get('message'),
@@ -128,6 +130,27 @@ export const ContactModal: React.FC<ContactModalProps> = ({ isOpen, onClose }) =
                                     required
                                     className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl text-slate-900 focus:outline-none focus:ring-2 focus:ring-brand-blue/20 focus:border-brand-blue transition-all"
                                     placeholder="Doe"
+                                />
+                            </div>
+                        </div>
+
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                            <div className="space-y-1.5">
+                                <label className="text-xs font-semibold uppercase tracking-wider text-slate-500">Company</label>
+                                <input
+                                    name="company"
+                                    type="text"
+                                    className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl text-slate-900 focus:outline-none focus:ring-2 focus:ring-brand-blue/20 focus:border-brand-blue transition-all"
+                                    placeholder="Company Name"
+                                />
+                            </div>
+                            <div className="space-y-1.5">
+                                <label className="text-xs font-semibold uppercase tracking-wider text-slate-500">Phone Number</label>
+                                <input
+                                    name="phone"
+                                    type="tel"
+                                    className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl text-slate-900 focus:outline-none focus:ring-2 focus:ring-brand-blue/20 focus:border-brand-blue transition-all"
+                                    placeholder="+1 (555) 000-0000"
                                 />
                             </div>
                         </div>

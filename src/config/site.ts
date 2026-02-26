@@ -6,7 +6,7 @@ export const siteConfig: SiteConfig = {
         badge: "Malta Edition 2026",
         headline: "The Global Inflection Point for AI Governance",
         subheadline: "Where frontier AI, decentralized systems, and global regulators confront the future of intelligence.",
-        location: "Valletta, Malta",
+        location: "St. Julians, Malta",
         date: "28-30 October, 2026",
         ctaPrimary: {
             label: "Apply for the Start-up competition",
@@ -160,9 +160,9 @@ export const siteConfig: SiteConfig = {
     stats: {
         quote: {
             text: "A deliberately capped convening of the people shaping AI’s next decade.",
-            author: "DeAI Summit",
+            author: "HumanAIx",
             role: "Organizing Committee",
-            image: "https://images.unsplash.com/photo-1519085360753-af0119f7cbe7?q=80&w=200&auto=format&fit=crop"
+            image: "/humanaix-logo.png"
         },
         items: [
             {
@@ -188,22 +188,20 @@ export const siteConfig: SiteConfig = {
         ]
     },
     marquee: [
-        { label: "NEO", logo: "https://cdn.prod.website-files.com/684bd887005afeaa302406a0/684bd926581b01cf841eb3cd_neo_color_dark.avif" },
-        { label: "OORT", logo: "https://cdn.prod.website-files.com/684bd887005afeaa302406a0/684bd926581b01cf841eb3a6_oort-1.avif" },
-        { label: "XYO", logo: "https://cdn.prod.website-files.com/684bd887005afeaa302406a0/684bd926581b01cf841eb3a2_xyo-1.avif" },
-        { label: "IO.NET", logo: "https://cdn.prod.website-files.com/684bd887005afeaa302406a0/684bd926581b01cf841eb39e_io-1.avif" },
-        { label: "YGG", logo: "https://cdn.prod.website-files.com/684bd887005afeaa302406a0/684bd926581b01cf841eb39a_ygg-1.avif" },
-        { label: "SUPERMOON", logo: "https://cdn.prod.website-files.com/684bd887005afeaa302406a0/684bd926581b01cf841eb394_moon-1.avif" },
-        { label: "DeTaSECURE", logo: "https://cdn.prod.website-files.com/684bd887005afeaa302406a0/684bd926581b01cf841eb397_dc-1.avif" },
-        { label: "HOLO", logo: "https://cdn.prod.website-files.com/684bd887005afeaa302406a0/684bd926581b01cf841eb3ac_holo.avif" },
-        { label: "UNYT", logo: "https://cdn.prod.website-files.com/684bd887005afeaa302406a0/684bd926581b01cf841eb38c_units-1.svg" },
-        { label: "AI.KIDO", logo: "https://cdn.prod.website-files.com/684bd887005afeaa302406a0/684bd926581b01cf841eb38d_kiddo-1.avif" },
-        { label: "OASIS", logo: "https://cdn.prod.website-files.com/684bd887005afeaa302406a0/684bd926581b01cf841eb385_oasis-1.avif" }
+        { label: "AAIS", logo: "/sponsors/partners-logo/aais.png" },
+        { label: "Aethir", logo: "/sponsors/partners-logo/aethir.png" },
+        { label: "Economiq", logo: "/sponsors/partners-logo/economiq.jpeg" },
+        { label: "LFG", logo: "/sponsors/partners-logo/lfg.jpg" },
+        { label: "Norm Partners", logo: "/sponsors/partners-logo/norm_partners.png" },
+        { label: "Solus Group", logo: "/sponsors/partners-logo/solus.webp" },
+        { label: "WASA", logo: "/sponsors/partners-logo/wasa.png" },
+        { label: "Intercognitive", logo: "/sponsors/partners-logo/intercognitive.svg" },
+        { label: "Supermoon", logo: "/sponsors/partners-logo/supermoon.png" }
     ],
     about: {
         sectionTitle: "What is DeAI Summit?",
         coverImage: "/whatisdeaiSummit.jpg",
-        badge: "Live from Valletta 2026",
+        badge: "Live from St. Julians 2026",
         overlayTitle: "Forging the next era of Intelligence",
         galleryLabel: "Summit Keynote Gallery",
         mainStatement: "As AI regulation accelerates globally and centralized models face mounting challenges around trust, compliance, and control, DeAI Summit convenes a forum where frontier AI labs, decentralized AI ecosystems, and policymakers confront these questions together.",
@@ -218,12 +216,12 @@ export const siteConfig: SiteConfig = {
         ctaSecondary: "Sponsor DeAI Summit"
     },
     highlights: {
-        backgroundImage: "https://images.unsplash.com/photo-1511578314322-379afb476865?q=80&w=2069&auto=format&fit=crop",
+        backgroundImage: "/venue-stage.png",
         hotspots: [
             {
                 id: "venue",
-                title: "Mediterranean <br/>Conference Centre",
-                subtitle: "Valletta | Malta",
+                title: "InterContinental <br/>Malta",
+                subtitle: "St Julians | Malta",
                 position: { top: "35%", left: "5%", mdLeft: "8%", lgLeft: "12%" },
                 type: "left-aligned"
             },
@@ -284,23 +282,21 @@ export const siteConfig: SiteConfig = {
         }
     ],
     partners: [
-        { name: "NEO", logo: "https://cdn.prod.website-files.com/684bd887005afeaa302406a0/684bd926581b01cf841eb3cd_neo_color_dark.avif" },
-        { name: "OORT", logo: "https://cdn.prod.website-files.com/684bd887005afeaa302406a0/684bd926581b01cf841eb3a6_oort-1.avif" },
-        { name: "XYO", logo: "https://cdn.prod.website-files.com/684bd887005afeaa302406a0/684bd926581b01cf841eb3a2_xyo-1.avif" },
-        { name: "IO.NET", logo: "https://cdn.prod.website-files.com/684bd887005afeaa302406a0/684bd926581b01cf841eb39e_io-1.avif" },
-        { name: "YGG", logo: "https://cdn.prod.website-files.com/684bd887005afeaa302406a0/684bd926581b01cf841eb39a_ygg-1.avif" },
-        { name: "SUPERMOON", logo: "https://cdn.prod.website-files.com/684bd887005afeaa302406a0/684bd926581b01cf841eb394_moon-1.avif" },
-        { name: "DeTaSECURE", logo: "https://cdn.prod.website-files.com/684bd887005afeaa302406a0/684bd926581b01cf841eb397_dc-1.avif" },
-        { name: "HOLO", logo: "https://cdn.prod.website-files.com/684bd887005afeaa302406a0/684bd926581b01cf841eb3ac_holo.avif" },
-        { name: "UNYT", logo: "https://cdn.prod.website-files.com/684bd887005afeaa302406a0/684bd926581b01cf841eb38c_units-1.svg" },
-        { name: "AI.KIDO", logo: "https://cdn.prod.website-files.com/684bd887005afeaa302406a0/684bd926581b01cf841eb38d_kiddo-1.avif" },
-        { name: "OASIS", logo: "https://cdn.prod.website-files.com/684bd887005afeaa302406a0/684bd926581b01cf841eb385_oasis-1.avif" }
+        { name: "AAIS", logo: "/sponsors/partners-logo/aais.png" },
+        { name: "Aethir", logo: "/sponsors/partners-logo/aethir.png" },
+        { name: "Economiq", logo: "/sponsors/partners-logo/economiq.jpeg" },
+        { name: "LFG", logo: "/sponsors/partners-logo/lfg.jpg" },
+        { name: "Norm Partners", logo: "/sponsors/partners-logo/norm_partners.png" },
+        { name: "Solus Group", logo: "/sponsors/partners-logo/solus.webp" },
+        { name: "WASA", logo: "/sponsors/partners-logo/wasa.png" },
+        { name: "Intercognitive", logo: "/sponsors/partners-logo/intercognitive.svg" },
+        { name: "Supermoon", logo: "/sponsors/partners-logo/supermoon.png" }
     ],
     closing: {
         statement: "AI has reached a global inflection point. Questions of transparency, accountability, safety, and governance are no longer theoretical. They are now shaping regulation, capital allocation, and the future of innovation itself.",
         description: "We find ourselves in the midst of the debate between the indiscriminate advance of AI in every aspect of life and the repercussions it will bring in the future. That inflection point will be the key point for the discussion in this summit. DeAI Summit is where those solutions are challenged, tested, and refined.",
         cta: "Join us in Malta",
-        location: "Valletta, Malta"
+        location: "St. Julians, Malta"
     },
     footer: {
         brandDescription: "The premier gathering for the decentralized AI ecosystem. Malta 2026.",

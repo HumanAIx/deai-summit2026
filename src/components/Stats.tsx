@@ -20,12 +20,12 @@ export const Stats: React.FC<StatsProps> = ({ data }) => {
           </h2>
 
           <div className="flex items-center gap-4 min-w-[200px]">
-            <div className="relative w-12 h-12 rounded-lg overflow-hidden grayscale">
+            <div className="relative w-14 h-14 rounded-lg overflow-hidden bg-black flex items-center justify-center p-1">
               <Image
                 src={data.quote.image}
                 alt={data.quote.author}
                 fill
-                className="object-cover"
+                className="object-contain"
               />
             </div>
             <div className="flex flex-col">
