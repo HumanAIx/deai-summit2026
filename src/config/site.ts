@@ -30,11 +30,11 @@ export const siteConfig: SiteConfig = {
             { label: "Terms", href: "/terms" },
             { label: "Privacy", href: "/privacy" }
         ],
-        actionButton: {
-            label: "Tickets",
-            link: "#"
-			title: "Coming soon"  // Hover tooltip
-        },
+	actionButton: {
+		label: "Tickets",
+		link: "#",
+		title: "Coming soon"
+	},
         contactEmail: "contact@deaisummit.org",
         socials: {
             twitter: "https://x.com/Human_AIx",
