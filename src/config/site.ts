@@ -33,6 +33,7 @@ export const siteConfig: SiteConfig = {
         actionButton: {
             label: "Tickets",
             link: "#"
+			title: "Coming soon"  // Hover tooltip
         },
         contactEmail: "contact@deaisummit.org",
         socials: {
