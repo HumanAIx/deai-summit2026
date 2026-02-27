@@ -151,7 +151,7 @@ export const siteConfig: SiteConfig = {
                 company: "Mohamed bin Zayed University of Artificial Intelligence (MBZUAI)",
                 image: "/Steve-Liu_main1.jpg",
                 icon: "ri-brain-line"
-            },
+            {
         ]
     },
     stats: {
