@@ -97,14 +97,20 @@ export const siteConfig: SiteConfig = {
                 image: "https://cdn.prod.website-files.com/684bd887005afeaa302406a0/68a375b3fa03ae248f700e3d_image_bw.jpg",
                 icon: "ri-user-line"
             },
+			{
+                name: "Prof. Alexiei Dingli",
+                role: "Full Professor of Applied AI",
+                company: "University of Malta",
+                image: "/Prof. Alexiei Dingli.jpg",
+                icon: "ri-robot-line"
+            }
             {
-                name: "Dr. Sean Yang",
-                role: "Co-Founder and CTO",
-                company: "OORT, Columbia University",
-                image: "https://cdn.prod.website-files.com/684bd887005afeaa302406a0/6883407e0abdffcdfaf30827_aix-team-01%20(1).avif",
-                icon: "ri-user-line"
+                name: "Dr. Aaron Farrugia",
+                role: "Member of the Parliament, Founder",
+                company: "Government of Malta, Economiq",
+                image: "/Dr. Aaron Farrugia.jpg",
+                icon: "ri-government-line"
             },
-
             {
                 name: "James Kingstone",
                 role: "Director DAO SPV",
@@ -117,6 +123,13 @@ export const siteConfig: SiteConfig = {
                 role: "Director",
                 company: "DLT Centre - University of Malta",
                 image: "https://cdn.prod.website-files.com/684bd887005afeaa302406a0/68a73f43a75d2ee4d2075dfc_joannisrev_bw.jpeg",
+                icon: "ri-user-line"
+            },
+			{
+                name: "Dr. Sean Yang",
+                role: "Co-Founder and CTO",
+                company: "OORT, Columbia University",
+                image: "https://cdn.prod.website-files.com/684bd887005afeaa302406a0/6883407e0abdffcdfaf30827_aix-team-01%20(1).avif",
                 icon: "ri-user-line"
             },
             {
@@ -139,21 +152,6 @@ export const siteConfig: SiteConfig = {
                 image: "/Steve-Liu_main1.jpg",
                 icon: "ri-brain-line"
             },
-
-            {
-                name: "Dr. Aaron Farrugia",
-                role: "Member of the Parliament, Founder",
-                company: "Government of Malta, Economiq",
-                image: "/Dr. Aaron Farrugia.jpg",
-                icon: "ri-government-line"
-            },
-            {
-                name: "Prof. Alexiei Dingli",
-                role: "Full Professor of Applied AI",
-                company: "University of Malta",
-                image: "/Prof. Alexiei Dingli.jpg",
-                icon: "ri-robot-line"
-            }
         ]
     },
     stats: {
