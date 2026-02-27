@@ -77,8 +77,8 @@ export const siteConfig: SiteConfig = {
         leading: [
             {
                 name: "Dr. Max Li",
-                role: "Founder and CEO",
-                company: "OORT",
+                role: "CEO & Founder, Adjunct Professor",
+                company: "OORT, Columbia University",
                 image: "https://cdn.prod.website-files.com/684bd887005afeaa302406a0/688a5d50582e13e9e031ca07_committee-01.avif",
                 icon: "ri-user-line"
             },
@@ -97,9 +97,9 @@ export const siteConfig: SiteConfig = {
                 icon: "ri-user-line"
             },
             {
-                name: "Sean Yang",
+                name: "Dr. Sean Yang",
                 role: "Co-Founder and CTO",
-                company: "OORT",
+                company: "OORT, Columbia University",
                 image: "https://cdn.prod.website-files.com/684bd887005afeaa302406a0/6883407e0abdffcdfaf30827_aix-team-01%20(1).avif",
                 icon: "ri-user-line"
             },
@@ -112,9 +112,9 @@ export const siteConfig: SiteConfig = {
                 icon: "ri-user-line"
             },
             {
-                name: "Dr Ioannis Revolidis",
+                name: "Dr. Ioannis Revolidis",
                 role: "Director",
-                company: "DLT Centre",
+                company: "DLT Centre - University of Malta",
                 image: "https://cdn.prod.website-files.com/684bd887005afeaa302406a0/68a73f43a75d2ee4d2075dfc_joannisrev_bw.jpeg",
                 icon: "ri-user-line"
             },
@@ -134,15 +134,15 @@ export const siteConfig: SiteConfig = {
             {
                 name: "Dr. Xue (Steve) Liu",
                 role: "Assoc. VP of Research",
-                company: "MBZUAI",
+                company: "Mohamed bin Zayed University of Artificial Intelligence (MBZUAI)",
                 image: "/Steve-Liu_main1.jpg",
                 icon: "ri-brain-line"
             },
 
             {
                 name: "Dr. Aaron Farrugia",
-                role: "Founder",
-                company: "Economiq Ltd",
+                role: "Member of the Parliament, Founder",
+                company: "Government of Malta, Economiq",
                 image: "/Dr. Aaron Farrugia.jpg",
                 icon: "ri-government-line"
             },
