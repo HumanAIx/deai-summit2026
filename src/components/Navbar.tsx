@@ -74,9 +74,6 @@ export const Navbar: React.FC<NavbarProps> = ({ onShowToast, onOpenContact, data
             </button>
           </div>
 
-
-
-
           {/* Social Icons */}
           <div className="flex items-center gap-4 border-l border-white/10 pl-6 ml-2">
             <a
@@ -93,7 +90,11 @@ export const Navbar: React.FC<NavbarProps> = ({ onShowToast, onOpenContact, data
 
         {/* Action */}
         <div className="flex items-center gap-3">
-          <a href={data.actionButton.link} className="hidden md:flex text-xs font-semibold text-[#020408] bg-white hover:bg-brand-cyan/10 hover:text-white transition-all rounded-full px-6 py-2.5">
+          <a
+            href={data.actionButton.link}
+            title={data.actionButton.title}  // ← hover tooltip
+            className="hidden md:flex text-xs font-semibold text-[#020408] bg-white hover:bg-brand-cyan/10 hover:text-white transition-all rounded-full px-6 py-2.5"
+          >
             {data.actionButton.label}
           </a>
           <button
@@ -127,7 +128,6 @@ export const Navbar: React.FC<NavbarProps> = ({ onShowToast, onOpenContact, data
               Contact Us
             </button>
 
-
             <div className="flex items-center justify-center gap-6">
               <a
                 href={data.socials.linkedin}
@@ -140,7 +140,12 @@ export const Navbar: React.FC<NavbarProps> = ({ onShowToast, onOpenContact, data
               </a>
             </div>
 
-            <a href={data.actionButton.link} onClick={() => setIsMenuOpen(false)} className="mt-4 flex w-full justify-center text-sm font-semibold text-[#020408] bg-white hover:bg-white/90 transition-all rounded-full px-8 py-3">
+            <a
+              href={data.actionButton.link}
+              title={data.actionButton.title}  // ← hover tooltip
+              onClick={() => setIsMenuOpen(false)}
+              className="mt-4 flex w-full justify-center text-sm font-semibold text-[#020408] bg-white hover:bg-white/90 transition-all rounded-full px-8 py-3"
+            >
               Get {data.actionButton.label}
             </a>
           </div>
