@@ -139,6 +139,7 @@ export const siteConfig: SiteConfig = {
                 image: "/Joshua Ellul.jpg",
                 icon: "ri-links-line"
             },
+            {			
                 name: "Prof. André Xuereb",
                 role: "Full Professor of Physics",
                 company: "University of Malta",
@@ -151,7 +152,7 @@ export const siteConfig: SiteConfig = {
                 company: "Mohamed bin Zayed University of Artificial Intelligence (MBZUAI)",
                 image: "/Steve-Liu_main1.jpg",
                 icon: "ri-brain-line"
-            {
+            }
         ]
     },
     stats: {
