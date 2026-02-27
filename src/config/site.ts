@@ -103,7 +103,7 @@ export const siteConfig: SiteConfig = {
                 company: "University of Malta",
                 image: "/Prof. Alexiei Dingli.jpg",
                 icon: "ri-robot-line"
-            }
+            },
             {
                 name: "Dr. Aaron Farrugia",
                 role: "Member of the Parliament, Founder",
@@ -138,7 +138,7 @@ export const siteConfig: SiteConfig = {
                 company: "University of Malta",
                 image: "/Joshua Ellul.jpg",
                 icon: "ri-links-line"
-            }, {
+            },
                 name: "Prof. André Xuereb",
                 role: "Full Professor of Physics",
                 company: "University of Malta",
