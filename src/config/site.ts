@@ -76,7 +76,7 @@ export const siteConfig: SiteConfig = {
         ],
         leading: [
             {
-                name: "Dr. Li",
+                name: "Dr. Max Li",
                 role: "Founder and CEO",
                 company: "OORT",
                 image: "https://cdn.prod.website-files.com/684bd887005afeaa302406a0/688a5d50582e13e9e031ca07_committee-01.avif",
