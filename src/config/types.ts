@@ -30,6 +30,7 @@ export interface NavigationConfig {
     actionButton: {
         label: string;
         link: string;
+        title?: string;  // ← Added for hover tooltip
     };
     contactEmail: string;
     socials: {
