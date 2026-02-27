@@ -84,11 +84,11 @@ export const siteConfig: SiteConfig = {
                 icon: "ri-user-line"
             },
             {
-                name: "Dr. Mike O'Sullivan",
-                role: "Senior Lecturer & Researcher",
-                company: "University of Auckland",
-                image: "https://cdn.prod.website-files.com/684bd887005afeaa302406a0/68a36e8409eabcf2d86afa40_mikeOSul_bw.jpeg",
-                icon: "ri-user-line"
+                name: "Dr. Xue (Steve) Liu",
+                role: "Assoc. VP of Research",
+                company: "Mohamed bin Zayed University of Artificial Intelligence (MBZUAI)",
+                image: "/Steve-Liu_main1.jpg",
+                icon: "ri-brain-line"
             },
             {
                 name: "Dr. Abeer S. Al-Humaimeedy",
@@ -139,19 +139,19 @@ export const siteConfig: SiteConfig = {
                 image: "/Joshua Ellul.jpg",
                 icon: "ri-links-line"
             },
+            {
+                name: "Dr. Mike O'Sullivan",
+                role: "Senior Lecturer & Researcher",
+                company: "University of Auckland",
+                image: "https://cdn.prod.website-files.com/684bd887005afeaa302406a0/68a36e8409eabcf2d86afa40_mikeOSul_bw.jpeg",
+                icon: "ri-user-line"
+            },
             {			
                 name: "Prof. André Xuereb",
                 role: "Full Professor of Physics",
                 company: "University of Malta",
                 image: "/André Xuereb.jpg",
                 icon: "ri-atom-line"
-            },
-            {
-                name: "Dr. Xue (Steve) Liu",
-                role: "Assoc. VP of Research",
-                company: "Mohamed bin Zayed University of Artificial Intelligence (MBZUAI)",
-                image: "/Steve-Liu_main1.jpg",
-                icon: "ri-brain-line"
             }
         ]
     },
