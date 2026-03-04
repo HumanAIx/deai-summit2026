@@ -291,7 +291,7 @@ export const siteConfig: SiteConfig = {
     ],
     partners: [
         { name: "AAIS", logo: "/sponsors/partners-logo/aais.png" },
-        { name: "Economiq", logo: "/sponsors/partners-logo/economiq.jpeg" },
+        { name: "Economiq", logo: "/sponsors/partners-logo/economiq_logo_gold.svg" },
         { name: "LFG", logo: "/sponsors/partners-logo/lfg.jpg" },
         { name: "Norm Partners", logo: "/sponsors/partners-logo/norm_partners.png" },
         { name: "Solus Group", logo: "/sponsors/partners-logo/solus.webp" },
