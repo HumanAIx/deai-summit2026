@@ -80,21 +80,21 @@ export const siteConfig: SiteConfig = {
                 name: "Dr. Max Li",
                 role: "CEO & Founder, Adjunct Professor",
                 company: "OORT, Columbia University",
-                image: "https://cdn.prod.website-files.com/684bd887005afeaa302406a0/688a5d50582e13e9e031ca07_committee-01.avif",
+                image: "/max_li.webp",
                 icon: "ri-user-line"
             },
             {
-                name: "Dr. Xue (Steve) Liu",
-                role: "Assoc. VP of Research",
-                company: "Mohamed bin Zayed University of Artificial Intelligence (MBZUAI)",
-                image: "/Steve-Liu_main1.jpg",
-                icon: "ri-brain-line"
+                name: "Dr. Steve Liu",
+                role: "Professor of Computer Science and Machine Learning",
+                company: "McGill University and Mohamed bin Zayed University of Artificial Intelligence (MBZUAI)",
+                image: "/Steve-Liu.jpg",
+                icon: "ri-user-line"
             },
             {
                 name: "Dr. Abeer S. Al-Humaimeedy",
                 role: "Vice Dean",
                 company: "King Saud University",
-                image: "https://cdn.prod.website-files.com/684bd887005afeaa302406a0/68a375b3fa03ae248f700e3d_image_bw.jpg",
+                image: "/drabeer.jpg",
                 icon: "ri-user-line"
             },
 			{
@@ -111,39 +111,46 @@ export const siteConfig: SiteConfig = {
                 image: "/Dr. Aaron Farrugia.jpg",
                 icon: "ri-government-line"
             },
+			{
+                name: "Prof. Dr. Katarina Kruger",
+                role: "Professor, Keynote Speaker, Researcher",
+                company: "Hochschule für Technik und Wirtschaft Berlin (HTW)",
+                image: "/Katarina_Kruger.png",
+                icon: "ri-user-line"
+            },
             {
                 name: "James Kingstone",
                 role: "Director DAO SPV",
                 company: "CDOT",
-                image: "https://cdn.prod.website-files.com/684bd887005afeaa302406a0/68a36d9c11a9dede6c588015_jameskings_bw.jpeg",
+                image: "/James_Kingstone.jpeg",
                 icon: "ri-user-line"
             },
             {
                 name: "Dr. Ioannis Revolidis",
                 role: "Director",
                 company: "DLT Centre - University of Malta",
-                image: "https://cdn.prod.website-files.com/684bd887005afeaa302406a0/68a73f43a75d2ee4d2075dfc_joannisrev_bw.jpeg",
+                image: "/Ioannis_Revolidis.jpeg",
                 icon: "ri-user-line"
             },
 			{
                 name: "Dr. Sean Yang",
-                role: "Co-Founder and CTO",
+                role: "Co-Founder & CTO, Adjunct Professor",
                 company: "OORT, Columbia University",
-                image: "https://cdn.prod.website-files.com/684bd887005afeaa302406a0/6883407e0abdffcdfaf30827_aix-team-01%20(1).avif",
+                image: "/sean_yang.jpeg",
                 icon: "ri-user-line"
             },
             {
                 name: "Prof. Joshua Ellul",
                 role: "Associate Professor",
                 company: "University of Malta",
-                image: "/Joshua Ellul.jpg",
+                image: "/joshua_ellul.jpeg",
                 icon: "ri-links-line"
             },
             {
                 name: "Dr. Mike O'Sullivan",
                 role: "Senior Lecturer & Researcher",
                 company: "University of Auckland",
-                image: "https://cdn.prod.website-files.com/684bd887005afeaa302406a0/68a36e8409eabcf2d86afa40_mikeOSul_bw.jpeg",
+                image: "/Mike O'Sullivan.jpeg",
                 icon: "ri-user-line"
             },
             {			
