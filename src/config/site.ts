@@ -83,7 +83,7 @@ export const siteConfig: SiteConfig = {
                 image: "/max_li.webp",
                 icon: "ri-user-line"
             },
-			/* {
+			/** {
                 name: "Dr. Steve Liu",
                 role: "Professor of Computer Science and Machine Learning",
                 company: "McGill University and Mohamed bin Zayed University of Artificial Intelligence (MBZUAI)",
