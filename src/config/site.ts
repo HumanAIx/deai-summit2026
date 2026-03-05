@@ -118,18 +118,18 @@ export const siteConfig: SiteConfig = {
                 image: "/Katarina_Kruger.png",
                 icon: "ri-user-line"
             },
+			{
+                name: "Dr. Ioannis Revolidis",
+                role: "Director",
+                company: "DLT Centre - University of Malta",
+                image: "/Ioannis_Revolidis.jpeg",
+                icon: "ri-user-line"
+            },
             {
                 name: "James Kingstone",
                 role: "Director DAO SPV",
                 company: "CDOT",
                 image: "/James_Kingstone.jpeg",
-                icon: "ri-user-line"
-            },
-            {
-                name: "Dr. Ioannis Revolidis",
-                role: "Director",
-                company: "DLT Centre - University of Malta",
-                image: "/Ioannis_Revolidis.jpeg",
                 icon: "ri-user-line"
             },
 			{
