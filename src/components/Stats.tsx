@@ -29,7 +29,11 @@ export const Stats: React.FC<StatsProps> = ({ data }) => {
               />
             </div>
             <div className="flex flex-col">
-              <span className="font-bold text-black text-sm">{data.quote.author}</span>
+              <span className="font-bold text-black text-sm">
+				<a href={data.quote.url} target="_blank" rel="noopener noreferrer" className="hover:text-brand-blue transition-colors">
+				{data.quote.author}
+				</a>
+			  </span>
               <span className="text-gray-500 text-xs">{data.quote.role}</span>
             </div>
           </div>

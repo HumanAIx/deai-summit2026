@@ -165,9 +165,10 @@ export const siteConfig: SiteConfig = {
     stats: {
         quote: {
             text: "A deliberately capped convening of the people shaping AI’s next decade.",
-            author: "HumanAIx",
+            author: "HumanAIx Foundation",
             role: "Host",
-            image: "/humanaix-logo.png"
+            image: "/humanaix-logo.png",
+			url: "https://humanaix.io"  // New link property
         },
         items: [
             {
