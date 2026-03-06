@@ -66,10 +66,11 @@ export interface StatItem {
 }
 
 export interface QuoteConfig {
-    text: string;
-    author: string;
-    role: string;
-    image: string;
+  text: string;
+  author: string;
+  role: string;
+  image: string;
+  url?: string;  // Add this optional field
 }
 
 export interface StatsConfig {
