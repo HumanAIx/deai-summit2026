@@ -293,7 +293,7 @@ export const siteConfig: SiteConfig = {
     partners: [
         { name: "AAIS", logo: "/sponsors/partners-logo/aais.png" },
         { name: "Norm Partners", logo: "/sponsors/partners-logo/norm_partners.png" },
-        { name: "Solus Group", logo: "/sponsors/partners-logo/solus.webp" },
+        { name: "Solus Group", logo: "/sponsors/partners-logo/Solus Group.jpg" },
         { name: "WASA", logo: "/sponsors/partners-logo/wasa.png" },
         { name: "Supermoon", logo: "/sponsors/partners-logo/supermoon.png" },
 		{ name: "Economiq", logo: "/sponsors/partners-logo/economiq_logo_gold.svg" },
@@ -306,7 +306,7 @@ export const siteConfig: SiteConfig = {
         { name: "DeTaSECURE", logo: "https://cdn.prod.website-files.com/684bd887005afeaa302406a0/684bd926581b01cf841eb397_dc-1.avif" },
         { name: "Holo", logo: "https://cdn.prod.website-files.com/684bd887005afeaa302406a0/684bd926581b01cf841eb3ac_holo.avif" },
         { name: "Unyt", logo: "https://cdn.prod.website-files.com/684bd887005afeaa302406a0/684bd926581b01cf841eb38c_units-1.svg" },
-        { name: "AI.KIDO", logo: "https://cdn.prod.website-files.com/684bd887005afeaa302406a0/684bd926581b01cf841eb38d_kiddo-1.avif" },
+        //{ name: "AI.KIDO", logo: "https://cdn.prod.website-files.com/684bd887005afeaa302406a0/684bd926581b01cf841eb38d_kiddo-1.avif" },
         { name: "OASIS", logo: "https://cdn.prod.website-files.com/684bd887005afeaa302406a0/684bd926581b01cf841eb385_oasis-1.avif" }
     ],
     closing: {
