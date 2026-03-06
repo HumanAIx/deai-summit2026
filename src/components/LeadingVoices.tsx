@@ -7,7 +7,7 @@ interface LeadingVoicesProps {
   data: LeadingVoice[];
 }
 
-const SPEED = 2; // px per frame — increase for faster scroll
+const SPEED = 2; // px per frame
 
 const SpeakerCard: React.FC<{
   speaker: LeadingVoice;
@@ -29,17 +29,19 @@ const SpeakerCard: React.FC<{
     <div
       onMouseEnter={handleEnter}
       onMouseLeave={handleLeave}
-      className="relative flex-shrink-0 mx-3 flex flex-col items-center text-center bg-white border rounded-2xl cursor-default overflow-hidden"
+      className="relative flex-shrink-0 mx-3 flex flex-col items-center text-center bg-white border rounded-2xl cursor-default"
       style={{
-        width: expanded ? "28rem" : "14rem",
-        padding: expanded ? "2.5rem" : "1.5rem",
+        width: "14rem",
+        padding: "1.5rem",
+        transform: expanded ? "scale(1.2)" : "scale(1)",
+        transformOrigin: "center center",
         boxShadow: expanded
-          ? "0 30px 80px rgba(0,0,0,0.18)"
+          ? "0 30px 80px rgba(0,0,0,0.22)"
           : "0 2px 8px rgba(0,0,0,0.04)",
         borderColor: expanded ? "rgba(0,0,0,0.25)" : "rgba(0,0,0,0.08)",
         transition:
-          "width 0.45s cubic-bezier(0.4,0,0.2,1), padding 0.45s cubic-bezier(0.4,0,0.2,1), box-shadow 0.45s ease, border-color 0.45s ease",
-        zIndex: expanded ? 20 : 1,
+          "transform 0.5s cubic-bezier(0.34,1.56,0.64,1), box-shadow 0.4s ease, border-color 0.4s ease",
+        zIndex: expanded ? 50 : 1,
       }}
     >
       {/* Background glow */}
@@ -50,13 +52,10 @@ const SpeakerCard: React.FC<{
 
       {/* Photo */}
       <div
-        className="relative rounded-full overflow-hidden border-2 flex-shrink-0 mb-4"
+        className="relative w-24 h-24 rounded-full overflow-hidden border-2 flex-shrink-0 mb-4"
         style={{
-          width: expanded ? "12rem" : "6rem",
-          height: expanded ? "12rem" : "6rem",
           borderColor: expanded ? "rgba(0,0,0,0.15)" : "rgba(0,0,0,0.05)",
-          transition:
-            "width 0.45s cubic-bezier(0.4,0,0.2,1), height 0.45s cubic-bezier(0.4,0,0.2,1)",
+          transition: "border-color 0.4s ease",
         }}
       >
         <Image
@@ -69,37 +68,28 @@ const SpeakerCard: React.FC<{
       </div>
 
       {/* Name */}
-      <h3
-        className="font-display font-bold text-[#1a1a1a] leading-tight mb-1 transition-all duration-300"
-        style={{ fontSize: expanded ? "1.35rem" : "0.875rem" }}
-      >
+      <h3 className="font-display font-bold text-[#1a1a1a] leading-tight mb-1 text-sm">
         {speaker.name}
       </h3>
 
       {/* Role */}
-      <p
-        className="font-mono uppercase tracking-widest text-gray-500 leading-relaxed transition-all duration-300"
-        style={{
-          fontSize: expanded ? "0.75rem" : "0.65rem",
-          minHeight: expanded ? "auto" : "2.5rem",
-        }}
-      >
+      <p className="font-mono uppercase tracking-widest text-gray-500 leading-relaxed text-[0.65rem] min-h-[2.5rem]">
         {speaker.role}
       </p>
 
-      {/* Full company name — only visible on expand, no icon */}
+      {/* Full company — fades in when expanded */}
       <div
         style={{
           maxHeight: expanded ? "10rem" : "0",
           opacity: expanded ? 1 : 0,
-          marginTop: expanded ? "1.25rem" : "0",
+          marginTop: expanded ? "1rem" : "0",
           overflow: "hidden",
           transition:
-            "max-height 0.45s ease, opacity 0.35s ease, margin 0.35s ease",
+            "max-height 0.4s ease, opacity 0.4s ease 0.1s, margin 0.4s ease",
         }}
       >
-        <div className="w-full border-t border-black/10 pt-4">
-          <p className="text-sm font-semibold text-[#1a1a1a] leading-snug text-center">
+        <div className="w-full border-t border-black/10 pt-3">
+          <p className="text-[0.65rem] font-semibold text-[#1a1a1a] leading-snug text-center">
             {speaker.company}
           </p>
         </div>
@@ -114,7 +104,6 @@ export const LeadingVoices: React.FC<LeadingVoicesProps> = ({ data }) => {
   const pausedRef = useRef(false);
   const rafRef = useRef<number | null>(null);
 
-  // Use a ref for paused so rAF loop always reads latest value
   const setPausedState = useCallback((val: boolean) => {
     pausedRef.current = val;
   }, []);
@@ -126,7 +115,6 @@ export const LeadingVoices: React.FC<LeadingVoicesProps> = ({ data }) => {
     const animate = () => {
       if (!pausedRef.current && track) {
         positionRef.current += SPEED;
-        // Reset when first half has scrolled out (seamless loop)
         const halfWidth = track.scrollWidth / 2;
         if (positionRef.current >= halfWidth) {
           positionRef.current = 0;
@@ -147,7 +135,8 @@ export const LeadingVoices: React.FC<LeadingVoicesProps> = ({ data }) => {
   return (
     <section
       id="leading-voices"
-      className="relative w-full py-24 bg-[#F0F0EF] text-black overflow-hidden"
+      className="relative w-full py-24 bg-[#F0F0EF] text-black"
+      // No overflow-hidden here — allows expanded cards to show fully
     >
       {/* Heading */}
       <div className="max-w-7xl mx-auto px-6 mb-14">
@@ -157,12 +146,15 @@ export const LeadingVoices: React.FC<LeadingVoicesProps> = ({ data }) => {
         </h2>
       </div>
 
-      {/* Fade edges */}
+      {/* Fade edges — left and right only, no top/bottom bands */}
       <div className="absolute left-0 top-0 h-full w-24 bg-gradient-to-r from-[#F0F0EF] to-transparent z-10 pointer-events-none" />
       <div className="absolute right-0 top-0 h-full w-24 bg-gradient-to-l from-[#F0F0EF] to-transparent z-10 pointer-events-none" />
 
-      {/* Scrolling track */}
-      <div className="overflow-hidden py-6">
+      {/* Outer wrapper: clips LEFT/RIGHT only using overflow-x-hidden */}
+      <div
+        className="py-16"
+        style={{ overflowX: "clip", overflowY: "visible" }}
+      >
         <div
           ref={trackRef}
           className="flex items-center will-change-transform"
