@@ -16,10 +16,48 @@ import { SpeakerApplicationModal } from '@/components/SpeakerApplicationModal';
 import { WaitlistModal } from '@/components/WaitlistModal';
 import { Toast } from '@/components/Toast';
 
-// Import Site Config
+// Import Site Config (for sections not yet driven by API)
 import { siteConfig } from '@/config/site';
 
-export const LandingPage = () => {
+export interface LeadingSpeakerData {
+    name: string;
+    slug: string;
+    role: string;
+    company: string;
+    image: string;
+    icon: string;
+}
+
+export interface MarqueeItemData {
+    label: string;
+    slug: string;
+    logo?: string;
+    iconType?: string;
+}
+
+export interface PartnerItemData {
+    name: string;
+    slug: string;
+    logo: string;
+    isSponsor: boolean;
+}
+
+export interface SocialLinkData {
+    key: string;
+    label: string;
+    url: string;
+    icon?: string;
+    color?: string;
+}
+
+interface LandingPageProps {
+    speakers: LeadingSpeakerData[];
+    marqueeItems: MarqueeItemData[];
+    partnerItems: PartnerItemData[];
+    socials?: SocialLinkData[];
+}
+
+export const LandingPage: React.FC<LandingPageProps> = ({ speakers, marqueeItems, partnerItems, socials }) => {
     const [toast, setToast] = useState({ visible: false, message: '' });
     const [isContactOpen, setIsContactOpen] = useState(false);
     const [isSpeakerModalOpen, setIsSpeakerModalOpen] = useState(false);
@@ -52,10 +90,8 @@ export const LandingPage = () => {
             <main className="w-full mx-auto">
                 <Hero data={siteConfig.hero} onOpenContact={handleOpenContact} onOpenSpeakerApp={handleOpenSpeakerApp} onOpenWaitlist={() => setIsWaitlistOpen(true)} />
 
-                {/* Dark transition section for Marquee */}
-                <div className="bg-[#020408] border-t border-white/5 pb-12 pt-12">
-                    <Marquee data={siteConfig.marquee} />
-                </div>
+                {/* Sponsor logo scroller */}
+                <Marquee data={marqueeItems} />
 
                 {/* Light Stats Section */}
                 <Stats data={siteConfig.stats} />
@@ -69,7 +105,7 @@ export const LandingPage = () => {
                 <SceneHighlights data={siteConfig.highlights} />
 
                 {/* Light Grid Speakers Section (Leading Voices) */}
-                <LeadingVoices data={siteConfig.speakers.leading} />
+                <LeadingVoices data={speakers} />
 
                 {/* Speaker Call to Action - Temporary placement until user decides */}
                 <div className="w-full bg-[#F0F0EF] pb-20 flex justify-center">
@@ -86,7 +122,7 @@ export const LandingPage = () => {
                 <Networking data={siteConfig.networking} />
 
                 {/* Sponsors Logo Grid */}
-                <PastSponsors data={siteConfig.partners} onOpenContact={handleOpenContact} />
+                <PastSponsors data={partnerItems} onOpenContact={handleOpenContact} />
             </main>
 
             <Footer
@@ -94,6 +130,7 @@ export const LandingPage = () => {
                 onOpenContact={handleOpenContact}
                 navData={siteConfig.navigation}
                 data={siteConfig.footer}
+                socials={socials}
             />
 
             <ContactModal

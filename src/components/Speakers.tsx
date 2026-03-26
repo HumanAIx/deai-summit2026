@@ -27,7 +27,7 @@ export const Speakers: React.FC<SpeakersProps> = ({ speakersData, partnersData }
             {/* Background radial gradient for depth */}
             <div className="absolute top-0 left-1/2 -translate-x-1/2 w-full h-[1200px] bg-[radial-gradient(circle_at_center,rgba(255,255,255,0.8)_0%,transparent_70%)] pointer-events-none" />
 
-            <div className="max-w-7xl mx-auto flex flex-col items-center">
+            <div className="max-w-[1440px] mx-auto flex flex-col items-center">
 
 
                 {/* Trusted By Caption */}

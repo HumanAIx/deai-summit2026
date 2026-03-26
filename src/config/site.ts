@@ -23,8 +23,8 @@ export const siteConfig: SiteConfig = {
     },
     navigation: {
         main: [
-            { label: "Speakers", href: "#leading-voices" },
-            { label: "Partners", href: "#sponsors" }
+            { label: "Speakers", href: "/speakers" },
+            { label: "Partners", href: "/partners" }
         ],
         legal: [
             { label: "Terms", href: "/terms" },

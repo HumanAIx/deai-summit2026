@@ -11,7 +11,7 @@ interface HeroProps {
 
 export const Hero: React.FC<HeroProps> = ({ data, onOpenContact, onOpenSpeakerApp, onOpenWaitlist }) => {
   return (
-    <section className="relative w-full min-h-screen flex flex-col items-center justify-center overflow-hidden bg-[#F2F4F7] pt-32 pb-24 md:pt-28 md:pb-16">
+    <section className="relative w-full min-h-screen flex flex-col items-center justify-center overflow-hidden bg-[#F2F4F7] pt-4 pb-24 md:pt-0 md:pb-16">
 
       {/* --- HERO BACKGROUND START --- */}
       <div className="absolute inset-0 z-0 w-full h-full">
@@ -37,7 +37,7 @@ export const Hero: React.FC<HeroProps> = ({ data, onOpenContact, onOpenSpeakerAp
       </div>
       {/* --- HERO BACKGROUND END --- */}
 
-      <div className="relative z-20 flex flex-col items-center text-center w-full max-w-6xl space-y-6 md:space-y-10 px-4 md:px-6">
+      <div className="relative z-20 flex flex-col items-center text-center w-full max-w-[1440px] space-y-6 md:space-y-10 px-4 md:px-6">
 
         {/* Badge */}
         <div className="inline-flex items-center gap-2 px-3 py-1.5 md:px-4 md:py-2 rounded-full border border-black/5 bg-white/60 backdrop-blur-md animate-fade-in-up shadow-sm">
@@ -51,7 +51,7 @@ export const Hero: React.FC<HeroProps> = ({ data, onOpenContact, onOpenSpeakerAp
         {/* Headline */}
         <div className="space-y-4 md:space-y-6 animate-fade-in-up [animation-delay:200ms] opacity-0 fill-mode-forwards w-full">
           <h1
-            className="text-4xl sm:text-5xl md:text-7xl lg:text-8xl font-display font-bold text-slate-900 tracking-tighter leading-[1.1] md:leading-[1.0] mix-blend-darken break-words"
+            className="text-5xl sm:text-6xl md:text-8xl lg:text-9xl font-display font-bold text-slate-900 tracking-tighter leading-[1.1] md:leading-[1.0] mix-blend-darken break-words"
             dangerouslySetInnerHTML={{ __html: data.headline }}
           />
 

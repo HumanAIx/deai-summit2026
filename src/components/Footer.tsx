@@ -1,16 +1,66 @@
 'use client';
 import React from 'react';
-import Image from 'next/image';
+import Link from 'next/link';
 import { FooterConfig, NavigationConfig } from '@/config/types';
+import { AnimatedCounter } from '@/components/AnimatedCounter';
+
+interface SocialLinkData {
+    key: string;
+    label: string;
+    url: string;
+    icon?: string;
+    color?: string;
+}
 
 interface FooterProps {
     data: FooterConfig;
     navData: NavigationConfig;
     onShowToast: (message: string) => void;
     onOpenContact?: () => void;
+    socials?: SocialLinkData[];
 }
 
-export const Footer: React.FC<FooterProps> = ({ data, navData, onShowToast, onOpenContact }) => {
+function getRemixIcon(key: string): string {
+    const map: Record<string, string> = {
+        linkedin: 'ri-linkedin-fill',
+        x: 'ri-twitter-x-fill',
+        twitter: 'ri-twitter-x-fill',
+        youtube: 'ri-youtube-fill',
+        github: 'ri-github-fill',
+        telegram: 'ri-telegram-fill',
+        discord: 'ri-discord-fill',
+        facebook: 'ri-facebook-circle-fill',
+        instagram: 'ri-instagram-fill',
+        tiktok: 'ri-tiktok-fill',
+        medium: 'ri-medium-fill',
+        meetup: 'ri-community-fill',
+        luma: 'ri-calendar-event-fill',
+    };
+    return map[key] || 'ri-link';
+}
+
+export const Footer: React.FC<FooterProps> = ({ data, navData, onShowToast, onOpenContact, socials }) => {
+
+    // Build social links: API socials first, fill gaps from siteConfig
+    const socialLinks: { key: string; label: string; url: string; icon: string }[] = [];
+    if (socials && socials.length > 0) {
+        for (const s of socials) {
+            if (s.url) {
+                socialLinks.push({ key: s.key, label: s.label, url: s.url, icon: getRemixIcon(s.key) });
+            }
+        }
+    }
+    // Fill in any missing from siteConfig
+    const configSocials: Record<string, { label: string; url: string }> = {
+        linkedin: { label: 'LinkedIn', url: data.socials.linkedin },
+        twitter: { label: 'X / Twitter', url: data.socials.twitter },
+        youtube: { label: 'YouTube', url: data.socials.youtube },
+    };
+    for (const [key, val] of Object.entries(configSocials)) {
+        if (val.url && !socialLinks.some(s => s.key === key)) {
+            socialLinks.push({ key, label: val.label, url: val.url, icon: getRemixIcon(key) });
+        }
+    }
 
     const handleCopyEmail = (e: React.MouseEvent) => {
         e.preventDefault();
@@ -22,120 +72,163 @@ export const Footer: React.FC<FooterProps> = ({ data, navData, onShowToast, onOp
         }
     };
 
-    const handleNavClick = (e: React.MouseEvent<HTMLAnchorElement>, id: string) => {
-        e.preventDefault();
-        const element = document.querySelector(id);
-        if (element) {
-            element.scrollIntoView({ behavior: 'smooth' });
-        }
-    };
-
     return (
-        <footer className="relative w-full py-12 md:py-24 px-4 md:px-6 bg-[#F2F4F7] text-slate-900 border-t border-black/5 overflow-hidden">
+        <footer className="relative w-full bg-[#020408] text-white overflow-hidden">
 
-            {/* Background elements */}
-            <div className="absolute top-0 left-0 w-full h-[1px] bg-gradient-to-r from-transparent via-black/10 to-transparent"></div>
+            {/* Top accent line */}
+            <div className="w-full h-[2px] bg-gradient-to-r from-brand-blue via-brand-cyan to-brand-teal" />
 
-            <div className="relative z-10 max-w-7xl mx-auto grid grid-cols-1 lg:grid-cols-12 gap-12 lg:gap-8">
+            {/* Main content */}
+            <div className="max-w-[1440px] mx-auto px-6 md:px-12 pt-20 pb-12">
 
-                {/* Brand Column */}
-                <div className="lg:col-span-4 flex flex-col gap-6">
-                    <a href="#" className="flex items-center gap-2 group w-fit">
-                        <div className="w-10 h-10 relative flex items-center justify-center bg-white rounded-xl shadow-sm border border-black/5 group-hover:scale-105 transition-transform duration-300">
-                            <svg viewBox="0 0 100 100" fill="none" xmlns="http://www.w3.org/2000/svg" className="w-[80%] h-[80%]">
-                                <path d="M10 30 C30 15, 60 45, 90 30" stroke="#3B82F6" strokeWidth="12" strokeLinecap="round" />
-                                <path d="M10 50 C30 35, 60 65, 90 50" stroke="#22D3EE" strokeWidth="12" strokeLinecap="round" />
-                                <path d="M20 70 C40 55, 70 85, 90 70" stroke="#2DD4BF" strokeWidth="12" strokeLinecap="round" />
-                            </svg>
-                        </div>
-                        <div className="flex flex-col leading-none justify-center">
-                            <span className="font-bold tracking-tight text-slate-900 text-xl leading-tight">DeAI</span>
-                            <span className="text-[0.65rem] uppercase tracking-[0.25em] text-slate-500 leading-none group-hover:text-brand-blue transition-colors">Summit</span>
-                        </div>
-                    </a>
-                    <p className="text-sm font-light text-slate-500 leading-relaxed max-w-xs">
-                        {data.brandDescription}
-                    </p>
-                    {/* Stats embedded in footer */}
-                    <div className="flex gap-6 mt-2 pt-6 border-t border-black/5">
-                        {data.stats.map((stat, idx) => (
-                            <div key={idx}>
-                                <div className={`text-lg font-medium ${idx === 1 ? 'text-brand-blue' : 'text-slate-900'}`}>{stat.value}</div>
-                                <div className="text-[10px] uppercase tracking-widest text-slate-400">{stat.label}</div>
+                {/* Top section: Brand + CTA cards */}
+                <div className="flex flex-col lg:flex-row justify-between gap-16 mb-20">
+
+                    {/* Brand */}
+                    <div className="lg:max-w-md">
+                        <Link href="/" className="flex items-center gap-3 group mb-6">
+                            <div className="w-12 h-12 relative flex items-center justify-center">
+                                <svg viewBox="0 0 100 100" fill="none" xmlns="http://www.w3.org/2000/svg" className="w-full h-full">
+                                    <path d="M10 30 C30 15, 60 45, 90 30" stroke="#3B82F6" strokeWidth="12" strokeLinecap="round" />
+                                    <path d="M10 50 C30 35, 60 65, 90 50" stroke="#22D3EE" strokeWidth="12" strokeLinecap="round" />
+                                    <path d="M20 70 C40 55, 70 85, 90 70" stroke="#2DD4BF" strokeWidth="12" strokeLinecap="round" />
+                                </svg>
                             </div>
-                        ))}
+                            <div className="flex flex-col leading-none justify-center">
+                                <span className="font-bold tracking-tight text-white text-2xl leading-tight">DeAI</span>
+                                <span className="text-[0.6rem] uppercase tracking-[0.25em] text-white/50 leading-none group-hover:text-brand-cyan transition-colors">Summit</span>
+                            </div>
+                        </Link>
+                        <p className="text-base text-white/50 leading-relaxed mb-8">
+                            {data.brandDescription}
+                        </p>
+
+                        {/* Stats */}
+                        <div className="flex gap-10">
+                            {data.stats.map((stat, idx) => (
+                                <div key={idx}>
+                                    <div className="text-3xl font-display font-bold text-brand-cyan">
+                                        <AnimatedCounter value={stat.value} duration={2000} delay={idx * 200} />
+                                    </div>
+                                    <div className="text-xs uppercase tracking-widest text-white/40 mt-1">{stat.label}</div>
+                                </div>
+                            ))}
+                        </div>
+                    </div>
+
+                    {/* CTA cards */}
+                    <div className="flex flex-col sm:flex-row gap-5 lg:self-start">
+                        <button
+                            onClick={(e) => { e.preventDefault(); if (onOpenContact) onOpenContact(); }}
+                            className="group relative p-8 rounded-2xl border border-white/10 bg-white/5 hover:bg-white/10 backdrop-blur-sm transition-all duration-300 overflow-hidden w-full sm:w-56 text-left"
+                        >
+                            <div className="absolute top-0 left-0 w-full h-[2px] bg-gradient-to-r from-brand-blue to-brand-cyan opacity-0 group-hover:opacity-100 transition-opacity" />
+                            <i className="ri-vip-diamond-line text-3xl text-brand-blue mb-4 block group-hover:scale-110 transition-transform origin-left"></i>
+                            <span className="text-base font-semibold text-white block mb-1">Become a Sponsor</span>
+                            <span className="text-sm text-white/40 group-hover:text-white/60 transition-colors">Partner with us</span>
+                            <i className="ri-arrow-right-up-line text-lg text-white/30 group-hover:text-brand-cyan absolute top-6 right-6 transition-colors"></i>
+                        </button>
+
+                        <button
+                            onClick={handleCopyEmail}
+                            className="group relative p-8 rounded-2xl border border-white/10 bg-white/5 hover:bg-white/10 backdrop-blur-sm transition-all duration-300 overflow-hidden w-full sm:w-56 text-left"
+                        >
+                            <div className="absolute top-0 left-0 w-full h-[2px] bg-gradient-to-r from-brand-cyan to-brand-teal opacity-0 group-hover:opacity-100 transition-opacity" />
+                            <i className="ri-mail-send-line text-3xl text-brand-cyan mb-4 block group-hover:scale-110 transition-transform origin-left"></i>
+                            <span className="text-base font-semibold text-white block mb-1">Contact Us</span>
+                            <span className="text-sm text-white/40 group-hover:text-white/60 transition-colors">Get in touch</span>
+                            <i className="ri-arrow-right-up-line text-lg text-white/30 group-hover:text-brand-cyan absolute top-6 right-6 transition-colors"></i>
+                        </button>
                     </div>
                 </div>
 
-                {/* Links */}
-                <div className="lg:col-span-2 flex flex-col gap-4 pt-1">
-                    <h4 className="font-medium text-xs uppercase tracking-widest text-slate-400">Event</h4>
-                    <ul className="flex flex-col gap-3">
-                        {navData.main.map((item) => (
-                            <li key={item.label}>
-                                <a
-                                    href={item.href}
-                                    onClick={(e) => handleNavClick(e, item.href)}
-                                    className="text-sm font-light text-slate-600 hover:text-brand-blue transition-colors"
-                                >
-                                    {item.label}
-                                </a>
+                {/* Divider */}
+                <div className="h-[1px] bg-white/10 mb-12" />
+
+                {/* Links row */}
+                <div className="grid grid-cols-2 sm:grid-cols-4 gap-10 mb-16">
+
+                    {/* Event links */}
+                    <div>
+                        <h4 className="text-sm font-semibold uppercase tracking-widest text-white/30 mb-5">Event</h4>
+                        <ul className="flex flex-col gap-3">
+                            {navData.main.map((item) => (
+                                <li key={item.label}>
+                                    <Link
+                                        href={item.href}
+                                        className="text-base text-white/60 hover:text-brand-cyan transition-colors"
+                                    >
+                                        {item.label}
+                                    </Link>
+                                </li>
+                            ))}
+                            <li>
+                                <Link href="/agenda" className="text-base text-white/60 hover:text-brand-cyan transition-colors">
+                                    Agenda
+                                </Link>
                             </li>
+                        </ul>
+                    </div>
+
+                    {/* Legal links */}
+                    <div>
+                        <h4 className="text-sm font-semibold uppercase tracking-widest text-white/30 mb-5">Legal</h4>
+                        <ul className="flex flex-col gap-3">
+                            {navData.legal.map((item) => (
+                                <li key={item.label}>
+                                    <Link href={item.href} className="text-base text-white/60 hover:text-brand-cyan transition-colors">
+                                        {item.label}
+                                    </Link>
+                                </li>
+                            ))}
+                        </ul>
+                    </div>
+
+                    {/* Social links */}
+                    <div>
+                        <h4 className="text-sm font-semibold uppercase tracking-widest text-white/30 mb-5">Connect</h4>
+                        <ul className="flex flex-col gap-3">
+                            {socialLinks.map((s) => (
+                                <li key={s.key}>
+                                    <a href={s.url} target="_blank" rel="noopener noreferrer" className="text-base text-white/60 hover:text-brand-cyan transition-colors flex items-center gap-2">
+                                        <i className={`${s.icon} text-lg`}></i> {s.label}
+                                    </a>
+                                </li>
+                            ))}
+                        </ul>
+                    </div>
+
+                    {/* Contact */}
+                    <div>
+                        <h4 className="text-sm font-semibold uppercase tracking-widest text-white/30 mb-5">Venue</h4>
+                        <ul className="flex flex-col gap-3">
+                            <li className="text-base text-white/60">
+                                <i className="ri-map-pin-2-fill text-brand-cyan mr-1"></i> St. Julians, Malta
+                            </li>
+                            <li className="text-base text-white/60">
+                                <i className="ri-calendar-event-fill text-brand-cyan mr-1"></i> 28-30 Oct 2026
+                            </li>
+                            <li>
+                                <button onClick={handleCopyEmail} className="text-base text-white/60 hover:text-brand-cyan transition-colors">
+                                    <i className="ri-mail-fill text-brand-cyan mr-1"></i> {navData.contactEmail}
+                                </button>
+                            </li>
+                        </ul>
+                    </div>
+                </div>
+
+                {/* Bottom bar */}
+                <div className="flex flex-col md:flex-row justify-between items-center gap-6 pt-8 border-t border-white/10">
+                    <span className="text-sm text-white/30 font-mono">{data.copyright}</span>
+                    <div className="flex gap-5 items-center">
+                        {socialLinks.map((s) => (
+                            <a key={s.key} href={s.url} target="_blank" rel="noopener noreferrer" className="text-white/30 hover:text-brand-cyan transition-colors" title={s.label}>
+                                <i className={`${s.icon} text-2xl`}></i>
+                            </a>
                         ))}
-                    </ul>
-                </div>
-
-                {/* Legal */}
-                <div className="lg:col-span-2 flex flex-col gap-4 pt-1">
-                    <h4 className="font-medium text-xs uppercase tracking-widest text-slate-400">Legal</h4>
-                    <ul className="flex flex-col gap-3">
-                        {navData.legal.map((item) => (
-                            <li key={item.label}><a href={item.href} className="text-sm font-light text-slate-600 hover:text-brand-blue transition-colors">{item.label}</a></li>
-                        ))}
-                    </ul>
-                </div>
-
-                {/* Large Footer Cards */}
-                <div className="lg:col-span-4 flex flex-col sm:flex-row gap-4 mt-8 lg:mt-0">
-                    {/* Sponsor Card */}
-                    <button onClick={(e) => { e.preventDefault(); if (onOpenContact) onOpenContact(); }} className="flex-1 group relative p-6 rounded-2xl border border-white bg-white shadow-sm hover:shadow-md transition-all overflow-hidden h-32 flex flex-col justify-between text-left">
-                        <div className="flex justify-between items-start z-10 relative">
-                            <span className="font-medium text-sm text-slate-900">Become a Sponsor</span>
-                            <i className="ri-arrow-right-up-line text-base text-slate-400 group-hover:text-brand-blue transition-colors"></i>
-                        </div>
-                        <div className="relative z-10">
-                            <i className="ri-vip-diamond-line text-2xl text-brand-blue/60 group-hover:text-brand-blue transition-colors"></i>
-                        </div>
-                        <div className="absolute inset-0 bg-gradient-to-br from-brand-blue/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity"></div>
-                    </button>
-
-                    {/* Contact Card */}
-                    <button onClick={handleCopyEmail} className="flex-1 group relative p-6 rounded-2xl border border-white bg-white shadow-sm hover:shadow-md transition-all overflow-hidden h-32 flex flex-col justify-between text-left w-full">
-                        <div className="flex justify-between items-start z-10 relative w-full">
-                            <span className="font-medium text-sm text-slate-900 transition-colors">
-                                Contact Us
-                            </span>
-                            <i className="ri-arrow-right-up-line text-base text-slate-400 group-hover:text-brand-teal transition-colors"></i>
-                        </div>
-                        <div className="relative z-10">
-                            <i className="ri-mail-line text-2xl text-brand-teal/60 group-hover:text-brand-teal transition-colors"></i>
-                        </div>
-                        <div className="absolute inset-0 bg-gradient-to-br from-brand-teal/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity"></div>
-                    </button>
-                </div>
-
-            </div>
-
-            {/* Bottom Bar */}
-            <div className="relative z-10 max-w-7xl mx-auto mt-16 pt-8 border-t border-brand-blue/10 flex flex-col md:flex-row justify-between items-center gap-4">
-                <span className="text-xs font-mono text-slate-400">{data.copyright}</span>
-                <div className="flex gap-6 items-center">
-                    <a href={data.socials.linkedin} target="_blank" rel="noopener noreferrer">
-                        <i className="ri-linkedin-fill text-[40px] text-slate-300 hover:text-slate-900 cursor-pointer transition-colors"></i>
-                    </a>
+                    </div>
                 </div>
             </div>
-
         </footer>
     );
 };

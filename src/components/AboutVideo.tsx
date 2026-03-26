@@ -15,7 +15,7 @@ export const AboutVideo: React.FC<AboutVideoProps> = ({ data }) => {
                 <div className="absolute bottom-[-20%] left-[-10%] w-[600px] h-[600px] bg-brand-cyan/5 rounded-full blur-[100px]"></div>
             </div>
 
-            <div className="relative z-10 max-w-7xl mx-auto flex flex-col items-center text-center">
+            <div className="relative z-10 max-w-[1440px] mx-auto flex flex-col items-center text-center">
 
                 {/* Section Title */}
                 <h2 className="text-3xl md:text-5xl lg:text-8xl font-display font-bold text-white tracking-tighter mb-12 md:mb-20">
