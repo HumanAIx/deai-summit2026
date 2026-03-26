@@ -35,9 +35,10 @@ const SpeakerCard: React.FC<{
     <div
       onMouseEnter={handleEnter}
       onMouseLeave={handleLeave}
-      className="relative flex-shrink-0 mx-4 flex flex-col items-center overflow-hidden rounded-2xl cursor-pointer"
+      className="relative flex-shrink-0 mx-4 flex flex-col overflow-hidden rounded-2xl cursor-pointer"
       style={{
         width: "18rem",
+        height: "22rem",
         background: "#020408",
         transform: hovered ? "scale(1.08)" : "scale(1)",
         transformOrigin: "center center",
@@ -49,28 +50,8 @@ const SpeakerCard: React.FC<{
         zIndex: hovered ? 50 : 1,
       }}
     >
-      {/* Photo — full color, large */}
-      <div className="relative w-full h-56 overflow-hidden">
-        <Image
-          src={speaker.image}
-          alt={speaker.name}
-          fill
-          className="object-cover object-top transition-transform duration-700"
-          style={{
-            transform: hovered ? "scale(1.08)" : "scale(1)",
-          }}
-        />
-        {/* Gradient overlay at bottom of photo */}
-        <div
-          className="absolute inset-0"
-          style={{
-            background: `linear-gradient(to top, #020408 0%, transparent 50%)`,
-          }}
-        />
-      </div>
-
-      {/* Info overlay — positioned at bottom of photo */}
-      <div className="relative w-full px-5 pb-5 -mt-4">
+      {/* Text at top */}
+      <div className="relative w-full px-5 pt-5 pb-3">
         {/* Accent line */}
         <div
           className="w-10 h-[3px] rounded-full mb-3 transition-all duration-500"
@@ -90,13 +71,11 @@ const SpeakerCard: React.FC<{
           {speaker.role}
         </p>
 
-        {/* Company — slides in on hover */}
+        {/* Company — fades in on hover */}
         <div
-          className="overflow-hidden transition-all duration-500"
+          className="mt-2 transition-opacity duration-500"
           style={{
-            maxHeight: hovered ? "4rem" : "0",
             opacity: hovered ? 1 : 0,
-            marginTop: hovered ? "0.75rem" : "0",
           }}
         >
           <p
@@ -106,6 +85,26 @@ const SpeakerCard: React.FC<{
             {speaker.company}
           </p>
         </div>
+      </div>
+
+      {/* Photo at bottom */}
+      <div className="relative w-full flex-1 overflow-hidden">
+        <Image
+          src={speaker.image}
+          alt={speaker.name}
+          fill
+          className={`object-cover transition-transform duration-700 ${speaker.slug === 'aaron-farrugia' ? 'object-[center_-90px]' : (speaker.slug === 'max-li' || speaker.slug === 'sean-yang') ? 'object-[center_-20px]' : 'object-top'}`}
+          style={{
+            transform: hovered ? "scale(1.08)" : "scale(1)",
+          }}
+        />
+        {/* Gradient overlay at top of photo */}
+        <div
+          className="absolute inset-0"
+          style={{
+            background: `linear-gradient(to bottom, #020408 0%, transparent 40%)`,
+          }}
+        />
       </div>
     </div>
   );

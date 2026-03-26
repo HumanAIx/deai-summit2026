@@ -18,7 +18,7 @@ export const DetailPageLayout: React.FC<DetailPageLayoutProps> = ({ children }) 
         onShowToast={handleShowToast}
         data={siteConfig.navigation}
       />
-      <main className="w-full mx-auto pt-20">
+      <main className="w-full mx-auto pt-[140px]">
         {children}
       </main>
       <Footer

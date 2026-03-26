@@ -5,6 +5,7 @@ import { AnimatedCounter } from '@/components/AnimatedCounter';
 import Link from 'next/link';
 import Image from 'next/image';
 import { DetailPageLayout } from '@/components/DetailPageLayout';
+import { AnimatedGrid } from '@/components/AnimatedGrid';
 import type { NormalizedSpeaker } from '@/lib/api-types';
 
 const SPEAKERS_PER_PAGE = 24;
@@ -123,18 +124,9 @@ export function SpeakersListClient({ speakers }: SpeakersListClientProps) {
       {/* Hero Section */}
       <section className="relative bg-[#020408] text-white pt-16 pb-0">
         {/* Grid Overlay */}
-        <div
-          className="absolute inset-0 pointer-events-none"
-          style={{
-            backgroundImage: `
-              linear-gradient(to right, rgba(255,255,255,0.03) 1px, transparent 1px),
-              linear-gradient(to bottom, rgba(255,255,255,0.03) 1px, transparent 1px)
-            `,
-            backgroundSize: '60px 60px',
-            maskImage: 'radial-gradient(ellipse 80% 70% at center, black 0%, transparent 70%)',
-            WebkitMaskImage: 'radial-gradient(ellipse 80% 70% at center, black 0%, transparent 70%)',
-          }}
-        />
+        <div className="absolute inset-0 pointer-events-none animated-grid">
+          <AnimatedGrid />
+        </div>
 
         <div className="relative z-10 max-w-[1440px] mx-auto px-6 text-center">
           <p className="text-brand-cyan text-sm font-mono uppercase tracking-widest mb-4">
@@ -151,29 +143,31 @@ export function SpeakersListClient({ speakers }: SpeakersListClientProps) {
 
         {/* Stats + Divider */}
         {speakers.length > 0 && (
-          <div className="relative z-10 max-w-[1440px] mx-auto px-6 pt-8 pb-8">
-            <div className="flex items-center justify-center gap-16 mb-12">
-              <div className="text-center">
-                <p className="text-brand-cyan text-4xl font-display font-bold mb-1">
-                  <AnimatedCounter value={String(speakers.length)} duration={1800} />
+          <div className="relative z-10 max-w-[1440px] mx-auto px-6 pt-12 pb-12">
+            <div className="flex items-center justify-center gap-20 md:gap-28 mb-16">
+              <div className="text-center relative">
+                <div className="absolute inset-0 blur-3xl opacity-15 rounded-full scale-150 bg-brand-cyan" />
+                <p className="text-brand-cyan text-6xl md:text-7xl font-display font-bold mb-3 relative">
+                  <AnimatedCounter value={String(speakers.length)} duration={2200} />
                 </p>
-                <div className="w-8 h-[2px] mx-auto mb-2" style={{ backgroundColor: cardColors[0] }} />
-                <p className="text-white/50 text-xs font-mono uppercase tracking-widest">
+                <div className="w-12 h-[3px] mx-auto mb-3 rounded-full bg-brand-cyan" />
+                <p className="text-white/50 text-sm font-mono uppercase tracking-widest">
                   Speakers
                 </p>
               </div>
-              <div className="w-[1px] h-14 bg-white/10" />
-              <div className="text-center">
-                <p className="text-brand-cyan text-4xl font-display font-bold mb-1">
-                  <AnimatedCounter value="60+" duration={1800} delay={200} />
+              <div className="w-[1px] h-20 bg-white/10" />
+              <div className="text-center relative">
+                <div className="absolute inset-0 blur-3xl opacity-15 rounded-full scale-150 bg-brand-blue" />
+                <p className="text-brand-blue text-6xl md:text-7xl font-display font-bold mb-3 relative">
+                  <AnimatedCounter value="60+" duration={2200} delay={300} />
                 </p>
-                <div className="w-8 h-[2px] mx-auto mb-2" style={{ backgroundColor: cardColors[1] }} />
-                <p className="text-white/50 text-xs font-mono uppercase tracking-widest">
+                <div className="w-12 h-[3px] mx-auto mb-3 rounded-full bg-brand-blue" />
+                <p className="text-white/50 text-sm font-mono uppercase tracking-widest">
                   Sessions
                 </p>
               </div>
             </div>
-            <div className="h-[1px] bg-brand-cyan/30" />
+            <div className="h-[1px] bg-gradient-to-r from-transparent via-brand-cyan/40 to-transparent" />
           </div>
         )}
       </section>

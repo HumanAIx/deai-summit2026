@@ -33,7 +33,7 @@ export const PAGE_CANONICALS: Record<string, string> = {
   home: '/',
   speakers: '/speakers',
   companies: '/companies',
-  sponsors: '/sponsors',
+  sponsors: '/partners',
   agenda: '/agenda',
   terms: '/terms',
   privacy: '/privacy',

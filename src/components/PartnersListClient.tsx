@@ -5,6 +5,7 @@ import { AnimatedCounter } from '@/components/AnimatedCounter';
 import Image from 'next/image';
 import Link from 'next/link';
 import { DetailPageLayout } from '@/components/DetailPageLayout';
+import { AnimatedGrid } from '@/components/AnimatedGrid';
 import type { NormalizedSponsor } from '@/lib/api-types';
 
 interface PartnersListClientProps {
@@ -12,8 +13,20 @@ interface PartnersListClientProps {
   partners: NormalizedSponsor[];
 }
 
-function CompanyCard({ company, type }: { company: NormalizedSponsor; type: 'sponsor' | 'partner' }) {
-  const href = type === 'sponsor' ? `/sponsors/${company.slug}` : `/companies/${company.slug}`;
+const cardColors = [
+  '#1cd4f0',   // cyan
+  '#3a9ef5',   // blue
+  '#40e8c0',   // teal
+  '#9a72f0',   // purple
+  '#38c0f5',   // sky
+  '#7a5af0',   // indigo
+  '#20e0a8',   // emerald
+  '#e080c0',   // magenta
+];
+
+function CompanyCard({ company, type, index }: { company: NormalizedSponsor; type: 'sponsor' | 'partner'; index: number }) {
+  const href = type === 'sponsor' ? `/partners/${company.slug}` : `/companies/${company.slug}`;
+  const bgColor = cardColors[index % cardColors.length];
 
   return (
     <Link
@@ -40,18 +53,18 @@ function CompanyCard({ company, type }: { company: NormalizedSponsor; type: 'spo
       </div>
 
       {/* Info section */}
-      <div className="p-5 bg-[#020408] min-h-[100px] flex flex-col justify-between">
+      <div className="p-5 h-[130px] flex flex-col justify-between" style={{ backgroundColor: bgColor }}>
         <div>
-          <h3 className="text-white text-base font-display font-bold group-hover:text-brand-cyan transition-colors leading-tight">
+          <h3 className="text-white text-base font-display font-extrabold group-hover:underline transition-colors leading-tight">
             {company.name}
           </h3>
           {company.bio && (
-            <p className="text-white/50 text-xs mt-2 line-clamp-2 leading-relaxed">
+            <p className="text-white/70 text-xs font-semibold mt-2 line-clamp-2 leading-relaxed">
               {company.bio.replace(/<[^>]*>/g, '').replace(/[#*_`>\[\]()]/g, '').replace(/\s+/g, ' ').trim().slice(0, 120)}
             </p>
           )}
         </div>
-        <div className="flex items-center gap-1 mt-3 text-brand-cyan text-xs font-mono uppercase tracking-widest group-hover:text-white transition-colors">
+        <div className="flex items-center gap-1 mt-3 text-white/60 text-xs font-bold font-mono uppercase tracking-widest group-hover:text-white transition-colors">
           View Details
           <svg className="w-3 h-3 group-hover:translate-x-1 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
@@ -70,18 +83,9 @@ export function PartnersListClient({ sponsors, partners }: PartnersListClientPro
       {/* Hero Section */}
       <section className="relative bg-[#020408] text-white pt-16 pb-0">
         {/* Grid Overlay */}
-        <div
-          className="absolute inset-0 pointer-events-none"
-          style={{
-            backgroundImage: `
-              linear-gradient(to right, rgba(255,255,255,0.03) 1px, transparent 1px),
-              linear-gradient(to bottom, rgba(255,255,255,0.03) 1px, transparent 1px)
-            `,
-            backgroundSize: '60px 60px',
-            maskImage: 'radial-gradient(ellipse 80% 70% at center, black 0%, transparent 70%)',
-            WebkitMaskImage: 'radial-gradient(ellipse 80% 70% at center, black 0%, transparent 70%)',
-          }}
-        />
+        <div className="absolute inset-0 pointer-events-none animated-grid">
+          <AnimatedGrid />
+        </div>
 
         <div className="relative z-10 max-w-[1440px] mx-auto px-6 text-center">
           <p className="text-brand-cyan text-sm font-mono uppercase tracking-widest mb-4">
@@ -97,42 +101,44 @@ export function PartnersListClient({ sponsors, partners }: PartnersListClientPro
 
         {/* Stats + Divider */}
         {totalCompanies > 0 && (
-          <div className="relative z-10 max-w-[1440px] mx-auto px-6 pt-8 pb-8">
-            <div className="flex items-center justify-center gap-16 mb-12">
+          <div className="relative z-10 max-w-[1440px] mx-auto px-6 pt-12 pb-12">
+            <div className="flex items-center justify-center gap-20 md:gap-28 mb-16">
               {sponsors.length > 0 && (
-                <div className="text-center">
-                  <p className="text-brand-cyan text-4xl font-display font-bold mb-1">
-                    <AnimatedCounter value={String(sponsors.length)} duration={1800} />
+                <div className="text-center relative">
+                  <div className="absolute inset-0 blur-3xl opacity-15 rounded-full scale-150 bg-brand-cyan" />
+                  <p className="text-brand-cyan text-6xl md:text-7xl font-display font-bold mb-3 relative">
+                    <AnimatedCounter value={String(sponsors.length)} duration={2200} />
                   </p>
-                  <div className="w-8 h-[2px] mx-auto mb-2 bg-brand-cyan" />
-                  <p className="text-white/50 text-xs font-mono uppercase tracking-widest">
+                  <div className="w-12 h-[3px] mx-auto mb-3 rounded-full bg-brand-cyan" />
+                  <p className="text-white/50 text-sm font-mono uppercase tracking-widest">
                     Sponsors
                   </p>
                 </div>
               )}
               {sponsors.length > 0 && partners.length > 0 && (
-                <div className="w-[1px] h-14 bg-white/10" />
+                <div className="w-[1px] h-20 bg-white/10" />
               )}
               {partners.length > 0 && (
-                <div className="text-center">
-                  <p className="text-brand-cyan text-4xl font-display font-bold mb-1">
-                    <AnimatedCounter value={String(partners.length)} duration={1800} delay={200} />
+                <div className="text-center relative">
+                  <div className="absolute inset-0 blur-3xl opacity-15 rounded-full scale-150 bg-brand-blue" />
+                  <p className="text-brand-blue text-6xl md:text-7xl font-display font-bold mb-3 relative">
+                    <AnimatedCounter value={String(partners.length)} duration={2200} delay={300} />
                   </p>
-                  <div className="w-8 h-[2px] mx-auto mb-2 bg-brand-blue" />
-                  <p className="text-white/50 text-xs font-mono uppercase tracking-widest">
+                  <div className="w-12 h-[3px] mx-auto mb-3 rounded-full bg-brand-blue" />
+                  <p className="text-white/50 text-sm font-mono uppercase tracking-widest">
                     Partners
                   </p>
                 </div>
               )}
             </div>
-            <div className="h-[1px] bg-brand-cyan/30" />
+            <div className="h-[1px] bg-gradient-to-r from-transparent via-brand-cyan/40 to-transparent" />
           </div>
         )}
       </section>
 
       {/* Sponsors Section */}
       {sponsors.length > 0 && (
-        <section className="bg-[#F0F0EF] pt-16 pb-8">
+        <section className="bg-[#F0F0EF] pt-16 pb-[100px]">
           <div className="max-w-[1440px] mx-auto px-6">
             <div className="flex items-center gap-4 mb-10">
               <div className="w-1 h-8 bg-brand-cyan rounded-full" />
@@ -140,9 +146,11 @@ export function PartnersListClient({ sponsors, partners }: PartnersListClientPro
                 Sponsors
               </h2>
             </div>
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
-              {sponsors.map((sponsor) => (
-                <CompanyCard key={sponsor.id} company={sponsor} type="sponsor" />
+            <div className="flex flex-wrap justify-center gap-6">
+              {sponsors.map((sponsor, index) => (
+                <div key={sponsor.id} className="w-full sm:w-[calc(50%-12px)] lg:w-[calc(33.333%-16px)] xl:w-[calc(25%-18px)]">
+                  <CompanyCard company={sponsor} type="sponsor" index={index} />
+                </div>
               ))}
             </div>
           </div>
@@ -151,7 +159,7 @@ export function PartnersListClient({ sponsors, partners }: PartnersListClientPro
 
       {/* Partners Section */}
       {partners.length > 0 && (
-        <section className="bg-[#F0F0EF] pt-8 pb-16">
+        <section className="bg-[#F0F0EF] pt-8 pb-[100px]">
           <div className="max-w-[1440px] mx-auto px-6">
             <div className="flex items-center gap-4 mb-10">
               <div className="w-1 h-8 bg-brand-blue rounded-full" />
@@ -159,9 +167,11 @@ export function PartnersListClient({ sponsors, partners }: PartnersListClientPro
                 Partners
               </h2>
             </div>
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
-              {partners.map((partner) => (
-                <CompanyCard key={partner.id} company={partner} type="partner" />
+            <div className="flex flex-wrap justify-center gap-6">
+              {partners.map((partner, index) => (
+                <div key={partner.id} className="w-full sm:w-[calc(50%-12px)] lg:w-[calc(33.333%-16px)] xl:w-[calc(25%-18px)]">
+                  <CompanyCard company={partner} type="partner" index={index + sponsors.length} />
+                </div>
               ))}
             </div>
           </div>

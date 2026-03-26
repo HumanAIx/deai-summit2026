@@ -4,6 +4,7 @@ import React from 'react';
 import Image from 'next/image';
 import Link from 'next/link';
 import { DetailPageLayout } from '@/components/DetailPageLayout';
+import { AnimatedGrid } from '@/components/AnimatedGrid';
 import { markdownToHtml } from '@/lib/utils';
 import type { Member, Company, PersonSocials } from '@/lib/api-types';
 
@@ -81,8 +82,12 @@ export const SpeakerDetailClient: React.FC<SpeakerDetailClientProps> = ({ member
   return (
     <DetailPageLayout>
       {/* Hero section */}
-      <section className="bg-[#020408] text-white">
-        <div className="max-w-[1440px] mx-auto px-6 py-20 md:py-28">
+      <section className="relative bg-[#020408] text-white">
+        {/* Grid Overlay */}
+        <div className="absolute inset-0 pointer-events-none animated-grid">
+          <AnimatedGrid />
+        </div>
+        <div className="relative z-10 max-w-[1440px] mx-auto px-6 py-20 md:py-28">
           <div className="flex flex-col md:flex-row gap-12 md:gap-16 items-center md:items-start">
             {/* Photo */}
             {photo && (
@@ -143,13 +148,7 @@ export const SpeakerDetailClient: React.FC<SpeakerDetailClientProps> = ({ member
               <h2 className="text-2xl md:text-3xl font-display font-bold text-[#1a1a1a]">About</h2>
             </div>
             <div
-              className="prose prose-lg max-w-none text-gray-700 leading-relaxed
-                prose-headings:font-display prose-headings:text-[#1a1a1a] prose-headings:font-bold
-                prose-h2:text-xl prose-h3:text-lg
-                prose-a:text-brand-blue prose-a:no-underline hover:prose-a:underline
-                prose-strong:text-[#1a1a1a]
-                prose-li:marker:text-brand-cyan
-                prose-blockquote:border-l-brand-cyan prose-blockquote:text-gray-600"
+              className="bio-content max-w-none"
               dangerouslySetInnerHTML={{ __html: renderBio(bio) }}
             />
           </div>
@@ -168,7 +167,7 @@ export const SpeakerDetailClient: React.FC<SpeakerDetailClientProps> = ({ member
               {companies.map((company) => (
                 <Link
                   key={company.id}
-                  href={company.company_is_sponsor ? `/sponsors/${company.company_slug}` : `/companies/${company.company_slug}`}
+                  href={company.company_is_sponsor ? `/partners/${company.company_slug}` : `/companies/${company.company_slug}`}
                   className="flex items-center gap-5 p-6 rounded-2xl border border-gray-200 hover:border-brand-cyan/30 hover:shadow-lg hover:shadow-brand-cyan/5 transition-all duration-300 no-underline group"
                 >
                   {company.company_logo && (

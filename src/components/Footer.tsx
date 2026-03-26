@@ -104,15 +104,21 @@ export const Footer: React.FC<FooterProps> = ({ data, navData, onShowToast, onOp
                         </p>
 
                         {/* Stats */}
-                        <div className="flex gap-10">
-                            {data.stats.map((stat, idx) => (
-                                <div key={idx}>
-                                    <div className="text-3xl font-display font-bold text-brand-cyan">
-                                        <AnimatedCounter value={stat.value} duration={2000} delay={idx * 200} />
+                        <div className="flex gap-14 mt-2">
+                            {data.stats.map((stat, idx) => {
+                                const colors = ['#06B0C2', '#0F6FEB'];
+                                const color = colors[idx % colors.length];
+                                return (
+                                    <div key={idx} className="relative">
+                                        <div className="absolute inset-0 blur-2xl opacity-15 rounded-full scale-150" style={{ backgroundColor: color }} />
+                                        <div className="text-5xl md:text-6xl font-display font-bold relative" style={{ color }}>
+                                            <AnimatedCounter value={stat.value} duration={2400} delay={idx * 300} />
+                                        </div>
+                                        <div className="w-10 h-[3px] rounded-full mt-3 mb-2" style={{ backgroundColor: color }} />
+                                        <div className="text-sm uppercase tracking-widest text-white/40">{stat.label}</div>
                                     </div>
-                                    <div className="text-xs uppercase tracking-widest text-white/40 mt-1">{stat.label}</div>
-                                </div>
-                            ))}
+                                );
+                            })}
                         </div>
                     </div>
 

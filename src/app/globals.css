@@ -39,6 +39,71 @@
   }
 }
 
+/* Animated grid background */
+.animated-grid {
+  background-image:
+    linear-gradient(to right, rgba(255,255,255,0.05) 1px, transparent 1px),
+    linear-gradient(to bottom, rgba(255,255,255,0.05) 1px, transparent 1px);
+  background-size: 60px 60px;
+  -webkit-mask-image: radial-gradient(ellipse 80% 70% at center, black 0%, transparent 70%);
+  mask-image: radial-gradient(ellipse 80% 70% at center, black 0%, transparent 70%);
+}
+
+/* Bio / Markdown content styling */
+.bio-content {
+  font-size: 1.125rem;
+  line-height: 1.8;
+  color: #4a4a4a;
+}
+.bio-content p {
+  margin-bottom: 1.5rem;
+}
+.bio-content h1, .bio-content h2, .bio-content h3 {
+  font-weight: 700;
+  color: #1a1a1a;
+  margin-top: 2.5rem;
+  margin-bottom: 1rem;
+  line-height: 1.3;
+}
+.bio-content h1 { font-size: 1.75rem; }
+.bio-content h2 { font-size: 1.375rem; }
+.bio-content h3 { font-size: 1.125rem; }
+.bio-content strong { color: #1a1a1a; }
+.bio-content a {
+  color: #0F6FEB;
+  text-decoration: none;
+}
+.bio-content a:hover { text-decoration: underline; }
+.bio-content ul, .bio-content ol {
+  margin: 1.5rem 0;
+  padding-left: 1.5rem;
+}
+.bio-content li {
+  margin-bottom: 0.5rem;
+}
+.bio-content li::marker {
+  color: #06B0C2;
+}
+.bio-content blockquote {
+  border-left: 3px solid #06B0C2;
+  padding-left: 1.25rem;
+  margin: 2rem 0;
+  color: #666;
+  font-style: italic;
+}
+.bio-content hr {
+  border: none;
+  height: 1px;
+  background: #ddd;
+  margin: 2.5rem 0;
+}
+.bio-content code {
+  background: #f0f0f0;
+  padding: 0.15rem 0.4rem;
+  border-radius: 0.25rem;
+  font-size: 0.9em;
+}
+
 /* Aura Style Effects */
 .text-glow {
   text-shadow: 0 0 30px rgba(34, 211, 238, 0.3);

@@ -12,11 +12,11 @@ export async function generateMetadata({ params }: { params: Promise<{ slug: str
   const { company, seo } = await prefetchSponsorDetailPageData(slug);
 
   if (!company) {
-    return { title: 'Sponsor Not Found' };
+    return { title: 'Partner Not Found' };
   }
 
-  const title = seo?.meta_title || `${company.company_name} | Sponsors - ${SEO_DEFAULTS.siteName}`;
-  const description = seo?.meta_description || company.company_bio?.replace(/<[^>]*>/g, '').slice(0, 160) || `${company.company_name} - Sponsor of DeAI Summit 2026`;
+  const title = seo?.meta_title || `${company.company_name} | Partners - ${SEO_DEFAULTS.siteName}`;
+  const description = seo?.meta_description || company.company_bio?.replace(/<[^>]*>/g, '').slice(0, 160) || `${company.company_name} - Partner of DeAI Summit 2026`;
   const logo = company.company_logo;
   const ogImage = logo?.startsWith('http') ? logo : logo ? `${BASE_URL}${logo}` : undefined;
 
@@ -38,12 +38,12 @@ export async function generateMetadata({ params }: { params: Promise<{ slug: str
       ...(ogImage && { images: [ogImage] }),
     },
     alternates: {
-      canonical: seo?.canonical_url || `${BASE_URL}/sponsors/${company.company_slug}`,
+      canonical: seo?.canonical_url || `${BASE_URL}/partners/${company.company_slug}`,
     },
   };
 }
 
-export default async function SponsorDetailPage({ params }: { params: Promise<{ slug: string }> }) {
+export default async function PartnerDetailPage({ params }: { params: Promise<{ slug: string }> }) {
   const { slug } = await params;
   const { company, seo } = await prefetchSponsorDetailPageData(slug);
 
@@ -51,7 +51,7 @@ export default async function SponsorDetailPage({ params }: { params: Promise<{ 
     notFound();
   }
 
-  const schema = generateOrganizationSchema(company, BASE_URL, 'sponsors');
+  const schema = generateOrganizationSchema(company, BASE_URL, 'partners');
   const seoOverrides = seo?.structured_data;
   const finalSchema = schema && seoOverrides && Object.keys(seoOverrides).length > 0
     ? { ...schema, ...seoOverrides }
@@ -68,7 +68,7 @@ export default async function SponsorDetailPage({ params }: { params: Promise<{ 
       <CompanyDetailClient
         company={company}
         backLabel="Sponsors & Partners"
-        backHref="/#sponsors"
+        backHref="/partners"
       />
     </>
   );

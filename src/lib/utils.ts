@@ -2,40 +2,62 @@
  * Convert markdown text to simple HTML for rendering.
  */
 export function markdownToHtml(text: string): string {
-  return text
+  // Split into blocks by double newline (or more)
+  const blocks = text.split(/\n{2,}/);
+
+  const htmlBlocks = blocks.map(block => {
+    const trimmed = block.trim();
+    if (!trimmed) return '';
+
     // Headers
-    .replace(/^### (.+)$/gm, '<h3>$1</h3>')
-    .replace(/^## (.+)$/gm, '<h2>$1</h2>')
-    .replace(/^# (.+)$/gm, '<h1>$1</h1>')
-    // Bold and italic
+    if (trimmed.startsWith('### ')) return `<h3>${trimmed.slice(4)}</h3>`;
+    if (trimmed.startsWith('## ')) return `<h2>${trimmed.slice(3)}</h2>`;
+    if (trimmed.startsWith('# ')) return `<h1>${trimmed.slice(2)}</h1>`;
+
+    // Horizontal rules
+    if (/^---+$/.test(trimmed)) return '<hr />';
+
+    // Blockquotes
+    if (trimmed.startsWith('> ')) {
+      const content = trimmed.replace(/^>\s*/gm, '');
+      return `<blockquote>${content}</blockquote>`;
+    }
+
+    // Unordered list
+    if (/^\s*[-*+]\s+/.test(trimmed)) {
+      const items = trimmed.split('\n')
+        .map(line => line.replace(/^\s*[-*+]\s+/, ''))
+        .map(item => `<li>${applyInlineFormatting(item)}</li>`)
+        .join('');
+      return `<ul>${items}</ul>`;
+    }
+
+    // Ordered list
+    if (/^\s*\d+\.\s+/.test(trimmed)) {
+      const items = trimmed.split('\n')
+        .map(line => line.replace(/^\s*\d+\.\s+/, ''))
+        .map(item => `<li>${applyInlineFormatting(item)}</li>`)
+        .join('');
+      return `<ol>${items}</ol>`;
+    }
+
+    // Regular paragraph — convert single newlines to <br>
+    const lines = trimmed.split('\n').map(l => applyInlineFormatting(l)).join('<br />');
+    return `<p>${lines}</p>`;
+  });
+
+  return htmlBlocks.filter(Boolean).join('\n');
+}
+
+function applyInlineFormatting(text: string): string {
+  return text
     .replace(/\*\*\*(.+?)\*\*\*/g, '<strong><em>$1</em></strong>')
     .replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>')
     .replace(/\*(.+?)\*/g, '<em>$1</em>')
     .replace(/__(.+?)__/g, '<strong>$1</strong>')
     .replace(/_(.+?)_/g, '<em>$1</em>')
-    // Links
     .replace(/\[([^\]]+)\]\(([^)]+)\)/g, '<a href="$2" target="_blank" rel="noopener noreferrer">$1</a>')
-    // Unordered lists
-    .replace(/^\s*[-*+]\s+(.+)$/gm, '<li>$1</li>')
-    .replace(/(<li>.*<\/li>\n?)+/g, '<ul>$&</ul>')
-    // Ordered lists
-    .replace(/^\s*\d+\.\s+(.+)$/gm, '<li>$1</li>')
-    // Blockquotes
-    .replace(/^>\s+(.+)$/gm, '<blockquote>$1</blockquote>')
-    // Inline code
-    .replace(/`([^`]+)`/g, '<code>$1</code>')
-    // Horizontal rules
-    .replace(/^---+$/gm, '<hr />')
-    // Paragraphs (double newline)
-    .replace(/\n\n+/g, '</p><p>')
-    // Single newlines to <br>
-    .replace(/\n/g, '<br />')
-    // Wrap in paragraph
-    .replace(/^(.+)/, '<p>$1</p>')
-    // Clean up empty paragraphs
-    .replace(/<p>\s*<\/p>/g, '')
-    .replace(/<p><(h[1-3]|ul|ol|blockquote|hr)/g, '<$1')
-    .replace(/<\/(h[1-3]|ul|ol|blockquote)><\/p>/g, '</$1>');
+    .replace(/`([^`]+)`/g, '<code>$1</code>');
 }
 
 /**

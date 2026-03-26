@@ -4,6 +4,7 @@ import React from 'react';
 import Image from 'next/image';
 import Link from 'next/link';
 import { DetailPageLayout } from '@/components/DetailPageLayout';
+import { AnimatedGrid } from '@/components/AnimatedGrid';
 import { markdownToHtml, youtubeToEmbed } from '@/lib/utils';
 import type { Company, CompanySocials } from '@/lib/api-types';
 
@@ -79,9 +80,13 @@ export const CompanyDetailClient: React.FC<CompanyDetailClientProps> = ({ compan
   return (
     <DetailPageLayout>
       {/* Hero section */}
-      <section className="bg-[#020408] text-white">
-        <div className="max-w-[1440px] mx-auto px-6 py-20 md:py-28">
-          <div className="flex flex-col md:flex-row gap-12 md:gap-16 items-center md:items-start">
+      <section className="relative bg-[#020408] text-white">
+        {/* Grid Overlay */}
+        <div className="absolute inset-0 pointer-events-none animated-grid">
+          <AnimatedGrid />
+        </div>
+        <div className="relative z-10 max-w-[1440px] mx-auto px-6 py-20 md:py-28">
+          <div className="flex flex-col md:flex-row gap-12 md:gap-16 items-center mx-auto w-fit">
             {/* Logo */}
             {company.company_logo && (
               <div className="flex-shrink-0">
@@ -98,7 +103,7 @@ export const CompanyDetailClient: React.FC<CompanyDetailClientProps> = ({ compan
             )}
 
             {/* Info */}
-            <div className="flex-1 text-center md:text-left">
+            <div className="text-center md:text-left">
               <Link href={backHref} className="text-brand-cyan text-sm font-mono uppercase tracking-widest hover:underline mb-6 inline-flex items-center gap-1">
                 <i className="ri-arrow-left-line"></i> {backLabel}
               </Link>
@@ -135,13 +140,7 @@ export const CompanyDetailClient: React.FC<CompanyDetailClientProps> = ({ compan
               <h2 className="text-2xl md:text-3xl font-display font-bold text-[#1a1a1a]">About</h2>
             </div>
             <div
-              className="prose prose-lg max-w-none text-gray-700 leading-relaxed
-                prose-headings:font-display prose-headings:text-[#1a1a1a] prose-headings:font-bold
-                prose-h2:text-xl prose-h3:text-lg
-                prose-a:text-brand-blue prose-a:no-underline hover:prose-a:underline
-                prose-strong:text-[#1a1a1a]
-                prose-li:marker:text-brand-cyan
-                prose-blockquote:border-l-brand-cyan prose-blockquote:text-gray-600"
+              className="bio-content max-w-none"
               dangerouslySetInnerHTML={{ __html: renderBio(company.company_bio) }}
             />
           </div>

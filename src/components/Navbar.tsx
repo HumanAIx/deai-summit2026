@@ -47,7 +47,7 @@ export const Navbar: React.FC<NavbarProps> = ({ onShowToast, onOpenContact, data
 
   return (
     <>
-      <nav className="fixed left-1/2 -translate-x-1/2 top-6 md:top-10 z-50 flex items-center justify-between w-[95%] max-w-4xl rounded-full px-5 py-3 border border-white/10 bg-[#020408]/80 backdrop-blur-xl shadow-2xl shadow-brand-cyan/5 transition-all duration-300">
+      <nav className="fixed left-1/2 -translate-x-1/2 top-6 md:top-10 z-50 flex items-center justify-between w-[95%] max-w-4xl rounded-full px-5 py-3 border border-white/20 bg-[#020408]/80 backdrop-blur-xl transition-all duration-300" style={{ boxShadow: '0 0 30px 8px rgba(255,255,255,0.12), 0 0 60px 20px rgba(255,255,255,0.06)' }}>
 
         {/* Logo */}
         <Link href="/" className="flex items-center gap-3 pl-2 group">

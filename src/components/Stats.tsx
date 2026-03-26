@@ -72,7 +72,7 @@ export const Stats: React.FC<StatsProps> = ({ data }) => {
                   />
                   <AnimatedCounter
                     value={stat.number}
-                    className="text-6xl md:text-7xl font-display font-bold tracking-tighter text-black group-hover:scale-105 transition-transform duration-300 origin-left"
+                    className="text-6xl md:text-7xl font-display font-bold tracking-tighter text-[#106FEB] group-hover:scale-105 transition-transform duration-300 origin-left"
                     duration={2200}
                     delay={idx * 150}
                   />
