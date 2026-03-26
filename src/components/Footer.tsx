@@ -209,7 +209,7 @@ export const Footer: React.FC<FooterProps> = ({ data, navData, onShowToast, onOp
                         <h4 className="text-sm font-semibold uppercase tracking-widest text-white/30 mb-5">Venue</h4>
                         <ul className="flex flex-col gap-3">
                             <li className="text-base text-white/60">
-                                <i className="ri-map-pin-2-fill text-brand-cyan mr-1"></i> St. Julians, Malta
+                                <i className="ri-map-pin-2-fill text-brand-cyan mr-1"></i> Is-Siġġiewi, Malta
                             </li>
                             <li className="text-base text-white/60">
                                 <i className="ri-calendar-event-fill text-brand-cyan mr-1"></i> 28-30 Oct 2026

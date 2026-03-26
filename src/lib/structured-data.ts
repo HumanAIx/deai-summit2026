@@ -111,7 +111,7 @@ export function generateEventSchema(baseUrl: string) {
       name: 'InterContinental Malta',
       address: {
         '@type': 'PostalAddress',
-        addressLocality: 'St. Julians',
+        addressLocality: 'Is-Siġġiewi',
         addressCountry: 'Malta',
       },
     },
