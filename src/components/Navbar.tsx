@@ -16,13 +16,11 @@ export const Navbar: React.FC<NavbarProps> = ({ onShowToast, onOpenContact, data
 
   const handleContactClick = (e: React.MouseEvent) => {
     e.preventDefault();
+    setIsMenuOpen(false);
     if (onOpenContact) {
       onOpenContact();
-      setIsMenuOpen(false);
     } else {
-      navigator.clipboard.writeText(data.contactEmail);
-      onShowToast("Email copied to clipboard");
-      setIsMenuOpen(false);
+      alert('Not implemented yet');
     }
   };
 
@@ -86,18 +84,6 @@ export const Navbar: React.FC<NavbarProps> = ({ onShowToast, onOpenContact, data
             </button>
           </div>
 
-          {/* Social Icons */}
-          <div className="flex items-center gap-5 border-l border-white/10 pl-7 ml-2">
-            <a
-              href={data.socials.linkedin}
-              target="_blank"
-              rel="noreferrer"
-              className="text-white/60 hover:text-white transition-colors"
-              aria-label="Follow us on LinkedIn"
-            >
-              <i className="ri-linkedin-fill text-xl"></i>
-            </a>
-          </div>
         </div>
 
         {/* Action */}

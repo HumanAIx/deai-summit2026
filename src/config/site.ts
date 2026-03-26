@@ -229,7 +229,7 @@ export const siteConfig: SiteConfig = {
         hotspots: [
             {
                 id: "venue",
-                title: "InterContinental <br/>Malta",
+                title: "Monte Kristo <br/>Estate",
                 subtitle: "St Julians | Malta",
                 position: { top: "35%", left: "5%", mdLeft: "8%", lgLeft: "12%" },
                 type: "left-aligned"
