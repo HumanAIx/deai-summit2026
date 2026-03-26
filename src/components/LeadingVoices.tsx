@@ -102,7 +102,7 @@ const SpeakerCard: React.FC<{
         <div
           className="absolute inset-0"
           style={{
-            background: `linear-gradient(to bottom, #020408 0%, transparent 40%)`,
+            background: `linear-gradient(to bottom, #020408 0%, rgba(2,4,8,0) 40%)`,
           }}
         />
       </div>

@@ -88,7 +88,7 @@ export const SpeakerDetailClient: React.FC<SpeakerDetailClientProps> = ({ member
           <AnimatedGrid />
         </div>
         <div className="relative z-10 max-w-[1440px] mx-auto px-6 py-20 md:py-28">
-          <div className="flex flex-col md:flex-row gap-12 md:gap-16 items-center md:items-start">
+          <div className="flex flex-col md:flex-row gap-12 md:gap-16 items-center mx-auto w-fit">
             {/* Photo */}
             {photo && (
               <div className="flex-shrink-0">
@@ -163,31 +163,56 @@ export const SpeakerDetailClient: React.FC<SpeakerDetailClientProps> = ({ member
               <div className="w-1 h-8 bg-brand-blue rounded-full" />
               <h2 className="text-2xl md:text-3xl font-display font-bold text-[#1a1a1a]">Organizations</h2>
             </div>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-              {companies.map((company) => (
-                <Link
-                  key={company.id}
-                  href={company.company_is_sponsor ? `/partners/${company.company_slug}` : `/companies/${company.company_slug}`}
-                  className="flex items-center gap-5 p-6 rounded-2xl border border-gray-200 hover:border-brand-cyan/30 hover:shadow-lg hover:shadow-brand-cyan/5 transition-all duration-300 no-underline group"
-                >
-                  {company.company_logo && (
-                    <div className="relative w-16 h-16 flex-shrink-0 rounded-xl overflow-hidden bg-gray-50 p-2">
-                      <Image
-                        src={company.company_logo}
-                        alt={company.company_name}
-                        fill
-                        className="object-contain"
-                      />
+            <div className="flex flex-wrap justify-center gap-6">
+              {companies.map((company, index) => {
+                const colors = ['#1cd4f0', '#3a9ef5', '#40e8c0', '#9a72f0', '#38c0f5', '#7a5af0', '#20e0a8', '#e080c0'];
+                const bgColor = colors[index % colors.length];
+                const href = company.company_is_sponsor ? `/partners/${company.company_slug}` : `/companies/${company.company_slug}`;
+
+                return (
+                  <Link
+                    key={company.id}
+                    href={href}
+                    className="group block overflow-hidden rounded-2xl transition-all duration-300 hover:scale-[1.02] hover:shadow-xl no-underline bg-white border border-gray-200 hover:border-gray-300 w-full md:w-[calc(50%-12px)]"
+                  >
+                    {/* Logo section */}
+                    <div className="relative h-[130px] flex items-center justify-center p-6 bg-white">
+                      {company.company_logo ? (
+                        <div className="relative w-full h-full max-w-[160px]">
+                          <Image
+                            src={company.company_logo}
+                            alt={company.company_name}
+                            fill
+                            className="object-contain"
+                          />
+                        </div>
+                      ) : (
+                        <span className="text-gray-300 text-lg font-display font-bold">{company.company_name}</span>
+                      )}
                     </div>
-                  )}
-                  <div>
-                    <h3 className="font-bold text-[#1a1a1a] group-hover:text-brand-cyan transition-colors">{company.company_name}</h3>
-                    {company.company_city && (
-                      <p className="text-sm text-gray-500 mt-0.5">{company.company_city}{company.company_country ? `, ${company.company_country}` : ''}</p>
-                    )}
-                  </div>
-                </Link>
-              ))}
+
+                    {/* Info section */}
+                    <div className="p-5 h-[100px] flex flex-col justify-between" style={{ backgroundColor: bgColor }}>
+                      <div>
+                        <h3 className="text-white text-base font-display font-extrabold group-hover:underline transition-colors leading-tight">
+                          {company.company_name}
+                        </h3>
+                        {company.company_city && (
+                          <p className="text-white/70 text-xs font-semibold mt-1">
+                            {company.company_city}{company.company_country ? `, ${company.company_country}` : ''}
+                          </p>
+                        )}
+                      </div>
+                      <div className="flex items-center gap-1 text-white/60 text-xs font-bold font-mono uppercase tracking-widest group-hover:text-white transition-colors">
+                        View Details
+                        <svg className="w-3 h-3 group-hover:translate-x-1 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+                        </svg>
+                      </div>
+                    </div>
+                  </Link>
+                );
+              })}
             </div>
           </div>
         </section>
