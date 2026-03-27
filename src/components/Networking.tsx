@@ -6,7 +6,7 @@ interface NetworkingProps {
     data: NetworkingItem[];
 }
 
-const cardAccents = ['#00B0C2', '#0E6FEB', '#050A1F', '#00B0C2'];
+const cardAccents = ['#00B0C2', '#0E6FEB', '#00B0C2', '#0E6FEB'];
 
 export const Networking: React.FC<NetworkingProps> = ({ data }) => {
     const [activeTab, setActiveTab] = useState(0);

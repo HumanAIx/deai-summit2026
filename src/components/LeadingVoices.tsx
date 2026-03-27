@@ -18,7 +18,7 @@ const SpeakerCard: React.FC<{
   const [hovered, setHovered] = useState(false);
 
   // Subtle accent colors for the bottom gradient
-  const accents = ['#00B0C2', '#0E6FEB', '#050A1F', '#00B0C2'];
+  const accents = ['#00B0C2', '#0E6FEB', '#00B0C2', '#0E6FEB'];
   const accent = accents[colorIndex % accents.length];
 
   const handleEnter = () => {
