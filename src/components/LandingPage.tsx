@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, Suspense } from 'react';
 import { Navbar } from '@/components/Navbar';
 import { Hero } from '@/components/Hero';
 import { Marquee } from '@/components/Marquee';
@@ -88,10 +88,14 @@ export const LandingPage: React.FC<LandingPageProps> = ({ speakers, marqueeItems
             />
 
             <main className="w-full mx-auto">
-                <Hero data={siteConfig.hero} onOpenContact={handleOpenContact} onOpenSpeakerApp={handleOpenSpeakerApp} onOpenWaitlist={() => setIsWaitlistOpen(true)} />
+                <Suspense>
+                    <Hero data={siteConfig.hero} onOpenContact={handleOpenContact} onOpenSpeakerApp={handleOpenSpeakerApp} onOpenWaitlist={() => setIsWaitlistOpen(true)} />
+                </Suspense>
 
                 {/* Sponsor logo scroller */}
-                <Marquee data={marqueeItems} />
+                <Suspense>
+                    <Marquee data={marqueeItems} />
+                </Suspense>
 
                 {/* Light Stats Section */}
                 <Stats data={siteConfig.stats} />
