@@ -92,8 +92,8 @@ export const Footer: React.FC<FooterProps> = ({ data, navData, onShowToast, onOp
                                 <Image src="/icontransparent.png" alt="DeAI Summit" fill className="object-contain" />
                             </div>
                             <div className="flex flex-col leading-none justify-center">
-                                <span className="font-bold tracking-tight text-white text-[1.75rem] leading-none">DeAI</span>
-                                <span className="text-[0.55rem] uppercase tracking-[0.35em] text-white/50 leading-none mt-[3px] group-hover:text-brand-cyan transition-colors">Summit</span>
+                                <span className="font-bold tracking-tight text-white text-[2rem] leading-none">DeAI</span>
+                                <span className="text-[0.65rem] uppercase tracking-[0.35em] text-white/50 leading-none mt-[3px] ml-[1px] group-hover:text-brand-cyan transition-colors">Summit</span>
                             </div>
                         </Link>
                         <p className="text-base text-white/50 leading-relaxed mb-8">

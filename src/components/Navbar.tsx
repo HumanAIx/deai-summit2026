@@ -52,8 +52,8 @@ export const Navbar: React.FC<NavbarProps> = ({ onShowToast, onOpenContact, data
             <Image src="/icontransparent.png" alt="DeAI Summit" fill className="object-contain" />
           </div>
           <div className="flex flex-col leading-none justify-center">
-            <span className="font-bold tracking-tight text-white text-[1.35rem] leading-none">DeAI</span>
-            <span className="text-[0.45rem] uppercase tracking-[0.35em] text-white/70 leading-none mt-[2px]">Summit</span>
+            <span className="font-bold tracking-tight text-white text-[1.55rem] leading-none">DeAI</span>
+            <span className="text-[0.5rem] uppercase tracking-[0.35em] text-white/70 leading-none mt-[2px] ml-[1px]">Summit</span>
           </div>
         </Link>
 
