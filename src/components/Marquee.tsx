@@ -66,7 +66,7 @@ export const Marquee: React.FC<MarqueeProps> = ({ data }) => {
   const totalWidth = data.length * itemWidth;
 
   return (
-    <section className="w-full z-20 relative overflow-hidden py-12 -mt-[190px]" style={{ backgroundColor: '#2a2a30' }}>
+    <section className="w-full z-20 relative overflow-hidden py-12" style={{ backgroundColor: '#2a2a30' }}>
       {/* Dynamic hover styles */}
       <style dangerouslySetInnerHTML={{
         __html: `
