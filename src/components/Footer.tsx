@@ -1,6 +1,7 @@
 'use client';
 import React from 'react';
 import Link from 'next/link';
+import Image from 'next/image';
 import { FooterConfig, NavigationConfig } from '@/config/types';
 import { AnimatedCounter } from '@/components/AnimatedCounter';
 
@@ -86,17 +87,13 @@ export const Footer: React.FC<FooterProps> = ({ data, navData, onShowToast, onOp
 
                     {/* Brand */}
                     <div className="lg:max-w-md">
-                        <Link href="/" className="flex items-center gap-3 group mb-6">
-                            <div className="w-12 h-12 relative flex items-center justify-center">
-                                <svg viewBox="0 0 100 100" fill="none" xmlns="http://www.w3.org/2000/svg" className="w-full h-full">
-                                    <path d="M10 30 C30 15, 60 45, 90 30" stroke="#3B82F6" strokeWidth="12" strokeLinecap="round" />
-                                    <path d="M10 50 C30 35, 60 65, 90 50" stroke="#22D3EE" strokeWidth="12" strokeLinecap="round" />
-                                    <path d="M20 70 C40 55, 70 85, 90 70" stroke="#2DD4BF" strokeWidth="12" strokeLinecap="round" />
-                                </svg>
+                        <Link href="/" className="flex items-center group mb-6">
+                            <div className="w-11 h-11 relative flex-shrink-0 mr-2">
+                                <Image src="/icontransparent.png" alt="DeAI Summit" fill className="object-contain" />
                             </div>
                             <div className="flex flex-col leading-none justify-center">
-                                <span className="font-bold tracking-tight text-white text-2xl leading-tight">DeAI</span>
-                                <span className="text-[0.6rem] uppercase tracking-[0.25em] text-white/50 leading-none group-hover:text-brand-cyan transition-colors">Summit</span>
+                                <span className="font-bold tracking-tight text-white text-[1.75rem] leading-none">DeAI</span>
+                                <span className="text-[0.55rem] uppercase tracking-[0.35em] text-white/50 leading-none mt-[3px] group-hover:text-brand-cyan transition-colors">Summit</span>
                             </div>
                         </Link>
                         <p className="text-base text-white/50 leading-relaxed mb-8">

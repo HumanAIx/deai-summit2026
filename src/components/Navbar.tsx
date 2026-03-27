@@ -1,6 +1,7 @@
 'use client';
 import React, { useState } from 'react';
 import Link from 'next/link';
+import Image from 'next/image';
 import { useRouter } from 'next/navigation';
 import { NavigationConfig } from '@/config/types';
 
@@ -46,17 +47,13 @@ export const Navbar: React.FC<NavbarProps> = ({ onShowToast, onOpenContact, data
       <nav className="fixed left-1/2 -translate-x-1/2 top-6 md:top-10 z-50 flex items-center justify-between w-[95%] max-w-4xl rounded-full px-5 py-3 border border-white/20 bg-[#050A1F]/80 backdrop-blur-xl transition-all duration-300" style={{ boxShadow: '0 0 30px 8px rgba(255,255,255,0.12), 0 0 60px 20px rgba(255,255,255,0.06)' }}>
 
         {/* Logo */}
-        <Link href="/" className="flex items-center gap-3 pl-2 group">
-          <div className="w-10 h-10 relative flex items-center justify-center">
-            <svg viewBox="0 0 100 100" fill="none" xmlns="http://www.w3.org/2000/svg" className="w-full h-full">
-              <path d="M10 30 C30 15, 60 45, 90 30" stroke="#3B82F6" strokeWidth="12" strokeLinecap="round" />
-              <path d="M10 50 C30 35, 60 65, 90 50" stroke="#22D3EE" strokeWidth="12" strokeLinecap="round" />
-              <path d="M20 70 C40 55, 70 85, 90 70" stroke="#2DD4BF" strokeWidth="12" strokeLinecap="round" />
-            </svg>
+        <Link href="/" className="flex items-center pl-2 group">
+          <div className="w-8 h-8 relative flex-shrink-0 mr-1.5">
+            <Image src="/icontransparent.png" alt="DeAI Summit" fill className="object-contain" />
           </div>
           <div className="flex flex-col leading-none justify-center">
-            <span className="font-bold tracking-tight text-white text-xl leading-tight">DeAI</span>
-            <span className="text-[0.5rem] uppercase tracking-[0.2em] text-white/80 leading-none">Summit</span>
+            <span className="font-bold tracking-tight text-white text-[1.35rem] leading-none">DeAI</span>
+            <span className="text-[0.45rem] uppercase tracking-[0.35em] text-white/70 leading-none mt-[2px]">Summit</span>
           </div>
         </Link>
 
