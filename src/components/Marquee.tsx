@@ -3,6 +3,7 @@
 import React, { useState } from 'react';
 import Image from 'next/image';
 import Link from 'next/link';
+import { useSearchParams } from 'next/navigation';
 import type { MarqueeItemData } from '@/components/LandingPage';
 
 interface MarqueeProps {
@@ -60,13 +61,16 @@ const MarqueeItem: React.FC<{
 
 export const Marquee: React.FC<MarqueeProps> = ({ data }) => {
   const [isHovering, setIsHovering] = useState(false);
+  const searchParams = useSearchParams();
+  const hasVideo = !!searchParams.get('video');
+  const bgColor = hasVideo ? '#000000' : '#050A1F';
 
   // Calculate total width for animation
   const itemWidth = 310; // 240px logo + 70px margins
   const totalWidth = data.length * itemWidth;
 
   return (
-    <section className="w-full z-20 relative overflow-hidden py-12" style={{ backgroundColor: '#050A1F' }}>
+    <section className="w-full z-20 relative overflow-hidden py-12" style={{ backgroundColor: bgColor }}>
       {/* Dynamic hover styles */}
       <style dangerouslySetInnerHTML={{
         __html: `
@@ -85,8 +89,8 @@ export const Marquee: React.FC<MarqueeProps> = ({ data }) => {
       }} />
 
       {/* Fade edges */}
-      <div className="absolute left-0 top-0 h-full w-24 bg-gradient-to-r from-[#050A1F] to-transparent z-10 pointer-events-none" />
-      <div className="absolute right-0 top-0 h-full w-24 bg-gradient-to-l from-[#050A1F] to-transparent z-10 pointer-events-none" />
+      <div className="absolute left-0 top-0 h-full w-24 z-10 pointer-events-none" style={{ background: `linear-gradient(to right, ${bgColor}, transparent)` }} />
+      <div className="absolute right-0 top-0 h-full w-24 z-10 pointer-events-none" style={{ background: `linear-gradient(to left, ${bgColor}, transparent)` }} />
 
       <div
         className="flex items-center"
