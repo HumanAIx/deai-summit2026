@@ -99,7 +99,7 @@ export const Networking: React.FC<NetworkingProps> = ({ data }) => {
                                 ></i>
 
                                 {/* Title */}
-                                <h3 className="text-xl font-display font-bold text-white mb-4 leading-tight group-hover:underline">
+                                <h3 className="text-xl font-display font-bold text-white mb-4 leading-tight">
                                     {item.title}
                                 </h3>
 

@@ -19,8 +19,6 @@ export const Navbar: React.FC<NavbarProps> = ({ onShowToast, onOpenContact, data
     setIsMenuOpen(false);
     if (onOpenContact) {
       onOpenContact();
-    } else {
-      alert('Not implemented yet');
     }
   };
 
