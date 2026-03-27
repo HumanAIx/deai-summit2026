@@ -79,7 +79,7 @@ export const PastSponsors: React.FC<PastSponsorsProps> = ({ data, onOpenContact 
               <div className="flex flex-wrap justify-center gap-5">
                 {sponsors.map((sponsor, index) => (
                   <div key={index} className="w-[calc(50%-10px)] sm:w-[calc(33.333%-14px)] lg:w-[calc(25%-15px)] xl:w-[calc(20%-16px)]">
-                    <SponsorCard item={sponsor} />
+                    <SponsorCard item={sponsor} index={index} />
                   </div>
                 ))}
               </div>
@@ -96,7 +96,7 @@ export const PastSponsors: React.FC<PastSponsorsProps> = ({ data, onOpenContact 
               <div className="flex flex-wrap justify-center gap-5">
                 {partners.map((partner, index) => (
                   <div key={index} className="w-[calc(50%-10px)] sm:w-[calc(33.333%-14px)] lg:w-[calc(25%-15px)] xl:w-[calc(20%-16px)]">
-                    <SponsorCard item={partner} />
+                    <SponsorCard item={partner} index={index + sponsors.length} />
                   </div>
                 ))}
               </div>
@@ -108,7 +108,7 @@ export const PastSponsors: React.FC<PastSponsorsProps> = ({ data, onOpenContact 
             <div className="flex flex-wrap justify-center gap-5 mb-16">
               {data.map((item, index) => (
                 <div key={index} className="w-[calc(50%-10px)] sm:w-[calc(33.333%-14px)] lg:w-[calc(25%-15px)] xl:w-[calc(20%-16px)]">
-                  <SponsorCard item={item} />
+                  <SponsorCard item={item} index={index} />
                 </div>
               ))}
             </div>
@@ -138,31 +138,58 @@ export const PastSponsors: React.FC<PastSponsorsProps> = ({ data, onOpenContact 
   );
 };
 
-function SponsorCard({ item }: { item: PartnerItemData }) {
+const tileColors = ['#00B0C2', '#0E6FEB', '#050A1F', '#00B0C2', '#0E6FEB', '#050A1F'];
+
+function SponsorCard({ item, index = 0 }: { item: PartnerItemData; index?: number }) {
   const href = item.isSponsor
     ? `/partners/${item.slug}`
     : `/companies/${item.slug}`;
+  const accent = tileColors[index % tileColors.length];
 
   const card = (
-    <div className="group relative h-36 rounded-2xl bg-white border border-gray-200 overflow-hidden transition-all duration-500 hover:border-brand-cyan/40 hover:scale-[1.06] hover:rotate-[0.5deg]"
-      style={{ boxShadow: 'none' }}
-      onMouseEnter={(e) => { e.currentTarget.style.boxShadow = '0 0 25px 5px rgba(0,176,194,0.12), 0 10px 30px rgba(0,0,0,0.08)'; }}
-      onMouseLeave={(e) => { e.currentTarget.style.boxShadow = 'none'; }}
+    <div className="group relative h-44 rounded-2xl overflow-hidden transition-all duration-500 hover:scale-[1.04]"
+      style={{
+        background: `linear-gradient(135deg, #ffffff 0%, #f8f8f8 100%)`,
+        boxShadow: '0 2px 12px rgba(0,0,0,0.06)',
+      }}
+      onMouseEnter={(e) => {
+        e.currentTarget.style.boxShadow = `0 0 30px 6px ${accent}20, 0 15px 40px rgba(0,0,0,0.12)`;
+      }}
+      onMouseLeave={(e) => {
+        e.currentTarget.style.boxShadow = '0 2px 12px rgba(0,0,0,0.06)';
+      }}
     >
+      {/* Top accent bar */}
+      <div
+        className="absolute top-0 left-0 right-0 h-[3px] transition-all duration-500 opacity-0 group-hover:opacity-100"
+        style={{ backgroundColor: accent }}
+      />
+
       {/* Logo */}
-      <div className="relative w-full h-full flex flex-col items-center justify-center p-6 gap-2">
-        <div className="relative w-full h-full max-w-[140px] max-h-[45px]">
+      <div className="relative w-full h-full flex flex-col items-center justify-center px-6 pt-6 pb-4">
+        <div className="relative w-full flex-1 max-w-[150px] max-h-[55px]">
           <Image
             src={item.logo}
             alt={item.name}
             fill
-            className="object-contain grayscale group-hover:grayscale-0 opacity-50 group-hover:opacity-100 transition-all duration-500"
+            className="object-contain grayscale-[0.6] group-hover:grayscale-0 opacity-60 group-hover:opacity-100 transition-all duration-500 group-hover:scale-110"
           />
         </div>
-        {/* Name fades in below logo */}
-        <p className="text-[10px] font-mono uppercase tracking-widest text-gray-400 group-hover:text-brand-cyan opacity-0 group-hover:opacity-100 transition-all duration-500 translate-y-1 group-hover:translate-y-0">
-          {item.name}
-        </p>
+
+        {/* Name + arrow */}
+        <div className="mt-auto pt-4 flex items-center justify-between w-full border-t border-gray-100 group-hover:border-transparent transition-colors duration-500">
+          <p className="text-[11px] font-semibold text-gray-400 group-hover:text-gray-700 transition-colors duration-500 truncate">
+            {item.name}
+          </p>
+          <div
+            className="w-6 h-6 rounded-full flex items-center justify-center opacity-0 group-hover:opacity-100 transition-all duration-500 -translate-x-2 group-hover:translate-x-0 flex-shrink-0"
+            style={{ backgroundColor: accent }}
+          >
+            <svg className="w-3 h-3 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M9 5l7 7-7 7" />
+            </svg>
+          </div>
+        </div>
       </div>
     </div>
   );
