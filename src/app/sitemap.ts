@@ -1,15 +1,16 @@
 import type { MetadataRoute } from 'next';
-import { prefetchSpeakers, prefetchSponsors, prefetchPartners, prefetchCompanies } from '@/lib/prefetch';
+import { prefetchSpeakers, prefetchSponsors, prefetchPartners, prefetchCompanies, prefetchVenues } from '@/lib/prefetch';
 
 const BASE_URL = process.env.NEXT_PUBLIC_SITE_URL || 'https://deaisummit.org';
 
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   // Fetch all dynamic data in parallel
-  const [speakers, sponsors, partners, companies] = await Promise.all([
+  const [speakers, sponsors, partners, companies, venues] = await Promise.all([
     prefetchSpeakers(),
     prefetchSponsors(),
     prefetchPartners(),
     prefetchCompanies(),
+    prefetchVenues(),
   ]);
 
   // Static pages
@@ -46,10 +47,18 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
       })),
   ];
 
-  // Company detail pages (non-sponsor, non-partner companies)
-  const partnerIds = new Set([...sponsors.map(s => s.id), ...partners.map(p => p.id)]);
+  // Venue detail pages
+  const venueIds = new Set(venues.map(v => v.id));
+  const venuePages: MetadataRoute.Sitemap = venues.map((venue) => ({
+    url: `${BASE_URL}/venues/${venue.company_slug}`,
+    changeFrequency: 'monthly' as const,
+    priority: 0.8,
+  }));
+
+  // Company detail pages (non-sponsor, non-partner, non-venue companies)
+  const excludeIds = new Set([...sponsors.map(s => s.id), ...partners.map(p => p.id), ...venueIds]);
   const companyPages: MetadataRoute.Sitemap = companies
-    .filter(c => !partnerIds.has(c.id))
+    .filter(c => !excludeIds.has(c.id))
     .map((company) => ({
       url: `${BASE_URL}/companies/${company.company_slug}`,
       changeFrequency: 'monthly' as const,
@@ -60,6 +69,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     ...staticPages,
     ...speakerPages,
     ...partnerPages,
+    ...venuePages,
     ...companyPages,
   ];
 }

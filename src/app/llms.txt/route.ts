@@ -1,5 +1,5 @@
 import { NextResponse } from 'next/server';
-import { prefetchSpeakers, prefetchSponsors, prefetchPartners, prefetchCompanies } from '@/lib/prefetch';
+import { prefetchSpeakers, prefetchSponsors, prefetchPartners, prefetchCompanies, prefetchVenues } from '@/lib/prefetch';
 
 const BASE_URL = process.env.NEXT_PUBLIC_SITE_URL || 'https://deaisummit.org';
 
@@ -8,11 +8,12 @@ function stripHtml(text: string): string {
 }
 
 export async function GET() {
-  const [speakers, sponsors, partners, companies] = await Promise.all([
+  const [speakers, sponsors, partners, companies, venues] = await Promise.all([
     prefetchSpeakers(),
     prefetchSponsors(),
     prefetchPartners(),
     prefetchCompanies(),
+    prefetchVenues(),
   ]);
 
   const lines: string[] = [];
@@ -82,8 +83,21 @@ export async function GET() {
     lines.push('');
   }
 
+  // Venues
+  if (venues.length > 0) {
+    lines.push('## Venues');
+    lines.push('');
+    for (const v of venues) {
+      const bio = v.company_bio ? `: ${stripHtml(v.company_bio).slice(0, 100)}` : '';
+      const location = [v.company_city, v.company_country === 'MT' ? 'Malta' : v.company_country].filter(Boolean).join(', ');
+      lines.push(`- [${v.company_name}](${BASE_URL}/venues/${v.company_slug})${location ? ` (${location})` : ''}${bio}`);
+    }
+    lines.push('');
+  }
+
   // Companies
-  const partnerIds = new Set([...sponsors.map(s => s.id), ...partners.map(p => p.id)]);
+  const venueIds = new Set(venues.map(v => v.id));
+  const partnerIds = new Set([...sponsors.map(s => s.id), ...partners.map(p => p.id), ...venueIds]);
   const otherCompanies = companies.filter(c => !partnerIds.has(c.id));
   if (otherCompanies.length > 0) {
     lines.push('## Companies');

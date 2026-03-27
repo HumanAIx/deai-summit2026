@@ -142,8 +142,21 @@ export async function prefetchPartners(): Promise<NormalizedSponsor[]> {
     .map(normalizeSponsor);
 }
 
+export async function prefetchVenues(): Promise<Company[]> {
+  const companies = await fetchFromAPI<Company[]>('/companies/venues');
+  if (!companies) return [];
+  return companies.filter(c => c.company_published && c.venue_published);
+}
+
 export async function prefetchCompanyBySlug(slug: string): Promise<Company | null> {
   return fetchFromAPI<Company>(`/companies/${slug}`);
+}
+
+export async function prefetchVenueDetailPageData(slug: string) {
+  const company = await prefetchCompanyBySlug(slug);
+  if (!company) return { company: null, seo: null };
+  const seo = await prefetchCompanySEO(company.id);
+  return { company, seo };
 }
 
 export async function prefetchCompanySEO(companyId: string): Promise<SEOSettings | null> {

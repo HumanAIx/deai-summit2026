@@ -90,6 +90,7 @@ export interface Company {
   partner_published: boolean;
   company_embedded_youtube?: string;
   company_youtube_videos?: unknown[];
+  venue_photo?: string;
   logo_background_white?: boolean;
   brochure_url?: string;
   tenant_id: string;

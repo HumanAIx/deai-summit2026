@@ -170,6 +170,11 @@ export const Footer: React.FC<FooterProps> = ({ data, navData, onShowToast, onOp
                                     Agenda
                                 </Link>
                             </li>
+                            <li>
+                                <Link href="/venues/monte-kristo" className="text-base text-white/60 hover:text-brand-cyan transition-colors">
+                                    Monte Kristo (Venue)
+                                </Link>
+                            </li>
                         </ul>
                     </div>
 
