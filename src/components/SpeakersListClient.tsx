@@ -12,10 +12,10 @@ const SPEAKERS_PER_PAGE = 24;
 
 // Card accent colors — subtle dark palette matching the site
 const cardColors = [
-  '#020408', // brand-dark
-  '#0a1628', // dark navy
-  '#0c1a2e', // deep blue
-  '#101820', // charcoal
+  '#050A1F', // deep navy
+  '#0A1530', // dark navy
+  '#0C1A35', // navy blue
+  '#081228', // midnight
 ];
 
 interface SpeakerCardProps {
@@ -122,7 +122,7 @@ export function SpeakersListClient({ speakers }: SpeakersListClientProps) {
   return (
     <DetailPageLayout>
       {/* Hero Section */}
-      <section className="relative bg-[#020408] text-white pt-16 pb-0">
+      <section className="relative bg-[#050A1F] text-white pt-16 pb-0">
         {/* Grid Overlay */}
         <div className="absolute inset-0 pointer-events-none animated-grid">
           <AnimatedGrid />
@@ -211,7 +211,7 @@ export function SpeakersListClient({ speakers }: SpeakersListClientProps) {
                     className={`px-4 py-2 rounded-lg border transition-all duration-300 ${
                       currentPage === 1
                         ? 'border-gray-300 text-gray-300 cursor-not-allowed'
-                        : 'border-gray-400 text-gray-700 hover:bg-[#020408] hover:text-white hover:border-[#020408]'
+                        : 'border-gray-400 text-gray-700 hover:bg-[#050A1F] hover:text-white hover:border-[#050A1F]'
                     }`}
                   >
                     <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -268,7 +268,7 @@ export function SpeakersListClient({ speakers }: SpeakersListClientProps) {
                     className={`px-4 py-2 rounded-lg border transition-all duration-300 ${
                       currentPage === totalPages
                         ? 'border-gray-300 text-gray-300 cursor-not-allowed'
-                        : 'border-gray-400 text-gray-700 hover:bg-[#020408] hover:text-white hover:border-[#020408]'
+                        : 'border-gray-400 text-gray-700 hover:bg-[#050A1F] hover:text-white hover:border-[#050A1F]'
                     }`}
                   >
                     <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">

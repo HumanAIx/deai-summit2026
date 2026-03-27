@@ -8,7 +8,7 @@ interface SceneHighlightsProps {
 
 export const SceneHighlights: React.FC<SceneHighlightsProps> = ({ data }) => {
     return (
-        <section className="relative w-full min-h-[600px] md:h-screen md:min-h-[700px] bg-[#020408] overflow-hidden border-t border-white/5">
+        <section className="relative w-full min-h-[600px] md:h-screen md:min-h-[700px] bg-[#050A1F] overflow-hidden border-t border-white/5">
 
             {/* Full Screen Image */}
             <div className="absolute inset-0">
@@ -18,7 +18,7 @@ export const SceneHighlights: React.FC<SceneHighlightsProps> = ({ data }) => {
                     fill
                     className="object-cover opacity-60"
                 />
-                <div className="absolute inset-0 bg-gradient-to-t from-[#020408] via-transparent to-[#020408]/40"></div>
+                <div className="absolute inset-0 bg-gradient-to-t from-[#050A1F] via-transparent to-[#050A1F]/40"></div>
                 {/* Subtle brand tint */}
                 <div className="absolute inset-0 bg-brand-blue/10 mix-blend-overlay"></div>
             </div>

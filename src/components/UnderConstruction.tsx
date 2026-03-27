@@ -8,7 +8,7 @@ interface UnderConstructionProps {
 
 export const UnderConstruction: React.FC<UnderConstructionProps> = ({ onOpenContact, data }) => {
     return (
-        <div className="relative min-h-screen w-full flex flex-col items-center justify-center overflow-hidden bg-[#020408]">
+        <div className="relative min-h-screen w-full flex flex-col items-center justify-center overflow-hidden bg-[#050A1F]">
             {/* Background Image with Overlay */}
             <div className="absolute inset-0 z-0">
                 <div className="absolute inset-0 bg-black/60 z-10" />
@@ -26,10 +26,10 @@ export const UnderConstruction: React.FC<UnderConstructionProps> = ({ onOpenCont
                 {/* Logo/Brand */}
                 <div className="flex flex-col items-center mb-6">
                     <div className="w-16 h-16 relative flex items-center justify-center mb-4">
-                        <svg viewBox="0 0 100 100" fill="none" xmlns="http://www.w3.org/2000/svg" className="w-full h-full drop-shadow-[0_0_15px_rgba(34,211,238,0.5)]">
-                            <path d="M10 30 C30 15, 60 45, 90 30" stroke="#3B82F6" strokeWidth="8" strokeLinecap="round" />
-                            <path d="M10 50 C30 35, 60 65, 90 50" stroke="#22D3EE" strokeWidth="8" strokeLinecap="round" />
-                            <path d="M20 70 C40 55, 70 85, 90 70" stroke="#2DD4BF" strokeWidth="8" strokeLinecap="round" />
+                        <svg viewBox="0 0 100 100" fill="none" xmlns="http://www.w3.org/2000/svg" className="w-full h-full drop-shadow-[0_0_15px_rgba(0,176,194,0.5)]">
+                            <path d="M10 30 C30 15, 60 45, 90 30" stroke="#0E6FEB" strokeWidth="8" strokeLinecap="round" />
+                            <path d="M10 50 C30 35, 60 65, 90 50" stroke="#00B0C2" strokeWidth="8" strokeLinecap="round" />
+                            <path d="M20 70 C40 55, 70 85, 90 70" stroke="#0E6FEB" strokeWidth="8" strokeLinecap="round" />
                         </svg>
                     </div>
                     <h1 className="text-4xl md:text-6xl font-bold tracking-tight text-white mb-2">

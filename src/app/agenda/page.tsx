@@ -24,7 +24,7 @@ export default function AgendaPage() {
     };
 
     return (
-        <div className="min-h-screen relative w-full selection:bg-brand-cyan/30 selection:text-brand-cyan font-sans bg-[#020408]">
+        <div className="min-h-screen relative w-full selection:bg-brand-cyan/30 selection:text-brand-cyan font-sans bg-[#050A1F]">
             <Navbar
                 onShowToast={showToast}
                 onOpenContact={handleOpenContact}
@@ -78,7 +78,7 @@ export default function AgendaPage() {
                             One main stage designed for “opposed futures of AI” debates, not keynotes.
                         </p>
 
-                        <div className="bg-gradient-to-br from-[#111] to-[#0a0a0a] p-6 rounded-2xl border border-white/5">
+                        <div className="bg-gradient-to-br from-[#050A1F] to-[#030712] p-6 rounded-2xl border border-white/5">
                             <h4 className="font-semibold text-white/90 mb-2">Match-ups between:</h4>
                             <p className="text-brand-cyan mb-6 pl-4 border-l-2 border-brand-cyan/30">
                                 Frontier / centralized actors and Decentralised / Web3 actors
@@ -91,14 +91,14 @@ export default function AgendaPage() {
                         </div>
                     </div>
                     <div className="relative h-64 md:h-full min-h-[300px] w-full rounded-2xl overflow-hidden border border-white/10 group">
-                        <div className="absolute inset-0 bg-gradient-to-t from-[#020408] via-transparent to-transparent z-10"></div>
+                        <div className="absolute inset-0 bg-gradient-to-t from-[#050A1F] via-transparent to-transparent z-10"></div>
                         <img src="https://images.unsplash.com/photo-1540575467063-178a50c2df87?q=80&w=2070&auto=format&fit=crop" alt="Debate Stage" className="absolute inset-0 w-full h-full object-cover group-hover:scale-105 transition-transform duration-700" />
                     </div>
                 </div>
 
                 {/* Societal, Ethical & Legal Arena */}
                 <div className="mb-20">
-                    <div className="inline-flex items-center justify-center px-3 py-1 mb-6 text-xs font-semibold tracking-wide text-pink-500 uppercase bg-pink-500/10 rounded-full border border-pink-500/20">
+                    <div className="inline-flex items-center justify-center px-3 py-1 mb-6 text-xs font-semibold tracking-wide text-brand-cyan uppercase bg-brand-cyan/10 rounded-full border border-brand-cyan/20">
                         Arena
                     </div>
                     <h3 className="text-2xl md:text-3xl font-bold mb-6">Societal, Ethical & Legal Arena</h3>
@@ -125,7 +125,7 @@ export default function AgendaPage() {
                 </div>
 
                 {/* A Safe Space for “Hard Conversations” */}
-                <div className="relative overflow-hidden rounded-3xl border border-white/10 bg-gradient-to-br from-[#111] via-[#050505] to-[#0a0f1a] p-8 md:p-12 mt-20">
+                <div className="relative overflow-hidden rounded-3xl border border-white/10 bg-gradient-to-br from-[#050A1F] via-[#030712] to-[#050A1F] p-8 md:p-12 mt-20">
                     <div className="absolute top-0 left-0 w-full h-[1px] bg-gradient-to-r from-transparent via-brand-cyan/50 to-transparent"></div>
 
                     <div className="relative z-10 flex flex-col md:flex-row gap-10 items-center">

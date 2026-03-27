@@ -7,7 +7,7 @@ interface AboutVideoProps {
 
 export const AboutVideo: React.FC<AboutVideoProps> = ({ data }) => {
     return (
-        <section className="relative w-full py-20 md:py-32 px-4 md:px-6 bg-[#020408] text-white border-t border-white/5">
+        <section className="relative w-full py-20 md:py-32 px-4 md:px-6 bg-[#050A1F] text-white border-t border-white/5">
 
             {/* Background Gradients */}
             <div className="absolute top-0 left-0 w-full h-full overflow-hidden pointer-events-none">
@@ -33,7 +33,7 @@ export const AboutVideo: React.FC<AboutVideoProps> = ({ data }) => {
                     />
 
                     {/* Cinematic Overlay */}
-                    <div className="absolute inset-0 bg-gradient-to-t from-[#020408] via-transparent to-transparent opacity-80" />
+                    <div className="absolute inset-0 bg-gradient-to-t from-[#050A1F] via-transparent to-transparent opacity-80" />
                     <div className="absolute inset-0 bg-brand-blue/10 mix-blend-overlay" />
 
 

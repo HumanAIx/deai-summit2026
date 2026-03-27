@@ -7,7 +7,7 @@ interface ClosingProps {
 
 export const Closing: React.FC<ClosingProps> = ({ data }) => {
     return (
-        <section className="relative w-full py-24 md:py-40 px-4 bg-[#020408] text-white border-t border-white/5 overflow-hidden">
+        <section className="relative w-full py-24 md:py-40 px-4 bg-[#050A1F] text-white border-t border-white/5 overflow-hidden">
 
             {/* Background Texture/Gradient */}
             <div className="absolute inset-0 opacity-20 pointer-events-none">

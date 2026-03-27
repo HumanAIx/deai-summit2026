@@ -43,15 +43,15 @@ export const Navbar: React.FC<NavbarProps> = ({ onShowToast, onOpenContact, data
 
   return (
     <>
-      <nav className="fixed left-1/2 -translate-x-1/2 top-6 md:top-10 z-50 flex items-center justify-between w-[95%] max-w-4xl rounded-full px-5 py-3 border border-white/20 bg-[#020408]/80 backdrop-blur-xl transition-all duration-300" style={{ boxShadow: '0 0 30px 8px rgba(255,255,255,0.12), 0 0 60px 20px rgba(255,255,255,0.06)' }}>
+      <nav className="fixed left-1/2 -translate-x-1/2 top-6 md:top-10 z-50 flex items-center justify-between w-[95%] max-w-4xl rounded-full px-5 py-3 border border-white/20 bg-[#050A1F]/80 backdrop-blur-xl transition-all duration-300" style={{ boxShadow: '0 0 30px 8px rgba(255,255,255,0.12), 0 0 60px 20px rgba(255,255,255,0.06)' }}>
 
         {/* Logo */}
         <Link href="/" className="flex items-center gap-3 pl-2 group">
           <div className="w-10 h-10 relative flex items-center justify-center">
             <svg viewBox="0 0 100 100" fill="none" xmlns="http://www.w3.org/2000/svg" className="w-full h-full">
-              <path d="M10 30 C30 15, 60 45, 90 30" stroke="#3B82F6" strokeWidth="12" strokeLinecap="round" />
-              <path d="M10 50 C30 35, 60 65, 90 50" stroke="#22D3EE" strokeWidth="12" strokeLinecap="round" />
-              <path d="M20 70 C40 55, 70 85, 90 70" stroke="#2DD4BF" strokeWidth="12" strokeLinecap="round" />
+              <path d="M10 30 C30 15, 60 45, 90 30" stroke="#0E6FEB" strokeWidth="12" strokeLinecap="round" />
+              <path d="M10 50 C30 35, 60 65, 90 50" stroke="#00B0C2" strokeWidth="12" strokeLinecap="round" />
+              <path d="M20 70 C40 55, 70 85, 90 70" stroke="#0E6FEB" strokeWidth="12" strokeLinecap="round" />
             </svg>
           </div>
           <div className="flex flex-col leading-none justify-center">
@@ -89,7 +89,7 @@ export const Navbar: React.FC<NavbarProps> = ({ onShowToast, onOpenContact, data
           <a
             href={data.actionButton.link}
             title={data.actionButton.title}  // ← hover tooltip
-            className="hidden md:flex text-sm font-semibold text-[#020408] bg-white hover:bg-brand-cyan/10 hover:text-white transition-all rounded-full px-8 py-3"
+            className="hidden md:flex text-sm font-semibold text-[#050A1F] bg-white hover:bg-brand-cyan/10 hover:text-white transition-all rounded-full px-8 py-3"
           >
             {data.actionButton.label}
           </a>
@@ -104,7 +104,7 @@ export const Navbar: React.FC<NavbarProps> = ({ onShowToast, onOpenContact, data
 
       {/* Mobile Menu Overlay */}
       {isMenuOpen && (
-        <div className="fixed inset-0 z-40 bg-[#020408]/95 backdrop-blur-xl pt-24 px-6 lg:hidden flex flex-col items-center gap-8 animate-in fade-in slide-in-from-top-5 duration-200">
+        <div className="fixed inset-0 z-40 bg-[#050A1F]/95 backdrop-blur-xl pt-24 px-6 lg:hidden flex flex-col items-center gap-8 animate-in fade-in slide-in-from-top-5 duration-200">
           <div className="flex flex-col items-center gap-6 w-full max-w-sm">
             {data.main.map((item) => (
               <a
@@ -140,7 +140,7 @@ export const Navbar: React.FC<NavbarProps> = ({ onShowToast, onOpenContact, data
               href={data.actionButton.link}
               title={data.actionButton.title}  // ← hover tooltip
               onClick={() => setIsMenuOpen(false)}
-              className="mt-4 flex w-full justify-center text-sm font-semibold text-[#020408] bg-white hover:bg-white/90 transition-all rounded-full px-8 py-3"
+              className="mt-4 flex w-full justify-center text-sm font-semibold text-[#050A1F] bg-white hover:bg-white/90 transition-all rounded-full px-8 py-3"
             >
               Get {data.actionButton.label}
             </a>

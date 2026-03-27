@@ -6,7 +6,7 @@ interface NetworkingProps {
     data: NetworkingItem[];
 }
 
-const cardAccents = ['#06B0C2', '#0F6FEB', '#2DD4BF', '#8B5CF6'];
+const cardAccents = ['#00B0C2', '#0E6FEB', '#050A1F', '#00B0C2'];
 
 export const Networking: React.FC<NetworkingProps> = ({ data }) => {
     const [activeTab, setActiveTab] = useState(0);
@@ -27,7 +27,7 @@ export const Networking: React.FC<NetworkingProps> = ({ data }) => {
     };
 
     return (
-        <section className="relative w-full py-32 px-6 bg-[#020408] text-white overflow-hidden">
+        <section className="relative w-full py-32 px-6 bg-[#050A1F] text-white overflow-hidden">
 
             {/* Background effects */}
             <div className="absolute inset-0 pointer-events-none">

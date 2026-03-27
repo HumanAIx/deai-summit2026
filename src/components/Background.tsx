@@ -2,7 +2,7 @@ import React from 'react';
 
 export const Background: React.FC = () => {
   return (
-    <div className="fixed inset-0 z-0 w-full h-full overflow-hidden pointer-events-none bg-[#020408]">
+    <div className="fixed inset-0 z-0 w-full h-full overflow-hidden pointer-events-none bg-[#050A1F]">
       {/* 
          Image: Conference Hall / Stage 
          Shows the stage from the perspective of the audience (backs of heads/seats visible).
@@ -17,13 +17,13 @@ export const Background: React.FC = () => {
       <div className="absolute inset-0 bg-brand-blue/30 mix-blend-multiply" />
 
       {/* Radial Vignette - Reveals the center (stage) while keeping edges heavy black */}
-      <div className="absolute inset-0 bg-[radial-gradient(circle_at_center,rgba(2,4,8,0.2)_0%,#020408_100%)]" />
+      <div className="absolute inset-0 bg-[radial-gradient(circle_at_center,rgba(5,10,31,0.2)_0%,#050A1F_100%)]" />
 
       {/* Grid Pattern */}
       <div className="absolute inset-0 grid-bg z-10 opacity-20" />
       
       {/* Vertical Fade - Ensures header and footer text remains readable against the image */}
-      <div className="absolute inset-0 bg-gradient-to-b from-[#020408] via-transparent to-[#020408] opacity-90 z-20" />
+      <div className="absolute inset-0 bg-gradient-to-b from-[#050A1F] via-transparent to-[#050A1F] opacity-90 z-20" />
     </div>
   );
 };

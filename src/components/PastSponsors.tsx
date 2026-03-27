@@ -20,7 +20,7 @@ export const PastSponsors: React.FC<PastSponsorsProps> = ({ data, onOpenContact 
     <section id="sponsors" className="relative w-full overflow-hidden">
 
       {/* Dark hero header */}
-      <div className="relative bg-[#020408] text-white py-24 px-6">
+      <div className="relative bg-[#050A1F] text-white py-24 px-6">
         <div className="absolute inset-0 pointer-events-none animated-grid">
           <AnimatedGrid density={2} />
         </div>
@@ -74,7 +74,7 @@ export const PastSponsors: React.FC<PastSponsorsProps> = ({ data, onOpenContact 
             <div className="mb-16">
               <div className="flex items-center gap-4 mb-10">
                 <div className="w-1 h-8 bg-brand-cyan rounded-full" />
-                <h3 className="text-xl md:text-2xl font-display font-bold text-[#1a1a1a]">Sponsors</h3>
+                <h3 className="text-xl md:text-2xl font-display font-bold text-[#050A1F]">Sponsors</h3>
               </div>
               <div className="flex flex-wrap justify-center gap-5">
                 {sponsors.map((sponsor, index) => (
@@ -91,7 +91,7 @@ export const PastSponsors: React.FC<PastSponsorsProps> = ({ data, onOpenContact 
             <div className="mb-16">
               <div className="flex items-center gap-4 mb-10">
                 <div className="w-1 h-8 bg-brand-blue rounded-full" />
-                <h3 className="text-xl md:text-2xl font-display font-bold text-[#1a1a1a]">Partners</h3>
+                <h3 className="text-xl md:text-2xl font-display font-bold text-[#050A1F]">Partners</h3>
               </div>
               <div className="flex flex-wrap justify-center gap-5">
                 {partners.map((partner, index) => (
@@ -118,14 +118,14 @@ export const PastSponsors: React.FC<PastSponsorsProps> = ({ data, onOpenContact 
           <div className="flex flex-col sm:flex-row gap-5 items-center justify-center pt-8">
             <button
               onClick={onOpenContact}
-              className="group px-10 py-4 rounded-full bg-[#020408] text-white hover:bg-brand-cyan transition-all duration-300 text-sm font-bold shadow-lg hover:shadow-brand-cyan/20 hover:shadow-xl flex items-center gap-3"
+              className="group px-10 py-4 rounded-full bg-[#050A1F] text-white hover:bg-brand-cyan transition-all duration-300 text-sm font-bold shadow-lg hover:shadow-brand-cyan/20 hover:shadow-xl flex items-center gap-3"
             >
               <i className="ri-vip-diamond-line text-lg group-hover:scale-110 transition-transform"></i>
               Become a Sponsor
             </button>
             <button
               onClick={onOpenContact}
-              className="group px-10 py-4 rounded-full border-2 border-[#020408] text-[#020408] hover:bg-[#020408] hover:text-white transition-all duration-300 text-sm font-bold flex items-center gap-3"
+              className="group px-10 py-4 rounded-full border-2 border-[#050A1F] text-[#050A1F] hover:bg-[#050A1F] hover:text-white transition-all duration-300 text-sm font-bold flex items-center gap-3"
             >
               <i className="ri-file-download-line text-lg group-hover:scale-110 transition-transform"></i>
               Request Sponsorship Deck
@@ -146,7 +146,7 @@ function SponsorCard({ item }: { item: PartnerItemData }) {
   const card = (
     <div className="group relative h-36 rounded-2xl bg-white border border-gray-200 overflow-hidden transition-all duration-500 hover:border-brand-cyan/40 hover:scale-[1.06] hover:rotate-[0.5deg]"
       style={{ boxShadow: 'none' }}
-      onMouseEnter={(e) => { e.currentTarget.style.boxShadow = '0 0 25px 5px rgba(6,176,194,0.12), 0 10px 30px rgba(0,0,0,0.08)'; }}
+      onMouseEnter={(e) => { e.currentTarget.style.boxShadow = '0 0 25px 5px rgba(0,176,194,0.12), 0 10px 30px rgba(0,0,0,0.08)'; }}
       onMouseLeave={(e) => { e.currentTarget.style.boxShadow = 'none'; }}
     >
       {/* Logo */}

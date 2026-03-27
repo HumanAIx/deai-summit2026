@@ -9,8 +9,8 @@ interface MarqueeProps {
   data: MarqueeItemData[];
 }
 
-// CSS filter to colorize to brand-cyan (#06B0C2) on hover
-const hoverFilter = 'brightness(0) saturate(100%) invert(45%) sepia(70%) saturate(500%) hue-rotate(190deg) brightness(95%) contrast(90%)';
+// CSS filter to colorize to brand-cyan (#00B0C2) on hover
+const hoverFilter = 'brightness(0) saturate(100%) invert(50%) sepia(90%) saturate(500%) hue-rotate(155deg) brightness(95%) contrast(95%)';
 const defaultFilter = 'brightness(0) invert(1) opacity(0.9)';
 
 const MarqueeItem: React.FC<{
@@ -66,7 +66,7 @@ export const Marquee: React.FC<MarqueeProps> = ({ data }) => {
   const totalWidth = data.length * itemWidth;
 
   return (
-    <section className="w-full z-20 relative overflow-hidden py-12" style={{ backgroundColor: '#2a2a30' }}>
+    <section className="w-full z-20 relative overflow-hidden py-12" style={{ backgroundColor: '#050A1F' }}>
       {/* Dynamic hover styles */}
       <style dangerouslySetInnerHTML={{
         __html: `
@@ -85,8 +85,8 @@ export const Marquee: React.FC<MarqueeProps> = ({ data }) => {
       }} />
 
       {/* Fade edges */}
-      <div className="absolute left-0 top-0 h-full w-24 bg-gradient-to-r from-[#2a2a30] to-transparent z-10 pointer-events-none" />
-      <div className="absolute right-0 top-0 h-full w-24 bg-gradient-to-l from-[#2a2a30] to-transparent z-10 pointer-events-none" />
+      <div className="absolute left-0 top-0 h-full w-24 bg-gradient-to-r from-[#050A1F] to-transparent z-10 pointer-events-none" />
+      <div className="absolute right-0 top-0 h-full w-24 bg-gradient-to-l from-[#050A1F] to-transparent z-10 pointer-events-none" />
 
       <div
         className="flex items-center"

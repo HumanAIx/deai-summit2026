@@ -126,7 +126,7 @@ interface AnimatedStatProps {
 export const AnimatedStat: React.FC<AnimatedStatProps> = ({
   value,
   label,
-  accentColor = '#06B0C2',
+  accentColor = '#00B0C2',
   delay = 0,
   dark = false,
 }) => {

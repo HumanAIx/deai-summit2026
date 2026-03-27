@@ -18,17 +18,17 @@ interface Cell {
 }
 
 const DARK_COLORS = [
-  'rgba(6, 176, 194,',   // cyan
-  'rgba(15, 111, 235,',  // blue
-  'rgba(45, 212, 191,',  // teal
-  'rgba(139, 92, 246,',  // purple
+  'rgba(0, 176, 194,',   // digital teal
+  'rgba(14, 111, 235,',  // electric blue
+  'rgba(0, 176, 194,',   // digital teal (alt)
+  'rgba(14, 111, 235,',  // electric blue (alt)
 ];
 
 const LIGHT_COLORS = [
-  'rgba(6, 176, 194,',   // cyan
-  'rgba(15, 111, 235,',  // blue
-  'rgba(45, 212, 191,',  // teal
-  'rgba(100, 60, 220,',  // purple
+  'rgba(0, 176, 194,',   // digital teal
+  'rgba(14, 111, 235,',  // electric blue
+  'rgba(0, 176, 194,',   // digital teal (alt)
+  'rgba(14, 111, 235,',  // electric blue (alt)
 ];
 
 interface AnimatedGridProps {

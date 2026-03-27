@@ -14,14 +14,14 @@ interface PartnersListClientProps {
 }
 
 const cardColors = [
-  '#1cd4f0',   // cyan
-  '#3a9ef5',   // blue
-  '#40e8c0',   // teal
-  '#9a72f0',   // purple
-  '#38c0f5',   // sky
-  '#7a5af0',   // indigo
-  '#20e0a8',   // emerald
-  '#e080c0',   // magenta
+  '#00B0C2',   // digital teal
+  '#0E6FEB',   // electric blue
+  '#050A1F',   // deep navy
+  '#00B0C2',   // digital teal
+  '#0E6FEB',   // electric blue
+  '#050A1F',   // deep navy
+  '#00B0C2',   // digital teal
+  '#0E6FEB',   // electric blue
 ];
 
 function CompanyCard({ company, type, index }: { company: NormalizedSponsor; type: 'sponsor' | 'partner'; index: number }) {
@@ -81,7 +81,7 @@ export function PartnersListClient({ sponsors, partners }: PartnersListClientPro
   return (
     <DetailPageLayout>
       {/* Hero Section */}
-      <section className="relative bg-[#020408] text-white pt-16 pb-0">
+      <section className="relative bg-[#050A1F] text-white pt-16 pb-0">
         {/* Grid Overlay */}
         <div className="absolute inset-0 pointer-events-none animated-grid">
           <AnimatedGrid />
@@ -142,7 +142,7 @@ export function PartnersListClient({ sponsors, partners }: PartnersListClientPro
           <div className="max-w-[1440px] mx-auto px-6">
             <div className="flex items-center gap-4 mb-10">
               <div className="w-1 h-8 bg-brand-cyan rounded-full" />
-              <h2 className="text-2xl md:text-3xl font-display font-bold text-[#1a1a1a]">
+              <h2 className="text-2xl md:text-3xl font-display font-bold text-[#050A1F]">
                 Sponsors
               </h2>
             </div>
@@ -163,7 +163,7 @@ export function PartnersListClient({ sponsors, partners }: PartnersListClientPro
           <div className="max-w-[1440px] mx-auto px-6">
             <div className="flex items-center gap-4 mb-10">
               <div className="w-1 h-8 bg-brand-blue rounded-full" />
-              <h2 className="text-2xl md:text-3xl font-display font-bold text-[#1a1a1a]">
+              <h2 className="text-2xl md:text-3xl font-display font-bold text-[#050A1F]">
                 Partners
               </h2>
             </div>
@@ -190,7 +190,7 @@ export function PartnersListClient({ sponsors, partners }: PartnersListClientPro
       )}
 
       {/* CTA Section */}
-      <section className="bg-[#020408] py-16">
+      <section className="bg-[#050A1F] py-16">
         <div className="max-w-3xl mx-auto px-6 text-center">
           <h2 className="text-2xl md:text-3xl font-display font-bold text-white mb-4">
             Interested in Sponsoring?
@@ -201,7 +201,7 @@ export function PartnersListClient({ sponsors, partners }: PartnersListClientPro
           <div className="flex flex-col sm:flex-row gap-4 justify-center">
             <Link
               href="/#sponsors"
-              className="px-8 py-3 rounded-full border border-white bg-white text-[#020408] hover:bg-brand-cyan hover:text-white hover:border-brand-cyan transition-all duration-300 text-sm font-bold no-underline"
+              className="px-8 py-3 rounded-full border border-white bg-white text-[#050A1F] hover:bg-brand-cyan hover:text-white hover:border-brand-cyan transition-all duration-300 text-sm font-bold no-underline"
             >
               Become a Sponsor
             </Link>

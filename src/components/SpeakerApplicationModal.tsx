@@ -43,7 +43,7 @@ export const SpeakerApplicationModal: React.FC<SpeakerApplicationModalProps> = (
             <div className={`relative w-full max-w-lg bg-white rounded-3xl shadow-2xl overflow-hidden transform transition-all duration-300 ${isOpen && !isClosing ? 'scale-100 translate-y-0' : 'scale-95 translate-y-4'}`}>
 
                 {/* Header */}
-                <div className="relative px-8 pt-8 pb-6 bg-[#F9FAFB] border-b border-slate-100">
+                <div className="relative px-8 pt-8 pb-6 bg-[#F0F0EF] border-b border-slate-100">
                     <button
                         onClick={handleClose}
                         className="absolute top-6 right-6 p-2 text-slate-400 hover:text-slate-600 transition-colors rounded-full hover:bg-slate-100"

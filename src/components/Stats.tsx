@@ -10,7 +10,7 @@ interface StatsProps {
 }
 
 // Accent colors for each stat card
-const statAccents = ['#06B0C2', '#0F6FEB', '#2DD4BF', '#8B5CF6', '#ec622b'];
+const statAccents = ['#00B0C2', '#0E6FEB', '#050A1F', '#00B0C2', '#0E6FEB'];
 
 export const Stats: React.FC<StatsProps> = ({ data }) => {
   return (
@@ -19,14 +19,14 @@ export const Stats: React.FC<StatsProps> = ({ data }) => {
 
         {/* Featured Quote Section */}
         <div className="flex flex-col lg:flex-row gap-12 lg:items-end justify-between mb-24 pb-12 border-b border-gray-100">
-          <h2 className="text-4xl md:text-5xl lg:text-6xl font-display font-bold text-black tracking-tight leading-[1.1] max-w-4xl">
+          <h2 className="text-4xl md:text-5xl lg:text-6xl font-display font-bold text-[#050A1F] tracking-tight leading-[1.1] max-w-4xl">
             <span className="text-brand-blue">&ldquo;</span>
             {data.quote.text}
             <span className="text-brand-blue">&rdquo;</span>
           </h2>
 
           <div className="flex items-center gap-4 min-w-[200px]">
-            <div className="relative w-14 h-14 rounded-lg overflow-hidden bg-black flex items-center justify-center p-1">
+            <div className="relative w-14 h-14 rounded-lg overflow-hidden bg-[#050A1F] flex items-center justify-center p-1">
               <Image
                 src={data.quote.image}
                 alt={data.quote.author}
@@ -35,7 +35,7 @@ export const Stats: React.FC<StatsProps> = ({ data }) => {
               />
             </div>
             <div className="flex flex-col">
-              <span className="font-bold text-black text-sm">
+              <span className="font-bold text-[#050A1F] text-sm">
                 <a href="/companies/humanaix-foundation" className="hover:text-brand-blue transition-colors">
                   {data.quote.author}
                 </a>
@@ -52,7 +52,7 @@ export const Stats: React.FC<StatsProps> = ({ data }) => {
             return (
               <div
                 key={idx}
-                className="relative flex flex-col justify-between p-8 md:p-10 bg-[#F9F9F9] rounded-3xl min-h-[260px] hover:bg-[#F0F0F0] transition-all duration-300 group overflow-hidden"
+                className="relative flex flex-col justify-between p-8 md:p-10 bg-[#F0F0EF] rounded-3xl min-h-[260px] hover:bg-[#E8E8E7] transition-all duration-300 group overflow-hidden"
               >
                 {/* Accent glow */}
                 <div
@@ -72,7 +72,7 @@ export const Stats: React.FC<StatsProps> = ({ data }) => {
                   />
                   <AnimatedCounter
                     value={stat.number}
-                    className="text-6xl md:text-7xl font-display font-bold tracking-tighter text-[#106FEB] group-hover:scale-105 transition-transform duration-300 origin-left"
+                    className="text-6xl md:text-7xl font-display font-bold tracking-tighter text-[#0E6FEB] group-hover:scale-105 transition-transform duration-300 origin-left"
                     duration={2200}
                     delay={idx * 150}
                   />

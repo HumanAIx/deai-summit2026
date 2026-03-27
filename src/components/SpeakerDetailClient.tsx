@@ -82,7 +82,7 @@ export const SpeakerDetailClient: React.FC<SpeakerDetailClientProps> = ({ member
   return (
     <DetailPageLayout>
       {/* Hero section */}
-      <section className="relative bg-[#020408] text-white">
+      <section className="relative bg-[#050A1F] text-white">
         {/* Grid Overlay */}
         <div className="absolute inset-0 pointer-events-none animated-grid">
           <AnimatedGrid />
@@ -145,7 +145,7 @@ export const SpeakerDetailClient: React.FC<SpeakerDetailClientProps> = ({ member
           <div className="max-w-4xl mx-auto px-6 py-16 md:py-24">
             <div className="flex items-center gap-4 mb-10">
               <div className="w-1 h-8 bg-brand-cyan rounded-full" />
-              <h2 className="text-2xl md:text-3xl font-display font-bold text-[#1a1a1a]">About</h2>
+              <h2 className="text-2xl md:text-3xl font-display font-bold text-[#050A1F]">About</h2>
             </div>
             <div
               className="bio-content max-w-none"
@@ -161,11 +161,11 @@ export const SpeakerDetailClient: React.FC<SpeakerDetailClientProps> = ({ member
           <div className="max-w-4xl mx-auto px-6 py-16">
             <div className="flex items-center gap-4 mb-10">
               <div className="w-1 h-8 bg-brand-blue rounded-full" />
-              <h2 className="text-2xl md:text-3xl font-display font-bold text-[#1a1a1a]">Organizations</h2>
+              <h2 className="text-2xl md:text-3xl font-display font-bold text-[#050A1F]">Organizations</h2>
             </div>
             <div className="flex flex-wrap justify-center gap-6">
               {companies.map((company, index) => {
-                const colors = ['#1cd4f0', '#3a9ef5', '#40e8c0', '#9a72f0', '#38c0f5', '#7a5af0', '#20e0a8', '#e080c0'];
+                const colors = ['#00B0C2', '#0E6FEB', '#050A1F', '#00B0C2', '#0E6FEB', '#050A1F', '#00B0C2', '#0E6FEB'];
                 const bgColor = colors[index % colors.length];
                 const href = company.company_is_sponsor ? `/partners/${company.company_slug}` : `/companies/${company.company_slug}`;
 

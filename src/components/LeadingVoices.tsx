@@ -18,7 +18,7 @@ const SpeakerCard: React.FC<{
   const [hovered, setHovered] = useState(false);
 
   // Subtle accent colors for the bottom gradient
-  const accents = ['#06B0C2', '#0F6FEB', '#2DD4BF', '#8B5CF6'];
+  const accents = ['#00B0C2', '#0E6FEB', '#050A1F', '#00B0C2'];
   const accent = accents[colorIndex % accents.length];
 
   const handleEnter = () => {
@@ -39,7 +39,7 @@ const SpeakerCard: React.FC<{
       style={{
         width: "18rem",
         height: "22rem",
-        background: "#020408",
+        background: "#050A1F",
         transform: hovered ? "scale(1.08)" : "scale(1)",
         transformOrigin: "center center",
         boxShadow: hovered
@@ -102,7 +102,7 @@ const SpeakerCard: React.FC<{
         <div
           className="absolute inset-0"
           style={{
-            background: `linear-gradient(to bottom, #020408 0%, rgba(2,4,8,0) 40%)`,
+            background: `linear-gradient(to bottom, #050A1F 0%, rgba(5,10,31,0) 40%)`,
           }}
         />
       </div>
@@ -161,7 +161,7 @@ export const LeadingVoices: React.FC<LeadingVoicesProps> = ({ data }) => {
     >
       {/* Heading */}
       <div className="max-w-[1440px] mx-auto px-6 mb-16">
-        <h2 className="text-4xl md:text-5xl lg:text-6xl font-display font-bold tracking-tight text-[#1a1a1a] leading-[1.1]">
+        <h2 className="text-4xl md:text-5xl lg:text-6xl font-display font-bold tracking-tight text-[#050A1F] leading-[1.1]">
           Leading Voices on the <br className="hidden md:block" />
           <span className="text-brand-blue">DeAI Summit</span> Stage
         </h2>

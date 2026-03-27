@@ -111,7 +111,7 @@ export const LandingPage: React.FC<LandingPageProps> = ({ speakers, marqueeItems
                 <div className="w-full bg-[#F0F0EF] pb-20 flex justify-center">
                     <button
                         onClick={handleOpenSpeakerApp}
-                        className="px-8 py-3 rounded-full border border-black bg-white text-black hover:bg-black hover:text-white transition-all duration-300 text-sm font-bold shadow-md hover:shadow-xl flex items-center gap-2"
+                        className="px-8 py-3 rounded-full border border-[#050A1F] bg-white text-[#050A1F] hover:bg-[#050A1F] hover:text-white transition-all duration-300 text-sm font-bold shadow-md hover:shadow-xl flex items-center gap-2"
                     >
                         <i className="ri-mic-line"></i>
                         Apply to Speak

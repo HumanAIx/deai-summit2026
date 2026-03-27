@@ -80,7 +80,7 @@ export const CompanyDetailClient: React.FC<CompanyDetailClientProps> = ({ compan
   return (
     <DetailPageLayout>
       {/* Hero section */}
-      <section className="relative bg-[#020408] text-white">
+      <section className="relative bg-[#050A1F] text-white">
         {/* Grid Overlay */}
         <div className="absolute inset-0 pointer-events-none animated-grid">
           <AnimatedGrid />
@@ -137,7 +137,7 @@ export const CompanyDetailClient: React.FC<CompanyDetailClientProps> = ({ compan
           <div className="max-w-4xl mx-auto px-6 py-16 md:py-24">
             <div className="flex items-center gap-4 mb-10">
               <div className="w-1 h-8 bg-brand-cyan rounded-full" />
-              <h2 className="text-2xl md:text-3xl font-display font-bold text-[#1a1a1a]">About</h2>
+              <h2 className="text-2xl md:text-3xl font-display font-bold text-[#050A1F]">About</h2>
             </div>
             <div
               className="bio-content max-w-none"
@@ -153,7 +153,7 @@ export const CompanyDetailClient: React.FC<CompanyDetailClientProps> = ({ compan
           <div className="max-w-4xl mx-auto px-6 py-16 md:py-24">
             <div className="flex items-center gap-4 mb-10">
               <div className="w-1 h-8 bg-red-500 rounded-full" />
-              <h2 className="text-2xl md:text-3xl font-display font-bold text-[#1a1a1a]">Video</h2>
+              <h2 className="text-2xl md:text-3xl font-display font-bold text-[#050A1F]">Video</h2>
             </div>
             <div className="aspect-video rounded-2xl overflow-hidden shadow-xl shadow-black/10">
               <iframe
