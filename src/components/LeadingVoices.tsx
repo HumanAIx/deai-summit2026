@@ -71,13 +71,8 @@ const SpeakerCard: React.FC<{
           {speaker.role}
         </p>
 
-        {/* Company — fades in on hover */}
-        <div
-          className="mt-2 transition-opacity duration-500"
-          style={{
-            opacity: hovered ? 1 : 0,
-          }}
-        >
+        {/* Company */}
+        <div className="mt-2">
           <p
             className="text-xs font-semibold leading-snug"
             style={{ color: accent }}
@@ -98,11 +93,11 @@ const SpeakerCard: React.FC<{
             transform: hovered ? "scale(1.08)" : "scale(1)",
           }}
         />
-        {/* Gradient overlay at top of photo */}
+        {/* Subtle blend at top of photo */}
         <div
           className="absolute inset-0"
           style={{
-            background: `linear-gradient(to bottom, #050A1F 0%, rgba(5,10,31,0) 40%)`,
+            background: `linear-gradient(to bottom, #050A1F 0%, rgba(5,10,31,0) 18%)`,
           }}
         />
       </div>
