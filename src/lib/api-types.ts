@@ -141,3 +141,99 @@ export interface APIResponse<T> {
   success: boolean;
   data: T;
 }
+
+// Navigation API types
+
+export interface NavAPIItem {
+  slug: string;
+  label: string;
+  published: boolean;
+}
+
+export interface NavAPICustomLink {
+  id: string;
+  url: string;
+  label: string;
+  style: string;
+  target: string;
+}
+
+export interface NavigationAPIData {
+  mainNav: NavAPIItem[];
+  footerCol1: NavAPIItem[];
+  footerCol2: NavAPIItem[];
+  footerCol3: NavAPIItem[];
+  footerCol4?: NavAPIItem[];
+  footerBuilder?: {
+    description?: string;
+    headerCustomLinks?: NavAPICustomLink[];
+    footerColLabels?: Record<string, string>;
+    collectionItems?: { title: string; description: string }[];
+    [key: string]: unknown;
+  };
+}
+
+// CMS Page types
+
+export interface CMSBlock {
+  id: string;
+  type: string;
+  addon?: string;
+  content?: string;
+  title?: string;
+  subtitle?: string;
+  listType?: string;
+  membersListType?: string;
+  listLimit?: number;
+  items?: CMSSpeakerItem[];
+  buttons?: CMSButton[];
+  [key: string]: unknown;
+}
+
+export interface CMSButton {
+  label: string;
+  link?: string;
+  action?: string;
+  formId?: string;
+}
+
+export interface CMSSpeakerItem {
+  id: string;
+  person_firstname: string;
+  person_surname: string;
+  person_slug: string;
+  person_bio?: string;
+  person_photo?: string;
+  person_photo_nobg?: string;
+  person_socials?: PersonSocials;
+  is_published?: boolean;
+  is_speaker?: boolean;
+  is_speaker_featured?: boolean;
+  avatar_seed?: string | null;
+}
+
+export interface CMSCompanyItem {
+  id: string;
+  company_name: string;
+  company_slug: string;
+  company_bio?: string;
+  company_logo?: string;
+  company_country?: string;
+  company_socials?: CompanySocials;
+  logo_background_white?: boolean;
+  company_is_venue?: boolean;
+  venue_published?: boolean;
+}
+
+export interface CMSPageData {
+  id?: string;
+  page_type: string;
+  page_slug: string;
+  page_title: string;
+  published: boolean;
+  content: {
+    blocks: CMSBlock[];
+    blockOrder?: string[];
+  };
+  seo?: SEOSettings;
+}

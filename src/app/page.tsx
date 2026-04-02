@@ -1,5 +1,5 @@
 import { LandingPage } from '@/components/LandingPage';
-import { prefetchHomePageData } from '@/lib/prefetch';
+import { prefetchHomePageData, prefetchNavigation, mapNavigationData } from '@/lib/prefetch';
 import type { SocialLink } from '@/lib/prefetch';
 import { siteConfig } from '@/config/site';
 import { generateEventSchema } from '@/lib/structured-data';
@@ -11,6 +11,9 @@ export default async function Home() {
   let sponsors: Awaited<ReturnType<typeof prefetchHomePageData>>['sponsors'] = [];
   let partners: Awaited<ReturnType<typeof prefetchHomePageData>>['partners'] = [];
   let socials: SocialLink[] = [];
+
+  const apiNav = await prefetchNavigation();
+  const navigationData = apiNav ? mapNavigationData(apiNav) : undefined;
 
   try {
     const data = await prefetchHomePageData();
@@ -68,6 +71,8 @@ export default async function Home() {
         marqueeItems={marqueeItems}
         partnerItems={partnerItems}
         socials={socials}
+        navigationData={navigationData}
+        navigationAPIData={apiNav || undefined}
       />
     </>
   );

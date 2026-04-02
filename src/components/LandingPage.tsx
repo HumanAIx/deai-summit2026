@@ -18,6 +18,8 @@ import { Toast } from '@/components/Toast';
 
 // Import Site Config (for sections not yet driven by API)
 import { siteConfig } from '@/config/site';
+import type { NavigationConfig } from '@/config/types';
+import type { NavigationAPIData } from '@/lib/api-types';
 
 export interface LeadingSpeakerData {
     name: string;
@@ -55,9 +57,11 @@ interface LandingPageProps {
     marqueeItems: MarqueeItemData[];
     partnerItems: PartnerItemData[];
     socials?: SocialLinkData[];
+    navigationData?: NavigationConfig;
+    navigationAPIData?: NavigationAPIData;
 }
 
-export const LandingPage: React.FC<LandingPageProps> = ({ speakers, marqueeItems, partnerItems, socials }) => {
+export const LandingPage: React.FC<LandingPageProps> = ({ speakers, marqueeItems, partnerItems, socials, navigationData, navigationAPIData }) => {
     const [toast, setToast] = useState({ visible: false, message: '' });
     const [isContactOpen, setIsContactOpen] = useState(false);
     const [isSpeakerModalOpen, setIsSpeakerModalOpen] = useState(false);
@@ -84,7 +88,7 @@ export const LandingPage: React.FC<LandingPageProps> = ({ speakers, marqueeItems
             <Navbar
                 onShowToast={showToast}
                 onOpenContact={handleOpenContact}
-                data={siteConfig.navigation}
+                data={navigationData || siteConfig.navigation}
             />
 
             <main className="w-full mx-auto">
@@ -132,8 +136,8 @@ export const LandingPage: React.FC<LandingPageProps> = ({ speakers, marqueeItems
             <Footer
                 onShowToast={showToast}
                 onOpenContact={handleOpenContact}
-                navData={siteConfig.navigation}
-                data={siteConfig.footer}
+                navData={navigationData || siteConfig.navigation}
+                navigationAPIData={navigationAPIData}
                 socials={socials}
             />
 

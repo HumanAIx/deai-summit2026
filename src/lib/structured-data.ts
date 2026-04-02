@@ -108,7 +108,7 @@ export function generateEventSchema(baseUrl: string) {
     eventAttendanceMode: 'https://schema.org/OfflineEventAttendanceMode',
     location: {
       '@type': 'Place',
-      name: 'InterContinental Malta',
+      name: 'Monte Kristo Estate',
       address: {
         '@type': 'PostalAddress',
         addressLocality: 'Is-Siġġiewi',

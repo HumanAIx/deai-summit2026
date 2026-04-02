@@ -85,7 +85,9 @@ export const Navbar: React.FC<NavbarProps> = ({ onShowToast, onOpenContact, data
         <div className="flex items-center gap-3">
           <a
             href={data.actionButton.link}
-            title={data.actionButton.title}  // ← hover tooltip
+            title={data.actionButton.title}
+            target={data.actionButton.target || undefined}
+            rel={data.actionButton.target === '_blank' ? 'noopener noreferrer' : undefined}
             className="hidden md:flex text-sm font-semibold text-[#050A1F] bg-white hover:bg-brand-cyan/10 hover:text-white transition-all rounded-full px-8 py-3"
           >
             {data.actionButton.label}
@@ -135,7 +137,9 @@ export const Navbar: React.FC<NavbarProps> = ({ onShowToast, onOpenContact, data
 
             <a
               href={data.actionButton.link}
-              title={data.actionButton.title}  // ← hover tooltip
+              title={data.actionButton.title}
+              target={data.actionButton.target || undefined}
+              rel={data.actionButton.target === '_blank' ? 'noopener noreferrer' : undefined}
               onClick={() => setIsMenuOpen(false)}
               className="mt-4 flex w-full justify-center text-sm font-semibold text-[#050A1F] bg-white hover:bg-white/90 transition-all rounded-full px-8 py-3"
             >

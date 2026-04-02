@@ -6,7 +6,18 @@ import Link from 'next/link';
 import Image from 'next/image';
 import { DetailPageLayout } from '@/components/DetailPageLayout';
 import { AnimatedGrid } from '@/components/AnimatedGrid';
-import type { NormalizedSpeaker } from '@/lib/api-types';
+import type { NormalizedSpeaker, NavigationAPIData } from '@/lib/api-types';
+import type { NavigationConfig } from '@/config/types';
+
+/** Convert **text** markers or brand name to cyan-highlighted spans */
+function highlightTitle(text: string): string {
+  // First, handle explicit **markers**
+  if (text.includes('**')) {
+    return text.replace(/\*\*(.+?)\*\*/g, '<span class="text-brand-cyan">$1</span>');
+  }
+  // Auto-highlight brand name
+  return text.replace(/(DeAI Summit)/gi, '<span class="text-brand-cyan">$1</span>');
+}
 
 const SPEAKERS_PER_PAGE = 24;
 
@@ -81,9 +92,16 @@ function SpeakerCard({ speaker, colorIndex }: SpeakerCardProps) {
 
 interface SpeakersListClientProps {
   speakers: NormalizedSpeaker[];
+  heroTitle?: string;
+  heroSubtitle?: string;
+  heroBadge?: string;
+  stats?: { label: string; value: string }[];
+  navigationData?: NavigationConfig;
+  navigationAPIData?: NavigationAPIData;
+  socials?: { key: string; label: string; url: string; icon?: string; color?: string }[];
 }
 
-export function SpeakersListClient({ speakers }: SpeakersListClientProps) {
+export function SpeakersListClient({ speakers, heroTitle, heroSubtitle, heroBadge, stats, navigationData, navigationAPIData, socials }: SpeakersListClientProps) {
   const [currentPage, setCurrentPage] = useState(1);
 
   const totalPages = Math.ceil(speakers.length / SPEAKERS_PER_PAGE);
@@ -120,7 +138,7 @@ export function SpeakersListClient({ speakers }: SpeakersListClientProps) {
   };
 
   return (
-    <DetailPageLayout>
+    <DetailPageLayout navigationData={navigationData} navigationAPIData={navigationAPIData} socials={socials}>
       {/* Hero Section */}
       <section className="relative bg-[#050A1F] text-white pt-16 pb-0">
         {/* Grid Overlay */}
@@ -130,14 +148,17 @@ export function SpeakersListClient({ speakers }: SpeakersListClientProps) {
 
         <div className="relative z-10 max-w-[1440px] mx-auto px-6 text-center">
           <p className="text-brand-cyan text-sm font-mono uppercase tracking-widest mb-4">
-            Meet Our Speakers
+            {heroBadge || 'Meet Our Speakers'}
           </p>
-          <h1 className="text-4xl md:text-5xl lg:text-6xl font-display font-bold tracking-tight leading-[1.1] mb-6">
-            Leading Voices on the <br className="hidden md:block" />
-            <span className="text-brand-cyan">DeAI Summit</span> Stage
-          </h1>
+          <h1
+            className="text-4xl md:text-5xl lg:text-6xl font-display font-bold tracking-tight leading-[1.1] mb-6"
+            dangerouslySetInnerHTML={{ __html: heroTitle
+              ? highlightTitle(heroTitle)
+              : 'Leading Voices on the <br class="hidden md:block" /><span class="text-brand-cyan">DeAI Summit</span> Stage'
+            }}
+          />
           <p className="text-white/60 text-lg max-w-2xl mx-auto mb-12">
-            Speakers from frontier AI, decentralized systems, policy, and academia — shaping the future of intelligence.
+            {heroSubtitle || 'Speakers from frontier AI, decentralized systems, policy, and academia — shaping the future of intelligence.'}
           </p>
         </div>
 
@@ -145,27 +166,53 @@ export function SpeakersListClient({ speakers }: SpeakersListClientProps) {
         {speakers.length > 0 && (
           <div className="relative z-10 max-w-[1440px] mx-auto px-6 pt-12 pb-12">
             <div className="flex items-center justify-center gap-20 md:gap-28 mb-16">
-              <div className="text-center relative">
-                <div className="absolute inset-0 blur-3xl opacity-15 rounded-full scale-150 bg-brand-cyan" />
-                <p className="text-brand-cyan text-6xl md:text-7xl font-display font-bold mb-3 relative">
-                  <AnimatedCounter value={String(speakers.length)} duration={2200} />
-                </p>
-                <div className="w-12 h-[3px] mx-auto mb-3 rounded-full bg-brand-cyan" />
-                <p className="text-white/50 text-sm font-mono uppercase tracking-widest">
-                  Speakers
-                </p>
-              </div>
-              <div className="w-[1px] h-20 bg-white/10" />
-              <div className="text-center relative">
-                <div className="absolute inset-0 blur-3xl opacity-15 rounded-full scale-150 bg-brand-blue" />
-                <p className="text-brand-blue text-6xl md:text-7xl font-display font-bold mb-3 relative">
-                  <AnimatedCounter value="60+" duration={2200} delay={300} />
-                </p>
-                <div className="w-12 h-[3px] mx-auto mb-3 rounded-full bg-brand-blue" />
-                <p className="text-white/50 text-sm font-mono uppercase tracking-widest">
-                  Sessions
-                </p>
-              </div>
+              {stats && stats.length > 0 ? (
+                stats.map((stat, i) => {
+                  const colors = ['bg-brand-cyan', 'bg-brand-blue', 'bg-brand-cyan'];
+                  const textColors = ['text-brand-cyan', 'text-brand-blue', 'text-brand-cyan'];
+                  const color = colors[i % colors.length];
+                  const textColor = textColors[i % textColors.length];
+                  return (
+                    <React.Fragment key={i}>
+                      {i > 0 && <div className="w-[1px] h-20 bg-white/10" />}
+                      <div className="text-center relative">
+                        <div className={`absolute inset-0 blur-3xl opacity-15 rounded-full scale-150 ${color}`} />
+                        <p className={`${textColor} text-6xl md:text-7xl font-display font-bold mb-3 relative`}>
+                          <AnimatedCounter value={stat.value} duration={2200} delay={i * 300} />
+                        </p>
+                        <div className={`w-12 h-[3px] mx-auto mb-3 rounded-full ${color}`} />
+                        <p className="text-white/50 text-sm font-mono uppercase tracking-widest">
+                          {stat.label}
+                        </p>
+                      </div>
+                    </React.Fragment>
+                  );
+                })
+              ) : (
+                <>
+                  <div className="text-center relative">
+                    <div className="absolute inset-0 blur-3xl opacity-15 rounded-full scale-150 bg-brand-cyan" />
+                    <p className="text-brand-cyan text-6xl md:text-7xl font-display font-bold mb-3 relative">
+                      <AnimatedCounter value={String(speakers.length)} duration={2200} />
+                    </p>
+                    <div className="w-12 h-[3px] mx-auto mb-3 rounded-full bg-brand-cyan" />
+                    <p className="text-white/50 text-sm font-mono uppercase tracking-widest">
+                      Speakers
+                    </p>
+                  </div>
+                  <div className="w-[1px] h-20 bg-white/10" />
+                  <div className="text-center relative">
+                    <div className="absolute inset-0 blur-3xl opacity-15 rounded-full scale-150 bg-brand-blue" />
+                    <p className="text-brand-blue text-6xl md:text-7xl font-display font-bold mb-3 relative">
+                      <AnimatedCounter value="60+" duration={2200} delay={300} />
+                    </p>
+                    <div className="w-12 h-[3px] mx-auto mb-3 rounded-full bg-brand-blue" />
+                    <p className="text-white/50 text-sm font-mono uppercase tracking-widest">
+                      Sessions
+                    </p>
+                  </div>
+                </>
+              )}
             </div>
             <div className="h-[1px] bg-gradient-to-r from-transparent via-brand-cyan/40 to-transparent" />
           </div>

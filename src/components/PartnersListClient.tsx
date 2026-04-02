@@ -6,11 +6,33 @@ import Image from 'next/image';
 import Link from 'next/link';
 import { DetailPageLayout } from '@/components/DetailPageLayout';
 import { AnimatedGrid } from '@/components/AnimatedGrid';
-import type { NormalizedSponsor } from '@/lib/api-types';
+import type { NormalizedSponsor, NavigationAPIData } from '@/lib/api-types';
+import type { NavigationConfig } from '@/config/types';
 
 interface PartnersListClientProps {
   sponsors: NormalizedSponsor[];
   partners: NormalizedSponsor[];
+  heroTitle?: string;
+  heroSubtitle?: string;
+  heroBadge?: string;
+  ctaTitle?: string;
+  ctaSubtitle?: string;
+  ctaButtons?: { label: string; link?: string }[];
+  navigationData?: NavigationConfig;
+  navigationAPIData?: NavigationAPIData;
+  socials?: { key: string; label: string; url: string; icon?: string; color?: string }[];
+}
+
+/** Convert **text** markers or brand name to cyan-highlighted spans */
+function highlightTitle(text: string): string {
+  // First, handle explicit **markers**
+  if (text.includes('**')) {
+    return text.replace(/\*\*(.+?)\*\*/g, '<span class="text-brand-cyan">$1</span>');
+  }
+  // Auto-highlight brand name or "Partners" keyword
+  return text
+    .replace(/(DeAI Summit)/gi, '<span class="text-brand-cyan">$1</span>')
+    .replace(/(Partners)/gi, '<span class="text-brand-cyan">$1</span>');
 }
 
 const cardColors = [
@@ -75,11 +97,11 @@ function CompanyCard({ company, type, index }: { company: NormalizedSponsor; typ
   );
 }
 
-export function PartnersListClient({ sponsors, partners }: PartnersListClientProps) {
+export function PartnersListClient({ sponsors, partners, heroTitle, heroSubtitle, heroBadge, ctaTitle, ctaSubtitle, ctaButtons, navigationData, navigationAPIData, socials }: PartnersListClientProps) {
   const totalCompanies = sponsors.length + partners.length;
 
   return (
-    <DetailPageLayout>
+    <DetailPageLayout navigationData={navigationData} navigationAPIData={navigationAPIData} socials={socials}>
       {/* Hero Section */}
       <section className="relative bg-[#050A1F] text-white pt-16 pb-0">
         {/* Grid Overlay */}
@@ -89,13 +111,17 @@ export function PartnersListClient({ sponsors, partners }: PartnersListClientPro
 
         <div className="relative z-10 max-w-[1440px] mx-auto px-6 text-center">
           <p className="text-brand-cyan text-sm font-mono uppercase tracking-widest mb-4">
-            Our Ecosystem
+            {heroBadge || 'Our Ecosystem'}
           </p>
-          <h1 className="text-4xl md:text-5xl lg:text-6xl font-display font-bold tracking-tight leading-[1.1] mb-6">
-            Sponsors & <span className="text-brand-cyan">Partners</span>
-          </h1>
+          <h1
+            className="text-4xl md:text-5xl lg:text-6xl font-display font-bold tracking-tight leading-[1.1] mb-6"
+            dangerouslySetInnerHTML={{ __html: heroTitle
+              ? highlightTitle(heroTitle)
+              : 'Sponsors & <span class="text-brand-cyan">Partners</span>'
+            }}
+          />
           <p className="text-white/60 text-lg max-w-2xl mx-auto mb-12">
-            Leading organizations shaping the future of decentralized AI — powering the summit and the movement.
+            {heroSubtitle || 'Leading organizations shaping the future of decentralized AI — powering the summit and the movement.'}
           </p>
         </div>
 
@@ -193,24 +219,41 @@ export function PartnersListClient({ sponsors, partners }: PartnersListClientPro
       <section className="bg-[#050A1F] py-16">
         <div className="max-w-3xl mx-auto px-6 text-center">
           <h2 className="text-2xl md:text-3xl font-display font-bold text-white mb-4">
-            Interested in Sponsoring?
+            {ctaTitle || 'Interested in Sponsoring?'}
           </h2>
           <p className="text-white/60 mb-8">
-            Join leading organizations at the forefront of decentralized AI governance.
+            {ctaSubtitle || 'Join leading organizations at the forefront of decentralized AI governance.'}
           </p>
           <div className="flex flex-col sm:flex-row gap-4 justify-center">
-            <Link
-              href="/#sponsors"
-              className="px-8 py-3 rounded-full border border-white bg-white text-[#050A1F] hover:bg-brand-cyan hover:text-white hover:border-brand-cyan transition-all duration-300 text-sm font-bold no-underline"
-            >
-              Become a Sponsor
-            </Link>
-            <Link
-              href="/#sponsors"
-              className="px-8 py-3 rounded-full border border-white/30 text-white hover:bg-white/10 transition-all duration-300 text-sm font-bold no-underline"
-            >
-              Request Sponsorship Deck
-            </Link>
+            {ctaButtons && ctaButtons.length > 0 ? (
+              ctaButtons.map((btn, i) => (
+                <Link
+                  key={i}
+                  href={btn.link || '#'}
+                  className={i === 0
+                    ? 'px-8 py-3 rounded-full border border-white bg-white text-[#050A1F] hover:bg-brand-cyan hover:text-white hover:border-brand-cyan transition-all duration-300 text-sm font-bold no-underline'
+                    : 'px-8 py-3 rounded-full border border-white/30 text-white hover:bg-white/10 transition-all duration-300 text-sm font-bold no-underline'
+                  }
+                >
+                  {btn.label}
+                </Link>
+              ))
+            ) : (
+              <>
+                <Link
+                  href="/#sponsors"
+                  className="px-8 py-3 rounded-full border border-white bg-white text-[#050A1F] hover:bg-brand-cyan hover:text-white hover:border-brand-cyan transition-all duration-300 text-sm font-bold no-underline"
+                >
+                  Become a Sponsor
+                </Link>
+                <Link
+                  href="/#sponsors"
+                  className="px-8 py-3 rounded-full border border-white/30 text-white hover:bg-white/10 transition-all duration-300 text-sm font-bold no-underline"
+                >
+                  Request Sponsorship Deck
+                </Link>
+              </>
+            )}
           </div>
         </div>
       </section>

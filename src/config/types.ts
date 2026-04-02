@@ -31,6 +31,7 @@ export interface NavigationConfig {
         label: string;
         link: string;
         title: string;  // ← Added for hover tooltip
+        target?: string;
     };
     contactEmail: string;
     socials: {

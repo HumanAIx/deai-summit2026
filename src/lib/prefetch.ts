@@ -1,4 +1,5 @@
-import { Member, Company, SEOSettings, NormalizedSpeaker, NormalizedSponsor } from './api-types';
+import { Member, Company, SEOSettings, NormalizedSpeaker, NormalizedSponsor, CMSPageData, NavigationAPIData } from './api-types';
+import type { NavigationConfig } from '@/config/types';
 
 const EXTERNAL_API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3000/api';
 const API_KEY = process.env.NEXT_PUBLIC_API_KEY || '';
@@ -231,4 +232,48 @@ export async function prefetchCompanyDetailPageData(slug: string) {
 
 export async function prefetchSponsorDetailPageData(slug: string) {
   return prefetchCompanyDetailPageData(slug);
+}
+
+export async function prefetchCMSPage(pageSlug: string): Promise<CMSPageData | null> {
+  return fetchFromAPI<CMSPageData>(`/cms/pages/${pageSlug}`, { cacheDuration: 60 });
+}
+
+export async function prefetchNavigation(): Promise<NavigationAPIData | null> {
+  return fetchFromAPI<NavigationAPIData>('/settings/public/navigation', { cacheDuration: 300 });
+}
+
+export function mapNavigationData(apiNav: NavigationAPIData): NavigationConfig {
+  // Filter out 'contact' — the Navbar renders a dedicated Contact button
+  const mainItems = (apiNav.mainNav || [])
+    .filter(item => item.published && item.slug !== 'contact')
+    .map(item => ({
+      label: item.label,
+      href: `/${item.slug}`,
+    }));
+
+  const legalItems = (apiNav.footerCol2 || [])
+    .filter(item => item.published)
+    .map(item => ({
+      label: item.label,
+      href: `/${item.slug}`,
+    }));
+
+  const headerLink = apiNav.footerBuilder?.headerCustomLinks?.[0];
+
+  return {
+    main: mainItems,
+    legal: legalItems,
+    actionButton: {
+      label: headerLink?.label || 'Tickets',
+      link: headerLink?.url || '#',
+      title: headerLink?.label || 'Tickets',
+      target: headerLink?.target || undefined,
+    },
+    contactEmail: 'contact@deaisummit.org',
+    socials: {
+      twitter: '',
+      linkedin: '',
+      youtube: '',
+    },
+  };
 }
