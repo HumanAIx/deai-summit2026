@@ -1,8 +1,8 @@
 import { Member, Company, SEOSettings, NormalizedSpeaker, NormalizedSponsor, CMSPageData, NavigationAPIData } from './api-types';
 import type { NavigationConfig } from '@/config/types';
 
-const EXTERNAL_API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3000/api';
-const API_KEY = process.env.NEXT_PUBLIC_API_KEY || '';
+const EXTERNAL_API_URL = process.env.NEXT_PUBLIC_GCONF_API_URL || 'http://localhost:3000/api';
+const API_KEY = process.env.NEXT_PUBLIC_GCONF_API_KEY || '';
 
 const CACHE_DURATION = 60; // 1 minute
 

@@ -135,8 +135,8 @@ export const Footer: React.FC<FooterProps> = ({ navData, navigationAPIData, onSh
     setIsSubmitting(true);
     setSubmitStatus({ type: null, message: '' });
     try {
-      const apiUrl = process.env.NEXT_PUBLIC_API_URL || '';
-      const apiKey = process.env.NEXT_PUBLIC_API_KEY || '';
+      const apiUrl = process.env.NEXT_PUBLIC_GCONF_API_URL || '';
+      const apiKey = process.env.NEXT_PUBLIC_GCONF_API_KEY || '';
       const res = await fetch(`${apiUrl}/newsletter/subscribe`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${apiKey}` },
