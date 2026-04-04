@@ -6,11 +6,23 @@ import Link from 'next/link';
 import { DetailPageLayout } from '@/components/DetailPageLayout';
 import { AnimatedGrid } from '@/components/AnimatedGrid';
 import { markdownToHtml } from '@/lib/utils';
-import type { Member, Company, PersonSocials } from '@/lib/api-types';
+import type { Member, Company, PersonSocials, NavigationAPIData } from '@/lib/api-types';
+import type { NavigationConfig } from '@/config/types';
+
+interface SocialLinkData {
+  key: string;
+  label: string;
+  url: string;
+  icon?: string;
+  color?: string;
+}
 
 interface SpeakerDetailClientProps {
   member: Member;
   companies: Company[];
+  navigationData?: NavigationConfig;
+  navigationAPIData?: NavigationAPIData;
+  socials?: SocialLinkData[];
 }
 
 function getSocialIcon(key: string): string {
@@ -73,14 +85,14 @@ function renderBio(bio: string): string {
   return markdownToHtml(bio);
 }
 
-export const SpeakerDetailClient: React.FC<SpeakerDetailClientProps> = ({ member, companies }) => {
+export const SpeakerDetailClient: React.FC<SpeakerDetailClientProps> = ({ member, companies, navigationData, navigationAPIData, socials }) => {
   const name = `${member.person_firstname} ${member.person_surname}`.trim();
   const bio = member.speaker_bio || member.person_bio;
   const photo = member.person_photo_nobg || member.person_photo;
   const firstCompany = member.person_companies?.[0];
 
   return (
-    <DetailPageLayout>
+    <DetailPageLayout navigationData={navigationData} navigationAPIData={navigationAPIData} socials={socials}>
       {/* Hero section */}
       <section className="relative bg-[#050A1F] text-white">
         {/* Grid Overlay */}

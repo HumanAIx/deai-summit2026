@@ -1,6 +1,6 @@
 import { notFound } from 'next/navigation';
 import type { Metadata } from 'next';
-import { prefetchSpeakerDetailPageData } from '@/lib/prefetch';
+import { prefetchSpeakerDetailPageData, prefetchNavigation, prefetchSocials, mapNavigationData } from '@/lib/prefetch';
 import { generatePersonSchema } from '@/lib/structured-data';
 import { SEO_DEFAULTS } from '@/lib/seo-defaults';
 import { SpeakerDetailClient } from '@/components/SpeakerDetailClient';
@@ -50,11 +50,17 @@ export async function generateMetadata({ params }: { params: Promise<{ slug: str
 
 export default async function SpeakerDetailPage({ params }: { params: Promise<{ slug: string }> }) {
   const { slug } = await params;
-  const { member, companies } = await prefetchSpeakerDetailPageData(slug);
+  const [{ member, companies }, apiNav, socials] = await Promise.all([
+    prefetchSpeakerDetailPageData(slug),
+    prefetchNavigation(),
+    prefetchSocials(),
+  ]);
 
   if (!member) {
     notFound();
   }
+
+  const navigationData = apiNav ? mapNavigationData(apiNav) : undefined;
 
   const schema = generatePersonSchema(member, BASE_URL, 'speakers');
   const seoOverrides = member.seo?.structured_data;
@@ -70,7 +76,13 @@ export default async function SpeakerDetailPage({ params }: { params: Promise<{ 
           dangerouslySetInnerHTML={{ __html: JSON.stringify(finalSchema) }}
         />
       )}
-      <SpeakerDetailClient member={member} companies={companies} />
+      <SpeakerDetailClient
+        member={member}
+        companies={companies}
+        navigationData={navigationData}
+        navigationAPIData={apiNav || undefined}
+        socials={socials}
+      />
     </>
   );
 }

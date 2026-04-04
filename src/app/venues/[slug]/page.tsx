@@ -1,6 +1,6 @@
 import { notFound } from 'next/navigation';
 import type { Metadata } from 'next';
-import { prefetchVenueDetailPageData } from '@/lib/prefetch';
+import { prefetchVenueDetailPageData, prefetchNavigation, prefetchSocials, mapNavigationData } from '@/lib/prefetch';
 import { generateOrganizationSchema } from '@/lib/structured-data';
 import { SEO_DEFAULTS } from '@/lib/seo-defaults';
 import { VenueDetailClient } from '@/components/VenueDetailClient';
@@ -45,11 +45,17 @@ export async function generateMetadata({ params }: { params: Promise<{ slug: str
 
 export default async function VenueDetailPage({ params }: { params: Promise<{ slug: string }> }) {
   const { slug } = await params;
-  const { company, seo } = await prefetchVenueDetailPageData(slug);
+  const [{ company, seo }, apiNav, socials] = await Promise.all([
+    prefetchVenueDetailPageData(slug),
+    prefetchNavigation(),
+    prefetchSocials(),
+  ]);
 
   if (!company) {
     notFound();
   }
+
+  const navigationData = apiNav ? mapNavigationData(apiNav) : undefined;
 
   const schema = generateOrganizationSchema(company, BASE_URL, 'venues');
   const seoOverrides = seo?.structured_data;
@@ -65,7 +71,12 @@ export default async function VenueDetailPage({ params }: { params: Promise<{ sl
           dangerouslySetInnerHTML={{ __html: JSON.stringify(finalSchema) }}
         />
       )}
-      <VenueDetailClient company={company} />
+      <VenueDetailClient
+        company={company}
+        navigationData={navigationData}
+        navigationAPIData={apiNav || undefined}
+        socials={socials}
+      />
     </>
   );
 }

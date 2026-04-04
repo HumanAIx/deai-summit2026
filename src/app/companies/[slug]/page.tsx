@@ -1,6 +1,6 @@
 import { notFound } from 'next/navigation';
 import type { Metadata } from 'next';
-import { prefetchCompanyDetailPageData } from '@/lib/prefetch';
+import { prefetchCompanyDetailPageData, prefetchNavigation, prefetchSocials, mapNavigationData } from '@/lib/prefetch';
 import { generateOrganizationSchema } from '@/lib/structured-data';
 import { SEO_DEFAULTS } from '@/lib/seo-defaults';
 import { CompanyDetailClient } from '@/components/CompanyDetailClient';
@@ -45,11 +45,17 @@ export async function generateMetadata({ params }: { params: Promise<{ slug: str
 
 export default async function CompanyDetailPage({ params }: { params: Promise<{ slug: string }> }) {
   const { slug } = await params;
-  const { company, seo } = await prefetchCompanyDetailPageData(slug);
+  const [{ company, seo }, apiNav, socials] = await Promise.all([
+    prefetchCompanyDetailPageData(slug),
+    prefetchNavigation(),
+    prefetchSocials(),
+  ]);
 
   if (!company) {
     notFound();
   }
+
+  const navigationData = apiNav ? mapNavigationData(apiNav) : undefined;
 
   const schema = generateOrganizationSchema(company, BASE_URL, 'companies');
   const seoOverrides = seo?.structured_data;
@@ -69,6 +75,9 @@ export default async function CompanyDetailPage({ params }: { params: Promise<{ 
         company={company}
         backLabel="Companies"
         backHref="/#sponsors"
+        navigationData={navigationData}
+        navigationAPIData={apiNav || undefined}
+        socials={socials}
       />
     </>
   );

@@ -6,10 +6,22 @@ import Link from 'next/link';
 import { DetailPageLayout } from '@/components/DetailPageLayout';
 import { AnimatedGrid } from '@/components/AnimatedGrid';
 import { markdownToHtml, youtubeToEmbed } from '@/lib/utils';
-import type { Company, CompanySocials } from '@/lib/api-types';
+import type { Company, CompanySocials, NavigationAPIData } from '@/lib/api-types';
+import type { NavigationConfig } from '@/config/types';
+
+interface SocialLinkData {
+  key: string;
+  label: string;
+  url: string;
+  icon?: string;
+  color?: string;
+}
 
 interface VenueDetailClientProps {
   company: Company;
+  navigationData?: NavigationConfig;
+  navigationAPIData?: NavigationAPIData;
+  socials?: SocialLinkData[];
 }
 
 function getSocialIcon(key: string): string {
@@ -57,13 +69,13 @@ function renderBio(bio: string): string {
   return markdownToHtml(bio);
 }
 
-export const VenueDetailClient: React.FC<VenueDetailClientProps> = ({ company }) => {
+export const VenueDetailClient: React.FC<VenueDetailClientProps> = ({ company, navigationData, navigationAPIData, socials }) => {
   const embedUrl = company.company_embedded_youtube
     ? youtubeToEmbed(company.company_embedded_youtube)
     : null;
 
   return (
-    <DetailPageLayout>
+    <DetailPageLayout navigationData={navigationData} navigationAPIData={navigationAPIData} socials={socials}>
       {/* Hero with video or venue photo */}
       <section className="relative bg-[#050A1F] text-white overflow-hidden">
         {/* Grid Overlay */}

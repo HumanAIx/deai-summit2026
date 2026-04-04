@@ -23,7 +23,7 @@ export const Hero: React.FC<HeroProps> = ({ data, onOpenContact, onOpenSpeakerAp
   const videoSrc = videoKey ? VIDEO_MAP[videoKey] : null;
 
   return (
-    <section className={`relative w-full min-h-[85vh] flex flex-col items-center justify-center overflow-hidden pt-24 pb-8 md:pt-28 md:pb-6 ${videoSrc ? 'bg-[#050A1F]' : 'bg-[#F0F0EF]'}`}>
+    <section className={`relative w-full min-h-[85vh] flex flex-col items-center justify-center overflow-hidden pt-32 pb-8 md:pt-40 md:pb-6 ${videoSrc ? 'bg-[#050A1F]' : 'bg-[#F0F0EF]'}`}>
 
       {/* --- HERO BACKGROUND START --- */}
       <div className="absolute inset-0 z-0 w-full h-full">
