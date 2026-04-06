@@ -100,7 +100,7 @@ export function AgendaClient({
 
       {/* Content Sections */}
       <section className="bg-[#F0F0EF] py-16">
-        <div className="max-w-[1440px] mx-auto px-6">
+        <div className="max-w-3xl mx-auto px-6">
           {sections.length === 0 ? (
             <div className="text-center py-20">
               <p className="text-gray-500 text-lg">
