@@ -3,6 +3,7 @@
 import React from 'react';
 import Image from 'next/image';
 import Link from 'next/link';
+import { useRouter } from 'next/navigation';
 import { DetailPageLayout } from '@/components/DetailPageLayout';
 import { AnimatedGrid } from '@/components/AnimatedGrid';
 import { markdownToHtml, youtubeToEmbed } from '@/lib/utils';
@@ -85,6 +86,21 @@ function renderBio(bio: string): string {
 }
 
 export const CompanyDetailClient: React.FC<CompanyDetailClientProps> = ({ company, backLabel, backHref, navigationData, navigationAPIData, socials }) => {
+  const router = useRouter();
+  const handleBack = (e: React.MouseEvent<HTMLAnchorElement>) => {
+    // If there is a same-origin referrer (user navigated here from within the site), go back.
+    if (typeof window !== 'undefined' && document.referrer) {
+      try {
+        const ref = new URL(document.referrer);
+        if (ref.origin === window.location.origin) {
+          e.preventDefault();
+          router.back();
+          return;
+        }
+      } catch {}
+    }
+    // Otherwise fall through to the Link's default navigation (backHref).
+  };
   const embedUrl = company.company_embedded_youtube
     ? youtubeToEmbed(company.company_embedded_youtube)
     : null;
@@ -116,7 +132,7 @@ export const CompanyDetailClient: React.FC<CompanyDetailClientProps> = ({ compan
 
             {/* Info */}
             <div className="text-center md:text-left">
-              <Link href={backHref} className="text-brand-cyan text-sm font-mono uppercase tracking-widest hover:underline mb-6 inline-flex items-center gap-1">
+              <Link href={backHref} onClick={handleBack} className="text-brand-cyan text-sm font-mono uppercase tracking-widest hover:underline mb-6 inline-flex items-center gap-1">
                 <i className="ri-arrow-left-line"></i> {backLabel}
               </Link>
               <h1 className="text-4xl md:text-5xl lg:text-6xl font-display font-bold tracking-tight leading-[1.1] mb-5">

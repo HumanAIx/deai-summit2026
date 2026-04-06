@@ -3,6 +3,7 @@
 import React from 'react';
 import Image from 'next/image';
 import Link from 'next/link';
+import { useRouter } from 'next/navigation';
 import { DetailPageLayout } from '@/components/DetailPageLayout';
 import { AnimatedGrid } from '@/components/AnimatedGrid';
 import { markdownToHtml } from '@/lib/utils';
@@ -86,6 +87,19 @@ function renderBio(bio: string): string {
 }
 
 export const SpeakerDetailClient: React.FC<SpeakerDetailClientProps> = ({ member, companies, navigationData, navigationAPIData, socials }) => {
+  const router = useRouter();
+  const handleBack = (e: React.MouseEvent<HTMLAnchorElement>) => {
+    if (typeof window !== 'undefined' && document.referrer) {
+      try {
+        const ref = new URL(document.referrer);
+        if (ref.origin === window.location.origin) {
+          e.preventDefault();
+          router.back();
+          return;
+        }
+      } catch {}
+    }
+  };
   const name = `${member.person_firstname} ${member.person_surname}`.trim();
   const bio = member.speaker_bio || member.person_bio;
   const photo = member.person_photo_nobg || member.person_photo;
@@ -118,7 +132,7 @@ export const SpeakerDetailClient: React.FC<SpeakerDetailClientProps> = ({ member
 
             {/* Info */}
             <div className="flex-1 text-center md:text-left">
-              <Link href="/speakers" className="text-brand-cyan text-sm font-mono uppercase tracking-widest hover:underline mb-6 inline-flex items-center gap-1">
+              <Link href="/speakers" onClick={handleBack} className="text-brand-cyan text-sm font-mono uppercase tracking-widest hover:underline mb-6 inline-flex items-center gap-1">
                 <i className="ri-arrow-left-line"></i> All Speakers
               </Link>
               <h1 className="text-4xl md:text-5xl lg:text-6xl font-display font-bold tracking-tight leading-[1.1] mb-5">
