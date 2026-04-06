@@ -68,12 +68,22 @@ function shuffle<T>(arr: T[]): T[] {
   return a;
 }
 
+/** Move TheBit Research into position 2 or 3 (0-indexed) after shuffle. */
+function pinTheBit(items: MarqueeItemData[]): MarqueeItemData[] {
+  const idx = items.findIndex(i => /thebit/i.test(i.label || ''));
+  if (idx === -1 || items.length < 6) return items;
+  const [thebit] = items.splice(idx, 1);
+  const targetIndex = 3 + Math.floor(Math.random() * 3); // 3, 4 or 5 (4th, 5th or 6th)
+  items.splice(targetIndex, 0, thebit);
+  return items;
+}
+
 export const Marquee: React.FC<MarqueeProps> = ({ data }) => {
   const [isHovering, setIsHovering] = useState(false);
   // Shuffle after mount to avoid SSR hydration mismatch
   const [items, setItems] = useState<MarqueeItemData[]>(data);
   useEffect(() => {
-    setItems(shuffle(data));
+    setItems(pinTheBit(shuffle(data)));
   }, [data]);
   const searchParams = useSearchParams();
   const hasVideo = !!searchParams.get('video');
