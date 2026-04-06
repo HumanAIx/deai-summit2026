@@ -1,4 +1,5 @@
 import type { Metadata } from 'next';
+import { Suspense } from 'react';
 import { prefetchCMSPage, prefetchNavigation, prefetchSocials, mapNavigationData } from '@/lib/prefetch';
 import { SEO_DEFAULTS } from '@/lib/seo-defaults';
 import { ContactClient } from '@/components/ContactClient';
@@ -53,11 +54,13 @@ export default async function ContactPage() {
     : [];
 
   return (
-    <ContactClient
-      blocks={blocks}
-      navigationData={navigationData}
-      navigationAPIData={apiNav || undefined}
-      socials={socials}
-    />
+    <Suspense fallback={null}>
+      <ContactClient
+        blocks={blocks}
+        navigationData={navigationData}
+        navigationAPIData={apiNav || undefined}
+        socials={socials}
+      />
+    </Suspense>
   );
 }
