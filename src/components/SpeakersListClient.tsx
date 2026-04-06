@@ -62,13 +62,13 @@ function SpeakerCard({ speaker, colorIndex }: SpeakerCardProps) {
         </div>
 
         {/* Speaker Image */}
-        <div className={`absolute bottom-0 right-0 overflow-hidden ${speaker.slug === 'alexiei-dingli' ? 'w-[300px] h-[390px]' : 'w-[200px] h-[260px]'}`}>
+        <div className={`absolute bottom-0 right-0 overflow-hidden ${speaker.slug === 'alexiei-dingli' ? 'w-[360px] h-[468px]' : 'w-[240px] h-[312px]'}`}>
           {speaker.image ? (
             <Image
               src={speaker.image}
               alt={speaker.name}
               fill
-              sizes={speaker.slug === 'alexiei-dingli' ? '300px' : '200px'}
+              sizes={speaker.slug === 'alexiei-dingli' ? '360px' : '240px'}
               className="object-contain object-bottom"
             />
           ) : (
@@ -96,12 +96,15 @@ interface SpeakersListClientProps {
   heroSubtitle?: string;
   heroBadge?: string;
   stats?: { label: string; value: string }[];
+  ctaTitle?: string;
+  ctaSubtitle?: string;
+  ctaButtons?: { label: string; link?: string }[];
   navigationData?: NavigationConfig;
   navigationAPIData?: NavigationAPIData;
   socials?: { key: string; label: string; url: string; icon?: string; color?: string }[];
 }
 
-export function SpeakersListClient({ speakers, heroTitle, heroSubtitle, heroBadge, stats, navigationData, navigationAPIData, socials }: SpeakersListClientProps) {
+export function SpeakersListClient({ speakers, heroTitle, heroSubtitle, heroBadge, stats, ctaTitle, ctaSubtitle, ctaButtons, navigationData, navigationAPIData, socials }: SpeakersListClientProps) {
   const [currentPage, setCurrentPage] = useState(1);
 
   const totalPages = Math.ceil(speakers.length / SPEAKERS_PER_PAGE);
@@ -327,7 +330,42 @@ export function SpeakersListClient({ speakers, heroTitle, heroSubtitle, heroBadg
             </>
           )}
         </div>
+
       </section>
+
+      {/* CTA Section (CMS-driven) */}
+      {(ctaTitle || ctaSubtitle || (ctaButtons && ctaButtons.length > 0)) && (
+        <section className="bg-[#050A1F] py-16">
+          <div className="max-w-3xl mx-auto px-6 text-center">
+            {ctaTitle && (
+              <h2 className="text-2xl md:text-3xl font-display font-bold text-white mb-4">
+                {ctaTitle}
+              </h2>
+            )}
+            {ctaSubtitle && (
+              <p className="text-white/60 mb-8">
+                {ctaSubtitle}
+              </p>
+            )}
+            {ctaButtons && ctaButtons.length > 0 && (
+              <div className="flex flex-col sm:flex-row gap-4 justify-center">
+                {ctaButtons.map((btn, i) => (
+                  <Link
+                    key={i}
+                    href={btn.link || '#'}
+                    className={i === 0
+                      ? 'px-8 py-3 rounded-full border border-white bg-white text-[#050A1F] hover:bg-brand-cyan hover:text-white hover:border-brand-cyan transition-all duration-300 text-sm font-bold no-underline'
+                      : 'px-8 py-3 rounded-full border border-white/30 text-white hover:bg-white/10 transition-all duration-300 text-sm font-bold no-underline'
+                    }
+                  >
+                    {btn.label}
+                  </Link>
+                ))}
+              </div>
+            )}
+          </div>
+        </section>
+      )}
     </DetailPageLayout>
   );
 }

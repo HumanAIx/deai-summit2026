@@ -3,6 +3,7 @@ import React, { useState, useEffect } from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
 import { AnimatedCounter } from '@/components/AnimatedCounter';
+import { GlitchText } from '@/components/GlitchText';
 import type { NavigationConfig } from '@/config/types';
 import type { NavigationAPIData } from '@/lib/api-types';
 
@@ -270,9 +271,9 @@ export const Footer: React.FC<FooterProps> = ({ navData, navigationAPIData, onSh
           <div className="flex flex-col md:flex-row justify-between items-center gap-6 pt-8 border-t border-white/10">
             <div className="flex items-center gap-2">
               <svg className="w-3 h-3 text-brand-cyan" fill="currentColor" viewBox="0 0 24 24"><path d="M13 0L0 14h9l-2 10L21 10h-9l2-10z"/></svg>
-              <a href="https://gconf.ai" target="_blank" rel="noopener noreferrer" className="text-white/40 text-xs hover:text-white/60 transition-colors uppercase tracking-widest">Powered by GCONF.AI</a>
+              <a href="https://gconf.ai" target="_blank" rel="noopener noreferrer" className="text-white/40 text-xs hover:text-white/60 transition-colors uppercase tracking-widest"><GlitchText>Powered by GCONF.AI</GlitchText></a>
             </div>
-            <span className="text-sm text-white/30 font-mono">&copy; {new Date().getFullYear()} DeAI Summit</span>
+            <span className="text-xs text-white/40 uppercase tracking-widest">&copy; {new Date().getFullYear()} DeAI Summit</span>
           </div>
         </div>
       </footer>
@@ -350,8 +351,8 @@ export const Footer: React.FC<FooterProps> = ({ navData, navigationAPIData, onSh
           <div className="flex flex-col gap-5 lg:self-start">
             {/* CTA cards */}
             <div className="flex flex-col sm:flex-row gap-5">
-              <button
-                onClick={handleContactClick}
+              <Link
+                href="/contact?inquiry=Sponsorship+Opportunities"
                 className="group relative p-8 rounded-2xl border border-white/10 bg-white/5 hover:bg-white/10 backdrop-blur-sm transition-all duration-300 overflow-hidden w-full sm:w-56 text-left"
               >
                 <div className="absolute top-0 left-0 w-full h-[2px] bg-gradient-to-r from-brand-blue to-brand-cyan opacity-0 group-hover:opacity-100 transition-opacity" />
@@ -359,10 +360,10 @@ export const Footer: React.FC<FooterProps> = ({ navData, navigationAPIData, onSh
                 <span className="text-base font-semibold text-white block mb-1">Become a Sponsor</span>
                 <span className="text-sm text-white/40 group-hover:text-white/60 transition-colors">Partner with us</span>
                 <i className="ri-arrow-right-up-line text-lg text-white/30 group-hover:text-brand-cyan absolute top-6 right-6 transition-colors"></i>
-              </button>
+              </Link>
 
-              <button
-                onClick={handleContactClick}
+              <Link
+                href="/contact"
                 className="group relative p-8 rounded-2xl border border-white/10 bg-white/5 hover:bg-white/10 backdrop-blur-sm transition-all duration-300 overflow-hidden w-full sm:w-56 text-left"
               >
                 <div className="absolute top-0 left-0 w-full h-[2px] bg-gradient-to-r from-brand-cyan to-brand-teal opacity-0 group-hover:opacity-100 transition-opacity" />
@@ -370,7 +371,7 @@ export const Footer: React.FC<FooterProps> = ({ navData, navigationAPIData, onSh
                 <span className="text-base font-semibold text-white block mb-1">Contact Us</span>
                 <span className="text-sm text-white/40 group-hover:text-white/60 transition-colors">Get in touch</span>
                 <i className="ri-arrow-right-up-line text-lg text-white/30 group-hover:text-brand-cyan absolute top-6 right-6 transition-colors"></i>
-              </button>
+              </Link>
             </div>
 
             {/* Newsletter (below CTA cards) */}
@@ -529,7 +530,7 @@ export const Footer: React.FC<FooterProps> = ({ navData, navigationAPIData, onSh
             <svg className="w-3 h-3 text-brand-cyan" fill="currentColor" viewBox="0 0 24 24"><path d="M13 0L0 14h9l-2 10L21 10h-9l2-10z"/></svg>
             <a href="https://gconf.ai" target="_blank" rel="noopener noreferrer"
               className="text-white/40 text-xs hover:text-white/60 transition-colors uppercase tracking-widest">
-              Powered by GCONF.AI
+              <GlitchText>Powered by GCONF.AI</GlitchText>
             </a>
           </div>
 
@@ -562,7 +563,7 @@ export const Footer: React.FC<FooterProps> = ({ navData, navigationAPIData, onSh
                 </a>
               ))}
             </div>
-            <span className="text-sm text-white/30 font-mono">&copy; {new Date().getFullYear()} DeAI Summit</span>
+            <span className="text-xs text-white/40 uppercase tracking-widest">&copy; {new Date().getFullYear()} DeAI Summit</span>
           </div>
         </div>
       </div>

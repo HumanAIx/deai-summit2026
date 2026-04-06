@@ -77,7 +77,7 @@ export const VenueDetailClient: React.FC<VenueDetailClientProps> = ({ company, n
   return (
     <DetailPageLayout navigationData={navigationData} navigationAPIData={navigationAPIData} socials={socials}>
       {/* Hero with video or venue photo */}
-      <section className="relative bg-[#050A1F] text-white overflow-hidden">
+      <section className="relative -mt-[140px] bg-[#050A1F] text-white overflow-hidden">
         {/* Grid Overlay */}
         <div className="absolute inset-0 pointer-events-none animated-grid z-10">
           <AnimatedGrid />
@@ -97,12 +97,7 @@ export const VenueDetailClient: React.FC<VenueDetailClientProps> = ({ company, n
           </div>
         )}
 
-        <div className="relative z-20 max-w-[1440px] mx-auto px-6 py-20 md:py-28">
-          {/* Back link */}
-          <Link href="/" className="text-brand-cyan text-sm font-mono uppercase tracking-widest hover:underline mb-8 inline-flex items-center gap-1">
-            <i className="ri-arrow-left-line"></i> Home
-          </Link>
-
+        <div className="relative z-20 max-w-[1440px] mx-auto px-6 pt-[160px] pb-20 md:pt-[180px] md:pb-28">
           {/* Venue info centered */}
           <div className="flex flex-col items-center text-center mt-6">
             {/* Logo */}

@@ -116,20 +116,20 @@ export const PastSponsors: React.FC<PastSponsorsProps> = ({ data, onOpenContact 
 
           {/* CTA Buttons */}
           <div className="flex flex-col sm:flex-row gap-5 items-center justify-center pt-8">
-            <button
-              onClick={onOpenContact}
+            <Link
+              href="/contact?inquiry=Sponsorship+Opportunities"
               className="group px-10 py-4 rounded-full bg-[#050A1F] text-white hover:bg-brand-cyan transition-all duration-300 text-sm font-bold shadow-lg hover:shadow-brand-cyan/20 hover:shadow-xl flex items-center gap-3"
             >
               <i className="ri-vip-diamond-line text-lg group-hover:scale-110 transition-transform"></i>
               Become a Sponsor
-            </button>
-            <button
-              onClick={onOpenContact}
+            </Link>
+            <Link
+              href="/contact?inquiry=Sponsorship+Opportunities"
               className="group px-10 py-4 rounded-full border-2 border-[#050A1F] text-[#050A1F] hover:bg-[#050A1F] hover:text-white transition-all duration-300 text-sm font-bold flex items-center gap-3"
             >
               <i className="ri-file-download-line text-lg group-hover:scale-110 transition-transform"></i>
               Request Sponsorship Deck
-            </button>
+            </Link>
           </div>
 
         </div>

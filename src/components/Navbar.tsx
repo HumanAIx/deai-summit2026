@@ -71,12 +71,13 @@ export const Navbar: React.FC<NavbarProps> = ({ onShowToast, onOpenContact, data
               </a>
             ))}
 
-            <button
-              onClick={handleContactClick}
+            <Link
+              href="/contact"
+              onClick={() => setIsMenuOpen(false)}
               className="text-base font-medium text-white/50 hover:text-white transition-colors"
             >
               Contact Us
-            </button>
+            </Link>
           </div>
 
         </div>
@@ -116,12 +117,13 @@ export const Navbar: React.FC<NavbarProps> = ({ onShowToast, onOpenContact, data
               </a>
             ))}
 
-            <button
-              onClick={handleContactClick}
+            <Link
+              href="/contact"
+              onClick={() => setIsMenuOpen(false)}
               className="text-2xl font-medium text-white/80 hover:text-white transition-colors w-full text-center py-2"
             >
               Contact Us
-            </button>
+            </Link>
 
             <div className="flex items-center justify-center gap-6">
               <a

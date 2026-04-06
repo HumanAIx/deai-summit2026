@@ -2,6 +2,7 @@
 
 import React from 'react';
 import Image from 'next/image';
+import Link from 'next/link';
 import { useSearchParams } from 'next/navigation';
 import { HeroConfig } from '@/config/types';
 import { AnimatedGrid } from '@/components/AnimatedGrid';
@@ -108,16 +109,16 @@ export const Hero: React.FC<HeroProps> = ({ data, onOpenContact, onOpenSpeakerAp
             ? '0 0 25px 6px rgba(0,176,194,0.25), 0 0 50px 12px rgba(0,176,194,0.12)'
             : '0 0 25px 6px rgba(14,111,235,0.20), 0 0 50px 12px rgba(14,111,235,0.10)';
           return (
-        <div className="flex flex-col sm:flex-row gap-4 md:gap-4 pt-4 md:pt-6 items-center w-full sm:w-auto animate-fade-in-up [animation-delay:600ms] opacity-0 fill-mode-forwards flex-wrap justify-center">
-          <button onClick={onOpenSpeakerApp} className={btnClass} style={{ boxShadow: glowDefault }} onMouseEnter={(e) => { e.currentTarget.style.boxShadow = glowHover; }} onMouseLeave={(e) => { e.currentTarget.style.boxShadow = glowDefault; }}>
+        <div className="flex flex-col sm:flex-row gap-4 md:gap-4 pt-4 md:pt-6 pb-10 md:pb-16 items-center w-full sm:w-auto animate-fade-in-up [animation-delay:600ms] opacity-0 fill-mode-forwards flex-wrap justify-center">
+          <Link href="/contact?inquiry=Speaker+Application" className={btnClass} style={{ boxShadow: glowDefault }} onMouseEnter={(e) => { e.currentTarget.style.boxShadow = glowHover; }} onMouseLeave={(e) => { e.currentTarget.style.boxShadow = glowDefault; }}>
             {data.ctaSecondary.label}
             <i className="ri-download-line text-lg md:text-xl"></i>
-          </button>
+          </Link>
           {data.ctaTertiary && (
-            <button onClick={() => { if (onOpenContact) onOpenContact(); }} className={btnClass} style={{ boxShadow: glowDefault }} onMouseEnter={(e) => { e.currentTarget.style.boxShadow = glowHover; }} onMouseLeave={(e) => { e.currentTarget.style.boxShadow = glowDefault; }}>
+            <Link href="/contact?inquiry=Sponsorship+Opportunities" className={btnClass} style={{ boxShadow: glowDefault }} onMouseEnter={(e) => { e.currentTarget.style.boxShadow = glowHover; }} onMouseLeave={(e) => { e.currentTarget.style.boxShadow = glowDefault; }}>
               {data.ctaTertiary.label}
               <i className="ri-hand-heart-line text-lg md:text-xl"></i>
-            </button>
+            </Link>
           )}
           <button onClick={onOpenWaitlist} className={btnClass} style={{ boxShadow: glowDefault }} onMouseEnter={(e) => { e.currentTarget.style.boxShadow = glowHover; }} onMouseLeave={(e) => { e.currentTarget.style.boxShadow = glowDefault; }}>
             Waitlist to Attend

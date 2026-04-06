@@ -1,6 +1,7 @@
 'use client';
 
 import React, { useState, Suspense } from 'react';
+import Link from 'next/link';
 import { Navbar } from '@/components/Navbar';
 import { Hero } from '@/components/Hero';
 import { Marquee } from '@/components/Marquee';
@@ -117,13 +118,13 @@ export const LandingPage: React.FC<LandingPageProps> = ({ speakers, marqueeItems
 
                 {/* Speaker Call to Action - Temporary placement until user decides */}
                 <div className="w-full bg-[#F0F0EF] pb-20 flex justify-center">
-                    <button
-                        onClick={handleOpenSpeakerApp}
+                    <Link
+                        href="/contact?inquiry=Speaker+Application"
                         className="px-8 py-3 rounded-full border border-[#050A1F] bg-white text-[#050A1F] hover:bg-[#050A1F] hover:text-white transition-all duration-300 text-sm font-bold shadow-md hover:shadow-xl flex items-center gap-2"
                     >
                         <i className="ri-mic-line"></i>
                         Apply to Speak
-                    </button>
+                    </Link>
                 </div>
 
                 {/* Dark Networking Section */}
