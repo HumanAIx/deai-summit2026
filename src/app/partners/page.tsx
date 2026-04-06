@@ -16,6 +16,7 @@ function normalizeCMSCompany(item: CMSCompanyItem, isSponsor: boolean, isPartner
     socials: item.company_socials,
     isSponsor,
     isPartner,
+    logoHasDarkBg: item.company_logo_has_dark_bg,
   };
 }
 
@@ -32,21 +33,26 @@ function extractCompaniesFromBlocks(blocks: CMSBlock[]): {
 
     const listType = block.listType || block.companiesListType;
 
+    const publishedSponsors = (list: CMSCompanyItem[]) =>
+      list.filter(i => i.company_published !== false && i.sponsor_published !== false);
+    const publishedPartners = (list: CMSCompanyItem[]) =>
+      list.filter(i => i.company_published !== false && i.partner_published !== false);
+
     // Direct companies-list block
     if (block.type === 'companies-list') {
       if (listType === 'all-sponsors') {
-        sponsors = items.map(item => normalizeCMSCompany(item, true, false));
+        sponsors = publishedSponsors(items).map(item => normalizeCMSCompany(item, true, false));
       } else if (listType === 'all-partners') {
-        partners = items.map(item => normalizeCMSCompany(item, false, true));
+        partners = publishedPartners(items).map(item => normalizeCMSCompany(item, false, true));
       }
     }
     // Content block with companies-list addon
     if (block.addon === 'companies-list') {
       const addonListType = (block as Record<string, unknown>).companiesListType || block.listType;
       if (addonListType === 'all-sponsors') {
-        sponsors = items.map(item => normalizeCMSCompany(item, true, false));
+        sponsors = publishedSponsors(items).map(item => normalizeCMSCompany(item, true, false));
       } else if (addonListType === 'all-partners') {
-        partners = items.map(item => normalizeCMSCompany(item, false, true));
+        partners = publishedPartners(items).map(item => normalizeCMSCompany(item, false, true));
       }
     }
   }

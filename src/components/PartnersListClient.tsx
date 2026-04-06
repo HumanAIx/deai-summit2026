@@ -56,7 +56,11 @@ function CompanyCard({ company, type, index }: { company: NormalizedSponsor; typ
       className="group block overflow-hidden rounded-2xl transition-all duration-300 hover:scale-[1.02] hover:shadow-xl no-underline bg-white border border-gray-200 hover:border-gray-300"
     >
       {/* Logo section */}
-      <div className="relative h-[160px] flex items-center justify-center p-8 bg-white">
+      <div
+        className={`relative h-[160px] flex items-center justify-center p-8 ${
+          company.logoHasDarkBg ? 'bg-[#050A1F]' : 'bg-white'
+        }`}
+      >
         {company.logo ? (
           <div className="relative w-full h-full">
             <Image

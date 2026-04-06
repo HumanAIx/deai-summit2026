@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import Image from 'next/image';
 import Link from 'next/link';
 import { useSearchParams } from 'next/navigation';
@@ -59,15 +59,30 @@ const MarqueeItem: React.FC<{
   return <div className="flex-shrink-0">{logoContent}</div>;
 };
 
+function shuffle<T>(arr: T[]): T[] {
+  const a = [...arr];
+  for (let i = a.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [a[i], a[j]] = [a[j], a[i]];
+  }
+  return a;
+}
+
 export const Marquee: React.FC<MarqueeProps> = ({ data }) => {
   const [isHovering, setIsHovering] = useState(false);
+  // Shuffle after mount to avoid SSR hydration mismatch
+  const [items, setItems] = useState<MarqueeItemData[]>(data);
+  useEffect(() => {
+    setItems(shuffle(data));
+  }, [data]);
   const searchParams = useSearchParams();
   const hasVideo = !!searchParams.get('video');
+  // Light background like chm-website so grayscale dark logos read clearly.
   const bgColor = hasVideo ? '#000000' : '#050A1F';
 
   // Calculate total width for animation
   const itemWidth = 310; // 240px logo + 70px margins
-  const totalWidth = data.length * itemWidth;
+  const totalWidth = items.length * itemWidth;
 
   return (
     <section className="w-full z-20 relative overflow-hidden py-12" style={{ backgroundColor: bgColor }}>
@@ -75,7 +90,7 @@ export const Marquee: React.FC<MarqueeProps> = ({ data }) => {
       <style dangerouslySetInnerHTML={{
         __html: `
           .sponsor-logo-wrapper {
-            transition: filter 0.3s ease, transform 0.3s ease;
+            transition: filter 0.2s ease, transform 0.3s ease;
           }
           .sponsor-logo-wrapper:hover {
             filter: ${hoverFilter} !important;
@@ -102,7 +117,7 @@ export const Marquee: React.FC<MarqueeProps> = ({ data }) => {
       >
         {/* 4 sets for seamless loop */}
         {[0, 1, 2, 3].map((setIndex) =>
-          data.map((item, i) => (
+          items.map((item, i) => (
             <MarqueeItem
               key={`${setIndex}-${i}`}
               item={item}

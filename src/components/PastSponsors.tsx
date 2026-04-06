@@ -146,10 +146,13 @@ function SponsorCard({ item, index = 0 }: { item: PartnerItemData; index?: numbe
     : `/companies/${item.slug}`;
   const accent = tileColors[index % tileColors.length];
 
+  const isDark = item.logoHasDarkBg;
   const card = (
     <div className="group relative h-44 rounded-2xl overflow-hidden transition-all duration-500 hover:scale-[1.04]"
       style={{
-        background: `linear-gradient(135deg, #ffffff 0%, #f8f8f8 100%)`,
+        background: isDark
+          ? 'linear-gradient(135deg, #050A1F 0%, #0a1230 100%)'
+          : 'linear-gradient(135deg, #ffffff 0%, #f8f8f8 100%)',
         boxShadow: '0 2px 12px rgba(0,0,0,0.06)',
       }}
       onMouseEnter={(e) => {
@@ -172,13 +175,13 @@ function SponsorCard({ item, index = 0 }: { item: PartnerItemData; index?: numbe
             src={item.logo}
             alt={item.name}
             fill
-            className="object-contain grayscale-[0.6] group-hover:grayscale-0 opacity-60 group-hover:opacity-100 transition-all duration-500 group-hover:scale-110"
+            className="object-contain transition-all duration-500 group-hover:scale-110"
           />
         </div>
 
         {/* Name + arrow */}
-        <div className="mt-auto pt-4 flex items-center justify-between w-full border-t border-gray-100 group-hover:border-transparent transition-colors duration-500">
-          <p className="text-[11px] font-semibold text-gray-400 group-hover:text-gray-700 transition-colors duration-500 truncate">
+        <div className={`mt-auto pt-4 flex items-center justify-between w-full border-t ${isDark ? 'border-white/10' : 'border-gray-100'} group-hover:border-transparent transition-colors duration-500`}>
+          <p className={`text-[11px] font-semibold ${isDark ? 'text-white/60 group-hover:text-white' : 'text-gray-400 group-hover:text-gray-700'} transition-colors duration-500 truncate`}>
             {item.name}
           </p>
           <div

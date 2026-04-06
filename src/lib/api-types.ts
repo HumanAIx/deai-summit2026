@@ -92,6 +92,7 @@ export interface Company {
   company_youtube_videos?: unknown[];
   venue_photo?: string;
   logo_background_white?: boolean;
+  company_logo_has_dark_bg?: boolean;
   brochure_url?: string;
   tenant_id: string;
   seo?: SEOSettings;
@@ -135,6 +136,7 @@ export interface NormalizedSponsor {
   socials?: CompanySocials;
   isSponsor: boolean;
   isPartner: boolean;
+  logoHasDarkBg?: boolean;
 }
 
 export interface APIResponse<T> {
@@ -223,6 +225,12 @@ export interface CMSCompanyItem {
   logo_background_white?: boolean;
   company_is_venue?: boolean;
   venue_published?: boolean;
+  company_logo_has_dark_bg?: boolean;
+  company_published?: boolean;
+  company_is_sponsor?: boolean;
+  sponsor_published?: boolean;
+  company_is_partner?: boolean;
+  partner_published?: boolean;
 }
 
 export interface CMSPageData {

@@ -55,6 +55,7 @@ export default async function Home() {
         slug: p.slug,
         logo: p.logo,
         isSponsor: p.isSponsor,
+        logoHasDarkBg: p.logoHasDarkBg,
       }))
     : siteConfig.partners.map(p => ({ ...p, slug: '', isSponsor: false }));
 

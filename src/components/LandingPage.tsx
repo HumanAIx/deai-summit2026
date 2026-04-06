@@ -43,6 +43,7 @@ export interface PartnerItemData {
     slug: string;
     logo: string;
     isSponsor: boolean;
+    logoHasDarkBg?: boolean;
 }
 
 export interface SocialLinkData {

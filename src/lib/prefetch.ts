@@ -90,6 +90,10 @@ export function normalizeSponsor(company: Company): NormalizedSponsor {
     socials: company.company_socials,
     isSponsor: company.company_is_sponsor,
     isPartner: company.company_is_partner,
+    logoHasDarkBg:
+      company.company_logo_has_dark_bg ??
+      (company as Record<string, unknown>).logo_has_dark_bg as boolean | undefined ??
+      (company as Record<string, unknown>).logo_background_dark as boolean | undefined,
   };
 }
 
