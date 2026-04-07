@@ -1,9 +1,10 @@
 'use client';
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
 import { AnimatedCounter } from '@/components/AnimatedCounter';
 import { GlitchText } from '@/components/GlitchText';
+import type { GlitchTextHandle } from '@/components/GlitchText';
 import type { NavigationConfig } from '@/config/types';
 import type { NavigationAPIData } from '@/lib/api-types';
 
@@ -53,6 +54,49 @@ interface VenueData {
   company_address?: string;
   company_logo?: string;
   company_slug: string;
+}
+
+const ANIM_DURATION = 1200;
+const PAUSE = 1900;
+
+function PoweredByGconf() {
+  const glitchRef = useRef<GlitchTextHandle>(null);
+  const [zapKey, setZapKey] = useState(0);
+  const [isZapping, setIsZapping] = useState(false);
+
+  useEffect(() => {
+    const timers: ReturnType<typeof setTimeout>[] = [];
+    const schedule = (fn: () => void, ms: number) => {
+      timers.push(setTimeout(fn, ms));
+    };
+
+    const cycle = () => {
+      setIsZapping(true);
+      setZapKey(k => k + 1);
+      schedule(() => {
+        setIsZapping(false);
+        schedule(() => {
+          glitchRef.current?.trigger();
+          schedule(cycle, ANIM_DURATION + PAUSE);
+        }, PAUSE);
+      }, ANIM_DURATION);
+    };
+
+    schedule(cycle, 800);
+    return () => timers.forEach(clearTimeout);
+  }, []);
+
+  return (
+    <div className="flex items-center gap-2">
+      <svg key={zapKey} className={`w-3 h-3 text-brand-cyan${isZapping ? ' animate-zap' : ''}`} fill="currentColor" viewBox="0 0 24 24">
+        <path d="M13 0L0 14h9l-2 10L21 10h-9l2-10z"/>
+      </svg>
+      <a href="https://gconf.ai" target="_blank" rel="noopener noreferrer"
+        className="text-white/40 text-xs hover:text-white/60 transition-colors uppercase tracking-widest">
+        <GlitchText ref={glitchRef} autoPlay={false}>Powered by GCONF.AI</GlitchText>
+      </a>
+    </div>
+  );
 }
 
 export const Footer: React.FC<FooterProps> = ({ navData, navigationAPIData, onShowToast, onOpenContact, socials }) => {
@@ -269,10 +313,7 @@ export const Footer: React.FC<FooterProps> = ({ navData, navigationAPIData, onSh
             </div>
           </div>
           <div className="flex flex-col md:flex-row justify-between items-center gap-6 pt-8 border-t border-white/10">
-            <div className="flex items-center gap-2">
-              <svg className="w-3 h-3 text-brand-cyan" fill="currentColor" viewBox="0 0 24 24"><path d="M13 0L0 14h9l-2 10L21 10h-9l2-10z"/></svg>
-              <a href="https://gconf.ai" target="_blank" rel="noopener noreferrer" className="text-white/40 text-xs hover:text-white/60 transition-colors uppercase tracking-widest"><GlitchText>Powered by GCONF.AI</GlitchText></a>
-            </div>
+            <PoweredByGconf />
             <span className="text-xs text-white/40 uppercase tracking-widest">&copy; {new Date().getFullYear()} DeAI Summit</span>
           </div>
         </div>
@@ -526,13 +567,7 @@ export const Footer: React.FC<FooterProps> = ({ navData, navigationAPIData, onSh
         {/* Bottom bar */}
         <div className="flex flex-col md:flex-row justify-between items-center gap-6 pt-8 border-t border-white/10">
           {/* Left — Powered by */}
-          <div className="flex items-center gap-2">
-            <svg className="w-3 h-3 text-brand-cyan" fill="currentColor" viewBox="0 0 24 24"><path d="M13 0L0 14h9l-2 10L21 10h-9l2-10z"/></svg>
-            <a href="https://gconf.ai" target="_blank" rel="noopener noreferrer"
-              className="text-white/40 text-xs hover:text-white/60 transition-colors uppercase tracking-widest">
-              <GlitchText>Powered by GCONF.AI</GlitchText>
-            </a>
-          </div>
+          <PoweredByGconf />
 
           {/* Center — Custom bottom bar links */}
           {bottomBarLinks.length > 0 && (
