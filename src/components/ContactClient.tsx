@@ -66,6 +66,7 @@ const INQUIRY_OPTIONS = [
   'Sponsorship Opportunities',
   'Media & Press',
   'Speaker Application',
+  'Request Sponsorship Deck',
 ];
 
 export function ContactClient({ blocks, navigationData, navigationAPIData, socials }: ContactClientProps) {

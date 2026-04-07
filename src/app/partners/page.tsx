@@ -85,17 +85,57 @@ function extractHeroFromBlocks(blocks: CMSBlock[]): {
   return {};
 }
 
+type RawCtaButton = {
+  label?: string;
+  text?: string;
+  link?: string;
+  url?: string;
+  href?: string;
+  action?: string;
+  formPrefill?: Record<string, string>;
+};
+
+function normalizeCtaButtons(raw: unknown): { label: string; link?: string }[] | undefined {
+  if (!Array.isArray(raw) || raw.length === 0) return undefined;
+  const normalized = (raw as RawCtaButton[])
+    .map(b => {
+      const label = b.label || b.text || '';
+      let link = b.link || b.url || b.href || undefined;
+      if (!link && b.action === 'form') {
+        const prefillValue = b.formPrefill ? Object.values(b.formPrefill).find(v => !!v) : undefined;
+        link = prefillValue ? `/contact?inquiry=${encodeURIComponent(prefillValue)}` : '/contact';
+      }
+      return { label, link };
+    })
+    .filter(b => b.label);
+  return normalized.length > 0 ? normalized : undefined;
+}
+
 function extractCtaFromBlocks(blocks: CMSBlock[]): {
   title?: string;
   subtitle?: string;
   buttons?: { label: string; link?: string }[];
 } {
+  // Prefer explicit cta block types
   for (const block of blocks) {
     if (block.type === 'cta' || block.type === 'call-to-action') {
       return {
-        title: block.title || block.content || undefined,
-        subtitle: block.subtitle || undefined,
-        buttons: block.buttons,
+        title: block.title || (block.content as string) || undefined,
+        subtitle: (block.subtitle as string) || (block.description as string) || undefined,
+        buttons: normalizeCtaButtons(block.buttons),
+      };
+    }
+  }
+  // Fallback: content blocks with buttons (but not the hero / list blocks)
+  for (const block of blocks) {
+    if (block.addon === 'companies-list' || block.addon === 'members-list') continue;
+    if (block.type === 'companies-list' || block.type === 'members-list' || block.type === 'hero') continue;
+    const buttons = normalizeCtaButtons(block.buttons);
+    if (buttons) {
+      return {
+        title: block.title || (block.content as string) || undefined,
+        subtitle: (block.subtitle as string) || (block.description as string) || undefined,
+        buttons,
       };
     }
   }
