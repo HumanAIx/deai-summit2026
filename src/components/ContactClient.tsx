@@ -18,6 +18,7 @@ interface SocialLinkData {
 
 interface ContactClientProps {
   blocks: CMSBlock[];
+  inquiryOptions?: string[];
   navigationData?: NavigationConfig;
   navigationAPIData?: NavigationAPIData;
   socials?: SocialLinkData[];
@@ -61,7 +62,7 @@ declare global {
   }
 }
 
-const INQUIRY_OPTIONS = [
+const FALLBACK_INQUIRY_OPTIONS = [
   'General Inquiry',
   'Sponsorship Opportunities',
   'Media & Press',
@@ -69,11 +70,12 @@ const INQUIRY_OPTIONS = [
   'Request Sponsorship Deck',
 ];
 
-export function ContactClient({ blocks, navigationData, navigationAPIData, socials }: ContactClientProps) {
+export function ContactClient({ blocks, inquiryOptions, navigationData, navigationAPIData, socials }: ContactClientProps) {
   const hero = extractHero(blocks);
+  const options = inquiryOptions && inquiryOptions.length > 0 ? inquiryOptions : FALLBACK_INQUIRY_OPTIONS;
   const searchParams = useSearchParams();
   const inquiryParam = searchParams.get('inquiry') || '';
-  const defaultInquiry = INQUIRY_OPTIONS.find(o => o.toLowerCase() === inquiryParam.toLowerCase()) || 'General Inquiry';
+  const defaultInquiry = options.find(o => o.toLowerCase() === inquiryParam.toLowerCase()) || options[0];
 
   const [highlightInquiry, setHighlightInquiry] = useState(!!inquiryParam);
   useEffect(() => {
@@ -275,7 +277,7 @@ export function ContactClient({ blocks, navigationData, navigationAPIData, socia
                         highlightInquiry ? 'bg-yellow-50 border-yellow-200' : 'bg-slate-50 border-slate-200'
                       }`}
                     >
-                      {INQUIRY_OPTIONS.map(o => (
+                      {options.map(o => (
                         <option key={o} value={o}>{o}</option>
                       ))}
                     </select>

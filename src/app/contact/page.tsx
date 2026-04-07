@@ -3,7 +3,20 @@ import { Suspense } from 'react';
 import { prefetchCMSPage, prefetchNavigation, prefetchSocials, mapNavigationData } from '@/lib/prefetch';
 import { SEO_DEFAULTS } from '@/lib/seo-defaults';
 import { ContactClient } from '@/components/ContactClient';
-import type { CMSBlock } from '@/lib/api-types';
+import type { CMSBlock, CMSFormConfig } from '@/lib/api-types';
+
+/** Pull inquiry-type choices out of whichever form in the CMS page has a select field. */
+function extractInquiryOptions(formConfigs?: Record<string, CMSFormConfig>): string[] | undefined {
+  if (!formConfigs) return undefined;
+  for (const form of Object.values(formConfigs)) {
+    for (const field of form.form_fields || []) {
+      if (field.type === 'select' && field.settings?.choices?.length) {
+        return field.settings.choices.map(c => c.value || c.label).filter(Boolean);
+      }
+    }
+  }
+  return undefined;
+}
 
 const BASE_URL = process.env.NEXT_PUBLIC_SITE_URL || 'https://deaisummit.org';
 
@@ -53,10 +66,13 @@ export default async function ContactPage() {
       : (Object.values(cmsPage.content.blocks) as CMSBlock[])
     : [];
 
+  const inquiryOptions = extractInquiryOptions(cmsPage?.content?.formConfigs);
+
   return (
     <Suspense fallback={null}>
       <ContactClient
         blocks={blocks}
+        inquiryOptions={inquiryOptions}
         navigationData={navigationData}
         navigationAPIData={apiNav || undefined}
         socials={socials}

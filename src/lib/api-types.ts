@@ -233,6 +233,31 @@ export interface CMSCompanyItem {
   partner_published?: boolean;
 }
 
+export interface CMSFormFieldChoice {
+  label: string;
+  value: string;
+}
+
+export interface CMSFormField {
+  id: string;
+  name: string;
+  type: string;
+  label: string;
+  required?: boolean;
+  placeholder?: string;
+  settings?: {
+    choices?: CMSFormFieldChoice[];
+  };
+}
+
+export interface CMSFormConfig {
+  id: string;
+  form_name: string;
+  form_slug: string;
+  form_description?: string;
+  form_fields: CMSFormField[];
+}
+
 export interface CMSPageData {
   id?: string;
   page_type: string;
@@ -242,6 +267,7 @@ export interface CMSPageData {
   content: {
     blocks: CMSBlock[];
     blockOrder?: string[];
+    formConfigs?: Record<string, CMSFormConfig>;
   };
   seo?: SEOSettings;
 }
