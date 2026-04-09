@@ -76,7 +76,7 @@ export const Hero: React.FC<HeroProps> = ({ data, onOpenContact, onOpenSpeakerAp
         {/* Headline */}
         <div className="space-y-4 md:space-y-6 animate-fade-in-up [animation-delay:200ms] opacity-0 fill-mode-forwards w-full">
           <h1
-            className={`text-5xl sm:text-6xl md:text-8xl lg:text-9xl font-display font-bold tracking-tighter leading-[1.1] md:leading-[1.0] break-words ${videoSrc ? 'text-white' : 'text-slate-900 mix-blend-darken'}`}
+            className={`text-5xl sm:text-6xl md:text-8xl lg:text-9xl font-display font-bold tracking-tighter leading-[1.1] md:leading-[1.0] break-words ${videoSrc ? 'text-white' : 'text-slate-900 md:mix-blend-darken'}`}
             dangerouslySetInnerHTML={{ __html: data.headline }}
           />
 

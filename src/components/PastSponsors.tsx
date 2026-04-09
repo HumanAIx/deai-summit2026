@@ -37,15 +37,15 @@ export const PastSponsors: React.FC<PastSponsorsProps> = ({ data, onOpenContact 
           </p>
 
           {/* Stats */}
-          <div className="flex items-center justify-center gap-20 md:gap-28">
+          <div className="flex items-center justify-center gap-8 sm:gap-20 md:gap-28">
             {data.length > 0 && (
               <div className="text-center relative">
                 <div className="absolute inset-0 blur-3xl opacity-15 rounded-full scale-150 bg-brand-cyan" />
-                <p className="text-brand-cyan text-5xl md:text-6xl font-display font-bold mb-3 relative">
+                <p className="text-brand-cyan text-4xl sm:text-5xl md:text-6xl font-display font-bold mb-3 relative">
                   <AnimatedCounter value={String(data.length)} duration={2000} />
                 </p>
                 <div className="w-10 h-[3px] mx-auto mb-3 rounded-full bg-brand-cyan" />
-                <p className="text-white/50 text-sm font-mono uppercase tracking-widest">
+                <p className="text-white/50 text-xs sm:text-sm font-mono uppercase tracking-widest">
                   Organizations
                 </p>
               </div>
@@ -53,11 +53,11 @@ export const PastSponsors: React.FC<PastSponsorsProps> = ({ data, onOpenContact 
             <div className="w-[1px] h-16 bg-white/10" />
             <div className="text-center relative">
               <div className="absolute inset-0 blur-3xl opacity-15 rounded-full scale-150 bg-brand-blue" />
-              <p className="text-brand-blue text-5xl md:text-6xl font-display font-bold mb-3 relative">
+              <p className="text-brand-blue text-4xl sm:text-5xl md:text-6xl font-display font-bold mb-3 relative">
                 <AnimatedCounter value="100+" duration={2000} delay={300} />
               </p>
               <div className="w-10 h-[3px] mx-auto mb-3 rounded-full bg-brand-blue" />
-              <p className="text-white/50 text-sm font-mono uppercase tracking-widest">
+              <p className="text-white/50 text-xs sm:text-sm font-mono uppercase tracking-widest">
                 Companies
               </p>
             </div>
