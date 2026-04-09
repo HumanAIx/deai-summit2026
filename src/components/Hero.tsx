@@ -55,14 +55,14 @@ export const Hero: React.FC<HeroProps> = ({ data, onOpenContact, onOpenSpeakerAp
             }}
           />
         )}
-        {/* Animated cell glow */}
-        <div className="absolute inset-0 z-10">
+        {/* Animated cell glow — hidden on mobile to prevent compositing issues */}
+        <div className="absolute inset-0 z-10 hidden md:block">
           <AnimatedGrid variant={videoSrc ? 'dark' : 'light'} density={60} mouseTrail />
         </div>
       </div>
       {/* --- HERO BACKGROUND END --- */}
 
-      <div className="relative z-20 flex flex-col items-center text-center w-full max-w-[1440px] space-y-6 md:space-y-10 px-4 md:px-6">
+      <div className="relative z-20 flex flex-col items-center text-center w-full max-w-[1440px] space-y-6 md:space-y-10 px-4 md:px-6" style={{ isolation: 'isolate' }}>
 
         {/* Badge */}
         <div className={`inline-flex items-center gap-2 px-3 py-1.5 md:px-4 md:py-2 rounded-full border backdrop-blur-md animate-fade-in-up ${videoSrc ? 'border-white/80 bg-white/90' : 'border-blue-200/50 bg-white/60'}`} style={{ boxShadow: '0 0 8px 1px rgba(14,111,235,0.10), 0 0 16px 2px rgba(14,111,235,0.05)' }}>
@@ -76,7 +76,7 @@ export const Hero: React.FC<HeroProps> = ({ data, onOpenContact, onOpenSpeakerAp
         {/* Headline */}
         <div className="space-y-4 md:space-y-6 animate-fade-in-up [animation-delay:200ms] opacity-0 fill-mode-forwards w-full">
           <h1
-            className={`text-5xl sm:text-6xl md:text-8xl lg:text-9xl font-display font-bold tracking-tighter leading-[1.1] md:leading-[1.0] break-words ${videoSrc ? 'text-white' : 'text-slate-900 md:mix-blend-darken'}`}
+            className={`text-5xl sm:text-6xl md:text-8xl lg:text-9xl font-display font-bold tracking-tighter leading-[1.1] md:leading-[1.0] break-words ${videoSrc ? 'text-white' : 'text-slate-900'}`}
             dangerouslySetInnerHTML={{ __html: data.headline }}
           />
 
