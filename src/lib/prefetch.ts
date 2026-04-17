@@ -193,11 +193,13 @@ export async function prefetchSocials(): Promise<SocialLink[]> {
 export interface CaptchaConfig {
   provider: string;
   site_key: string;
+  /** When true, the tenant has explicitly disabled captcha — skip the widget + verification. */
+  disabled?: boolean;
 }
 
 export async function prefetchCaptchaConfig(): Promise<CaptchaConfig> {
-  const data = await fetchFromAPI<CaptchaConfig>('/settings/public/captcha', { noAuth: false, cacheDuration: 300 });
-  return data || { provider: 'recaptcha', site_key: '' };
+  const data = await fetchFromAPI<CaptchaConfig>('/settings/public/captcha', { noAuth: false, cacheDuration: 60 });
+  return data || { provider: 'recaptcha', site_key: '', disabled: false };
 }
 
 /** Verifies a captcha token server-side via ep-api, using the tenant's secret. */
@@ -274,7 +276,7 @@ export async function prefetchCMSPage(pageSlug: string): Promise<CMSPageData | n
 }
 
 export async function prefetchNavigation(): Promise<NavigationAPIData | null> {
-  return fetchFromAPI<NavigationAPIData>('/settings/public/navigation', { cacheDuration: 300 });
+  return fetchFromAPI<NavigationAPIData>('/settings/public/navigation', { cacheDuration: 60 });
 }
 
 export function mapNavigationData(apiNav: NavigationAPIData): NavigationConfig {

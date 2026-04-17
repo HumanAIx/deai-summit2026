@@ -24,6 +24,8 @@ interface ContactClientProps {
   socials?: SocialLinkData[];
   /** Tenant-scoped reCAPTCHA site key from ep-api. Falls back to the NEXT_PUBLIC env var. */
   captchaSiteKey?: string;
+  /** When true, tenant has disabled captcha — never render the widget, never verify. */
+  captchaDisabled?: boolean;
 }
 
 function extractHero(blocks: CMSBlock[]) {
@@ -72,9 +74,10 @@ const FALLBACK_INQUIRY_OPTIONS = [
   'Request Sponsorship Deck',
 ];
 
-export function ContactClient({ blocks, inquiryOptions, navigationData, navigationAPIData, socials, captchaSiteKey }: ContactClientProps) {
-  // Prefer tenant key from API; fall back to platform env var for legacy/solo installs.
-  const RECAPTCHA_SITE_KEY = captchaSiteKey || FALLBACK_RECAPTCHA_SITE_KEY;
+export function ContactClient({ blocks, inquiryOptions, navigationData, navigationAPIData, socials, captchaSiteKey, captchaDisabled }: ContactClientProps) {
+  // When the tenant has explicitly disabled captcha, skip everything — no widget,
+  // no env-var fallback, no submit-time token check.
+  const RECAPTCHA_SITE_KEY = captchaDisabled ? '' : (captchaSiteKey || FALLBACK_RECAPTCHA_SITE_KEY);
   const hero = extractHero(blocks);
   const options = inquiryOptions && inquiryOptions.length > 0 ? inquiryOptions : FALLBACK_INQUIRY_OPTIONS;
   const searchParams = useSearchParams();

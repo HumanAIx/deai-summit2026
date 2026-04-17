@@ -78,6 +78,7 @@ export default async function ContactPage() {
         navigationAPIData={apiNav || undefined}
         socials={socials}
         captchaSiteKey={captchaConfig.site_key}
+        captchaDisabled={captchaConfig.disabled === true}
       />
     </Suspense>
   );
