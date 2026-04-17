@@ -190,6 +190,37 @@ export async function prefetchSocials(): Promise<SocialLink[]> {
   return socials || [];
 }
 
+export interface CaptchaConfig {
+  provider: string;
+  site_key: string;
+}
+
+export async function prefetchCaptchaConfig(): Promise<CaptchaConfig> {
+  const data = await fetchFromAPI<CaptchaConfig>('/settings/public/captcha', { noAuth: false, cacheDuration: 300 });
+  return data || { provider: 'recaptcha', site_key: '' };
+}
+
+/** Verifies a captcha token server-side via ep-api, using the tenant's secret. */
+export async function verifyCaptchaToken(token: string): Promise<boolean> {
+  if (!token) return false;
+  try {
+    const headers: Record<string, string> = { 'Content-Type': 'application/json' };
+    if (API_KEY) headers['Authorization'] = `Bearer ${API_KEY}`;
+    const response = await fetch(`${EXTERNAL_API_URL}/settings/public/captcha/verify`, {
+      method: 'POST',
+      headers,
+      body: JSON.stringify({ token }),
+      cache: 'no-store',
+    });
+    if (!response.ok) return false;
+    const json = await response.json() as { data?: { valid?: boolean } };
+    return json.data?.valid === true;
+  } catch (error) {
+    console.error('[verifyCaptchaToken] error:', error);
+    return false;
+  }
+}
+
 export async function prefetchHomePageData() {
   const [speakers, sponsors, partners, socials] = await Promise.all([
     prefetchSpeakers(),

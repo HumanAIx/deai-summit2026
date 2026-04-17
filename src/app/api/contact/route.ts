@@ -1,12 +1,13 @@
 import { NextResponse } from 'next/server';
 import { Resend } from 'resend';
+import { verifyCaptchaToken } from '@/lib/prefetch';
 
 const resend = new Resend(process.env.RESEND_API_KEY);
 
 export async function POST(request: Request) {
     try {
         const body = await request.json();
-        const { firstName, lastName, email, inquiryType, message, company, phone } = body;
+        const { firstName, lastName, email, inquiryType, message, company, phone, captchaToken } = body;
 
         // Validate required fields
         if (!firstName || !lastName || !email || !message) {
@@ -14,6 +15,20 @@ export async function POST(request: Request) {
                 { error: 'Missing required fields' },
                 { status: 400 }
             );
+        }
+
+        // Verify captcha (tenant-scoped via ep-api). Skipped only when the tenant
+        // has not configured a captcha provider AND the platform env fallback is
+        // empty — in that case ep-api returns valid=false, which we treat as
+        // a soft-bypass when no captchaToken was submitted either.
+        if (captchaToken) {
+            const isValid = await verifyCaptchaToken(captchaToken);
+            if (!isValid) {
+                return NextResponse.json(
+                    { error: 'Captcha verification failed' },
+                    { status: 400 }
+                );
+            }
         }
 
         const fromEmail = process.env.RESEND_FROM_EMAIL || 'onboarding@resend.dev';

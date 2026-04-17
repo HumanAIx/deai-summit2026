@@ -1,13 +1,12 @@
 import type { Metadata } from 'next';
-import { prefetchCMSPage, prefetchSpeakers, prefetchNavigation, mapNavigationData, prefetchSocials } from '@/lib/prefetch';
-import { siteConfig } from '@/config/site';
+import { prefetchCMSPage, prefetchNavigation, mapNavigationData, prefetchSocials } from '@/lib/prefetch';
 import { SEO_DEFAULTS } from '@/lib/seo-defaults';
 import { SpeakersListClient } from '@/components/SpeakersListClient';
 import type { NormalizedSpeaker, CMSBlock, CMSSpeakerItem } from '@/lib/api-types';
 
 const BASE_URL = process.env.NEXT_PUBLIC_SITE_URL || 'https://deaisummit.org';
 
-function normalizeCMSSpeaker(item: CMSSpeakerItem, index: number): NormalizedSpeaker {
+function normalizeCMSMember(item: CMSSpeakerItem): NormalizedSpeaker {
   const name = `${item.person_firstname || ''} ${item.person_surname || ''}`.trim();
   return {
     id: item.id,
@@ -22,15 +21,13 @@ function normalizeCMSSpeaker(item: CMSSpeakerItem, index: number): NormalizedSpe
   };
 }
 
-function extractSpeakersFromBlocks(blocks: CMSBlock[]): NormalizedSpeaker[] {
+function extractMembersFromBlocks(blocks: CMSBlock[]): NormalizedSpeaker[] {
   for (const block of blocks) {
-    // Direct members-list block
     if (block.type === 'members-list' && block.items && block.items.length > 0) {
-      return block.items.map((item, i) => normalizeCMSSpeaker(item, i));
+      return block.items.map(normalizeCMSMember);
     }
-    // Content block with members-list addon
     if (block.addon === 'members-list' && block.items && block.items.length > 0) {
-      return block.items.map((item, i) => normalizeCMSSpeaker(item, i));
+      return block.items.map(normalizeCMSMember);
     }
   }
   return [];
@@ -49,7 +46,6 @@ function extractHeroFromBlocks(blocks: CMSBlock[]): {
         subtitle: (block.description as string) || undefined,
       };
     }
-    // Content blocks with a title (CMS uses subtitle for badge, description for subtitle)
     if (block.type === 'content' && block.title) {
       return {
         badge: block.subtitle || undefined,
@@ -84,7 +80,6 @@ function normalizeButtons(raw: unknown): { label: string; link?: string }[] | un
     .map(b => {
       const label = b.label || b.text || '';
       let link = b.link || b.url || b.href || undefined;
-      // CMS form-action buttons: build /contact link with inquiry preselect from formPrefill
       if (!link && b.action === 'form') {
         const prefillValue = b.formPrefill ? Object.values(b.formPrefill).find(v => !!v) : undefined;
         link = prefillValue ? `/contact?inquiry=${encodeURIComponent(prefillValue)}` : '/contact';
@@ -100,7 +95,6 @@ function extractCtaFromBlocks(blocks: CMSBlock[]): {
   subtitle?: string;
   buttons?: { label: string; link?: string }[];
 } {
-  // Prefer explicit cta block types
   for (const block of blocks) {
     if (block.type === 'cta' || block.type === 'call-to-action') {
       return {
@@ -110,10 +104,9 @@ function extractCtaFromBlocks(blocks: CMSBlock[]): {
       };
     }
   }
-  // Fallback: any non-hero block that has buttons (e.g. a content block with CTAs)
   for (let i = 0; i < blocks.length; i++) {
     const block = blocks[i];
-    if (i === 0) continue; // skip hero
+    if (i === 0) continue;
     const buttons = normalizeButtons(block.buttons);
     if (buttons) {
       return {
@@ -140,11 +133,11 @@ function extractStatsFromBlocks(blocks: CMSBlock[]): { label: string; value: str
 }
 
 export async function generateMetadata(): Promise<Metadata> {
-  const cmsPage = await prefetchCMSPage('speakers');
+  const cmsPage = await prefetchCMSPage('team');
   const seo = cmsPage?.seo;
 
-  const title = seo?.meta_title || `Speakers - ${SEO_DEFAULTS.siteName}`;
-  const description = seo?.meta_description || 'Meet the leading voices at DeAI Summit 2026. Speakers from frontier AI, decentralized systems, policy, and academia.';
+  const title = seo?.meta_title || `Team - ${SEO_DEFAULTS.siteName}`;
+  const description = seo?.meta_description || 'Meet the team behind DeAI Summit 2026.';
 
   return {
     title,
@@ -162,14 +155,14 @@ export async function generateMetadata(): Promise<Metadata> {
       description: seo?.og_description || description,
     },
     alternates: {
-      canonical: seo?.canonical_url || `${BASE_URL}/speakers`,
+      canonical: seo?.canonical_url || `${BASE_URL}/team`,
     },
     ...(seo?.robots_tag ? { robots: seo.robots_tag } : {}),
   };
 }
 
-export default async function SpeakersPage() {
-  let speakers: NormalizedSpeaker[] = [];
+export default async function TeamPage() {
+  let members: NormalizedSpeaker[] = [];
   let heroData: { badge?: string; title?: string; subtitle?: string } = {};
   let stats: { label: string; value: string }[] = [];
   let ctaData: { title?: string; subtitle?: string; buttons?: { label: string; link?: string }[] } = {};
@@ -178,47 +171,25 @@ export default async function SpeakersPage() {
   const navigationData = apiNav ? mapNavigationData(apiNav) : undefined;
 
   try {
-    const cmsPage = await prefetchCMSPage('speakers');
+    const cmsPage = await prefetchCMSPage('team');
 
     if (cmsPage?.content?.blocks) {
       const blocks: CMSBlock[] = Array.isArray(cmsPage.content.blocks)
         ? cmsPage.content.blocks
         : Object.values(cmsPage.content.blocks) as CMSBlock[];
 
-      speakers = extractSpeakersFromBlocks(blocks);
+      members = extractMembersFromBlocks(blocks);
       heroData = extractHeroFromBlocks(blocks);
       stats = extractStatsFromBlocks(blocks);
       ctaData = extractCtaFromBlocks(blocks);
     }
   } catch (error) {
-    console.error('Failed to fetch CMS speakers page:', error);
-  }
-
-  // Fallback: if CMS returned no speakers, try the members API directly
-  if (speakers.length === 0) {
-    try {
-      speakers = await prefetchSpeakers();
-    } catch (error) {
-      console.error('Failed to fetch speakers from members API:', error);
-    }
-  }
-
-  // Final fallback to hardcoded data
-  if (speakers.length === 0) {
-    speakers = siteConfig.speakers.leading.map((s, i) => ({
-      id: String(i),
-      name: s.name,
-      slug: '',
-      role: s.role,
-      company: s.company,
-      image: s.image,
-      isFeatured: false,
-    }));
+    console.error('Failed to fetch CMS team page:', error);
   }
 
   return (
     <SpeakersListClient
-      speakers={speakers}
+      speakers={members}
       heroTitle={heroData.title}
       heroSubtitle={heroData.subtitle}
       heroBadge={heroData.badge}
@@ -229,7 +200,14 @@ export default async function SpeakersPage() {
       navigationData={navigationData}
       navigationAPIData={apiNav || undefined}
       socials={socials}
-      detailBasePath="/speakers"
+      gridId="team-grid"
+      itemNoun="member"
+      itemNounPlural="members"
+      defaultHeroBadge="Meet Our Team"
+      defaultHeroHtml='The People Behind <br class="hidden md:block" /><span class="text-brand-cyan">DeAI Summit</span>'
+      defaultHeroSubtitle="The organizers, curators, and operators bringing DeAI Summit to life."
+      defaultPrimaryStatLabel="Team Members"
+      emptyMessage="No team members available at the moment."
     />
   );
 }

@@ -22,6 +22,8 @@ interface ContactClientProps {
   navigationData?: NavigationConfig;
   navigationAPIData?: NavigationAPIData;
   socials?: SocialLinkData[];
+  /** Tenant-scoped reCAPTCHA site key from ep-api. Falls back to the NEXT_PUBLIC env var. */
+  captchaSiteKey?: string;
 }
 
 function extractHero(blocks: CMSBlock[]) {
@@ -49,7 +51,7 @@ function extractHero(blocks: CMSBlock[]) {
   return { badge, title, subtitle, bodyHtml };
 }
 
-const RECAPTCHA_SITE_KEY = process.env.NEXT_PUBLIC_RECAPTCHA_SITE_KEY || '';
+const FALLBACK_RECAPTCHA_SITE_KEY = process.env.NEXT_PUBLIC_RECAPTCHA_SITE_KEY || '';
 
 declare global {
   interface Window {
@@ -70,7 +72,9 @@ const FALLBACK_INQUIRY_OPTIONS = [
   'Request Sponsorship Deck',
 ];
 
-export function ContactClient({ blocks, inquiryOptions, navigationData, navigationAPIData, socials }: ContactClientProps) {
+export function ContactClient({ blocks, inquiryOptions, navigationData, navigationAPIData, socials, captchaSiteKey }: ContactClientProps) {
+  // Prefer tenant key from API; fall back to platform env var for legacy/solo installs.
+  const RECAPTCHA_SITE_KEY = captchaSiteKey || FALLBACK_RECAPTCHA_SITE_KEY;
   const hero = extractHero(blocks);
   const options = inquiryOptions && inquiryOptions.length > 0 ? inquiryOptions : FALLBACK_INQUIRY_OPTIONS;
   const searchParams = useSearchParams();

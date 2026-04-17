@@ -32,61 +32,80 @@ const cardColors = [
 interface SpeakerCardProps {
   speaker: NormalizedSpeaker;
   colorIndex: number;
+  detailBasePath?: string;
 }
 
-function SpeakerCard({ speaker, colorIndex }: SpeakerCardProps) {
+function SpeakerCard({ speaker, colorIndex, detailBasePath }: SpeakerCardProps) {
   const color = cardColors[colorIndex % cardColors.length];
+  const canLink = !!detailBasePath && !!speaker.slug;
 
-  return (
-    <Link
-      href={speaker.slug ? `/speakers/${speaker.slug}` : '#'}
-      className="group block overflow-hidden rounded-2xl transition-all duration-300 hover:scale-[1.02] hover:shadow-xl no-underline"
-      style={{ backgroundColor: color }}
-    >
-      <div className="relative h-[340px] p-6 flex flex-col">
-        {/* Speaker Info */}
-        <div className="flex-1 pr-[180px]">
-          <h3 className="text-white text-xl font-display font-bold group-hover:underline leading-tight">
-            {speaker.name}
-          </h3>
-          {speaker.company && (
-            <p className="text-brand-cyan text-sm mt-2">
-              {speaker.company}
-            </p>
-          )}
-          {speaker.role && (
-            <p className="text-white/60 text-xs mt-2 font-mono uppercase tracking-widest">
-              {speaker.role}
-            </p>
-          )}
-        </div>
+  const inner = (
+    <div className="relative h-[340px] p-6 flex flex-col">
+      {/* Speaker Info */}
+      <div className="flex-1 pr-[180px]">
+        <h3 className={`text-white text-xl font-display font-bold leading-tight ${canLink ? 'group-hover:underline' : ''}`}>
+          {speaker.name}
+        </h3>
+        {speaker.company && (
+          <p className="text-brand-cyan text-sm mt-2">
+            {speaker.company}
+          </p>
+        )}
+        {speaker.role && (
+          <p className="text-white/60 text-xs mt-2 font-mono uppercase tracking-widest">
+            {speaker.role}
+          </p>
+        )}
+      </div>
 
-        {/* Speaker Image */}
-        <div className={`absolute bottom-0 right-0 overflow-hidden ${speaker.slug === 'alexiei-dingli' ? 'w-[360px] h-[468px]' : 'w-[240px] h-[312px]'}`}>
-          {speaker.image ? (
-            <Image
-              src={speaker.image}
-              alt={speaker.name}
-              fill
-              sizes={speaker.slug === 'alexiei-dingli' ? '360px' : '240px'}
-              className="object-contain object-bottom"
-            />
-          ) : (
-            <div className="w-full h-full flex items-end justify-center">
-              <i className="ri-user-line text-white/20 text-7xl mb-4"></i>
-            </div>
-          )}
-        </div>
+      {/* Speaker Image */}
+      <div className={`absolute bottom-0 right-0 overflow-hidden ${speaker.slug === 'alexiei-dingli' ? 'w-[360px] h-[468px]' : 'w-[240px] h-[312px]'}`}>
+        {speaker.image ? (
+          <Image
+            src={speaker.image}
+            alt={speaker.name}
+            fill
+            sizes={speaker.slug === 'alexiei-dingli' ? '360px' : '240px'}
+            className="object-contain object-bottom"
+          />
+        ) : (
+          <div className="w-full h-full flex items-end justify-center">
+            <i className="ri-user-line text-white/20 text-7xl mb-4"></i>
+          </div>
+        )}
+      </div>
 
-        {/* View Profile indicator */}
+      {/* View Profile indicator (only shown when card is linkable) */}
+      {canLink && (
         <div className="absolute bottom-4 left-6 text-white/70 text-xs flex items-center gap-1 group-hover:text-white transition-colors font-mono uppercase tracking-widest">
           View Profile
           <svg className="w-3 h-3 group-hover:translate-x-1 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
           </svg>
         </div>
-      </div>
-    </Link>
+      )}
+    </div>
+  );
+
+  if (canLink) {
+    return (
+      <Link
+        href={`${detailBasePath}/${speaker.slug}`}
+        className="group block overflow-hidden rounded-2xl transition-all duration-300 hover:scale-[1.02] hover:shadow-xl no-underline"
+        style={{ backgroundColor: color }}
+      >
+        {inner}
+      </Link>
+    );
+  }
+
+  return (
+    <div
+      className="block overflow-hidden rounded-2xl"
+      style={{ backgroundColor: color }}
+    >
+      {inner}
+    </div>
   );
 }
 
@@ -102,9 +121,42 @@ interface SpeakersListClientProps {
   navigationData?: NavigationConfig;
   navigationAPIData?: NavigationAPIData;
   socials?: { key: string; label: string; url: string; icon?: string; color?: string }[];
+  /** Base path for individual detail pages (e.g. "/speakers"). When omitted, cards are not clickable. */
+  detailBasePath?: string;
+  /** id + label for anchor scroll-to and the "Showing X of Y" label. */
+  gridId?: string;
+  itemNoun?: string;
+  itemNounPlural?: string;
+  /** Default fallback hero/stat copy when no CMS/API value is provided. */
+  defaultHeroBadge?: string;
+  defaultHeroHtml?: string;
+  defaultHeroSubtitle?: string;
+  defaultPrimaryStatLabel?: string;
+  emptyMessage?: string;
 }
 
-export function SpeakersListClient({ speakers, heroTitle, heroSubtitle, heroBadge, stats, ctaTitle, ctaSubtitle, ctaButtons, navigationData, navigationAPIData, socials }: SpeakersListClientProps) {
+export function SpeakersListClient({
+  speakers,
+  heroTitle,
+  heroSubtitle,
+  heroBadge,
+  stats,
+  ctaTitle,
+  ctaSubtitle,
+  ctaButtons,
+  navigationData,
+  navigationAPIData,
+  socials,
+  detailBasePath,
+  gridId = 'speakers-grid',
+  itemNoun = 'speaker',
+  itemNounPlural = 'speakers',
+  defaultHeroBadge = 'Meet Our Speakers',
+  defaultHeroHtml = 'Leading Voices on the <br class="hidden md:block" /><span class="text-brand-cyan">DeAI Summit</span> Stage',
+  defaultHeroSubtitle = 'Speakers from frontier AI, decentralized systems, policy, and academia — shaping the future of intelligence.',
+  defaultPrimaryStatLabel = 'Speakers',
+  emptyMessage = 'No speakers available at the moment.',
+}: SpeakersListClientProps) {
   const [currentPage, setCurrentPage] = useState(1);
 
   const totalPages = Math.ceil(speakers.length / SPEAKERS_PER_PAGE);
@@ -114,7 +166,7 @@ export function SpeakersListClient({ speakers, heroTitle, heroSubtitle, heroBadg
 
   const goToPage = (page: number) => {
     setCurrentPage(page);
-    document.getElementById('speakers-grid')?.scrollIntoView({ behavior: 'smooth' });
+    document.getElementById(gridId)?.scrollIntoView({ behavior: 'smooth' });
   };
 
   const getPageNumbers = () => {
@@ -151,17 +203,14 @@ export function SpeakersListClient({ speakers, heroTitle, heroSubtitle, heroBadg
 
         <div className="relative z-10 max-w-[1440px] mx-auto px-6 text-center">
           <p className="text-brand-cyan text-sm font-mono uppercase tracking-widest mb-4">
-            {heroBadge || 'Meet Our Speakers'}
+            {heroBadge || defaultHeroBadge}
           </p>
           <h1
             className="text-4xl md:text-5xl lg:text-6xl font-display font-bold tracking-tight leading-[1.1] mb-6"
-            dangerouslySetInnerHTML={{ __html: heroTitle
-              ? highlightTitle(heroTitle)
-              : 'Leading Voices on the <br class="hidden md:block" /><span class="text-brand-cyan">DeAI Summit</span> Stage'
-            }}
+            dangerouslySetInnerHTML={{ __html: heroTitle ? highlightTitle(heroTitle) : defaultHeroHtml }}
           />
           <p className="text-white/60 text-lg max-w-2xl mx-auto mb-12">
-            {heroSubtitle || 'Speakers from frontier AI, decentralized systems, policy, and academia — shaping the future of intelligence.'}
+            {heroSubtitle || defaultHeroSubtitle}
           </p>
         </div>
 
@@ -200,7 +249,7 @@ export function SpeakersListClient({ speakers, heroTitle, heroSubtitle, heroBadg
                     </p>
                     <div className="w-12 h-[3px] mx-auto mb-3 rounded-full bg-brand-cyan" />
                     <p className="text-white/50 text-sm font-mono uppercase tracking-widest">
-                      Speakers
+                      {defaultPrimaryStatLabel}
                     </p>
                   </div>
                   <div className="w-[1px] h-20 bg-white/10" />
@@ -222,13 +271,13 @@ export function SpeakersListClient({ speakers, heroTitle, heroSubtitle, heroBadg
         )}
       </section>
 
-      {/* Speakers Grid */}
-      <section id="speakers-grid" className="bg-[#F0F0EF] py-16">
+      {/* People Grid */}
+      <section id={gridId} className="bg-[#F0F0EF] py-16">
         <div className="max-w-[1440px] mx-auto px-6">
           {speakers.length === 0 ? (
             <div className="text-center py-20">
               <p className="text-gray-500 text-lg">
-                No speakers available at the moment.
+                {emptyMessage}
               </p>
             </div>
           ) : (
@@ -236,18 +285,23 @@ export function SpeakersListClient({ speakers, heroTitle, heroSubtitle, heroBadg
               {/* Showing count */}
               {speakers.length > SPEAKERS_PER_PAGE && (
                 <p className="text-gray-500 text-sm text-center mb-8 font-mono">
-                  Showing {startIndex + 1}-{Math.min(endIndex, speakers.length)} of {speakers.length} speakers
+                  Showing {startIndex + 1}-{Math.min(endIndex, speakers.length)} of {speakers.length} {speakers.length === 1 ? itemNoun : itemNounPlural}
                 </p>
               )}
 
-              {/* Grid */}
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+              {/* Grid — flex-wrap keeps a partial last row centered instead of left-aligned */}
+              <div className="flex flex-wrap justify-center gap-6">
                 {paginatedSpeakers.map((speaker, index) => (
-                  <SpeakerCard
+                  <div
                     key={speaker.id}
-                    speaker={speaker}
-                    colorIndex={startIndex + index}
-                  />
+                    className="w-full md:w-[calc((100%-1.5rem)/2)] lg:w-[calc((100%-3rem)/3)] xl:w-[calc((100%-4.5rem)/4)]"
+                  >
+                    <SpeakerCard
+                      speaker={speaker}
+                      colorIndex={startIndex + index}
+                      detailBasePath={detailBasePath}
+                    />
+                  </div>
                 ))}
               </div>
 

@@ -1,6 +1,6 @@
 import type { Metadata } from 'next';
 import { Suspense } from 'react';
-import { prefetchCMSPage, prefetchNavigation, prefetchSocials, mapNavigationData } from '@/lib/prefetch';
+import { prefetchCMSPage, prefetchNavigation, prefetchSocials, mapNavigationData, prefetchCaptchaConfig } from '@/lib/prefetch';
 import { SEO_DEFAULTS } from '@/lib/seo-defaults';
 import { ContactClient } from '@/components/ContactClient';
 import type { CMSBlock, CMSFormConfig } from '@/lib/api-types';
@@ -52,10 +52,11 @@ export async function generateMetadata(): Promise<Metadata> {
 }
 
 export default async function ContactPage() {
-  const [cmsPage, apiNav, socials] = await Promise.all([
+  const [cmsPage, apiNav, socials, captchaConfig] = await Promise.all([
     prefetchCMSPage('contact'),
     prefetchNavigation(),
     prefetchSocials(),
+    prefetchCaptchaConfig(),
   ]);
 
   const navigationData = apiNav ? mapNavigationData(apiNav) : undefined;
@@ -76,6 +77,7 @@ export default async function ContactPage() {
         navigationData={navigationData}
         navigationAPIData={apiNav || undefined}
         socials={socials}
+        captchaSiteKey={captchaConfig.site_key}
       />
     </Suspense>
   );
