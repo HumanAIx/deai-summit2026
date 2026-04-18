@@ -19,7 +19,14 @@ import { Toast } from '@/components/Toast';
 
 // Import Site Config (for sections not yet driven by API)
 import { siteConfig } from '@/config/site';
-import type { NavigationConfig } from '@/config/types';
+import type {
+  NavigationConfig,
+  HeroConfig,
+  StatsConfig,
+  AboutConfig,
+  HighlightsConfig,
+  NetworkingItem,
+} from '@/config/types';
 import type { NavigationAPIData } from '@/lib/api-types';
 
 export interface LeadingSpeakerData {
@@ -61,9 +68,29 @@ interface LandingPageProps {
     socials?: SocialLinkData[];
     navigationData?: NavigationConfig;
     navigationAPIData?: NavigationAPIData;
+    // CMS-driven section data with siteConfig fallbacks applied at the page level.
+    heroData?: HeroConfig;
+    statsData?: StatsConfig;
+    aboutData?: AboutConfig;
+    highlightsData?: HighlightsConfig;
+    networkingData?: NetworkingItem[];
+    speakerCtaData?: { title?: string; subtitle?: string; button?: { label: string; link: string } };
 }
 
-export const LandingPage: React.FC<LandingPageProps> = ({ speakers, marqueeItems, partnerItems, socials, navigationData, navigationAPIData }) => {
+export const LandingPage: React.FC<LandingPageProps> = ({
+    speakers,
+    marqueeItems,
+    partnerItems,
+    socials,
+    navigationData,
+    navigationAPIData,
+    heroData,
+    statsData,
+    aboutData,
+    highlightsData,
+    networkingData,
+    speakerCtaData,
+}) => {
     const [toast, setToast] = useState({ visible: false, message: '' });
     const [isContactOpen, setIsContactOpen] = useState(false);
     const [isSpeakerModalOpen, setIsSpeakerModalOpen] = useState(false);
@@ -95,7 +122,7 @@ export const LandingPage: React.FC<LandingPageProps> = ({ speakers, marqueeItems
 
             <main className="w-full mx-auto">
                 <Suspense>
-                    <Hero data={siteConfig.hero} onOpenContact={handleOpenContact} onOpenSpeakerApp={handleOpenSpeakerApp} onOpenWaitlist={() => setIsWaitlistOpen(true)} />
+                    <Hero data={heroData || siteConfig.hero} onOpenContact={handleOpenContact} onOpenSpeakerApp={handleOpenSpeakerApp} onOpenWaitlist={() => setIsWaitlistOpen(true)} />
                 </Suspense>
 
                 {/* Sponsor logo scroller */}
@@ -104,32 +131,32 @@ export const LandingPage: React.FC<LandingPageProps> = ({ speakers, marqueeItems
                 </Suspense>
 
                 {/* Light Stats Section */}
-                <Stats data={siteConfig.stats} />
+                <Stats data={statsData || siteConfig.stats} />
 
 
                 {/* Dark Video Section */}
-                <AboutVideo data={siteConfig.about} />
+                <AboutVideo data={aboutData || siteConfig.about} />
 
                 {/* Full Screen Image Highlights */}
                 {/* Pass the whole config object since the component expects HighlightsConfig */}
-                <SceneHighlights data={siteConfig.highlights} />
+                <SceneHighlights data={highlightsData || siteConfig.highlights} />
 
                 {/* Light Grid Speakers Section (Leading Voices) */}
                 <LeadingVoices data={speakers} />
 
-                {/* Speaker Call to Action - Temporary placement until user decides */}
+                {/* Speaker Call to Action */}
                 <div className="w-full bg-[#F0F0EF] pb-20 flex justify-center">
                     <Link
-                        href="/contact?inquiry=Speaker+Application"
+                        href={speakerCtaData?.button?.link || '/contact?inquiry=Speaker+Application'}
                         className="px-8 py-3 rounded-full border border-[#050A1F] bg-white text-[#050A1F] hover:bg-[#050A1F] hover:text-white transition-all duration-300 text-sm font-bold shadow-md hover:shadow-xl flex items-center gap-2"
                     >
                         <i className="ri-mic-line"></i>
-                        Apply to Speak
+                        {speakerCtaData?.button?.label || 'Apply to Speak'}
                     </Link>
                 </div>
 
                 {/* Dark Networking Section */}
-                <Networking data={siteConfig.networking} />
+                <Networking data={networkingData || siteConfig.networking} />
 
                 {/* Sponsors Logo Grid */}
                 <PastSponsors data={partnerItems} onOpenContact={handleOpenContact} />

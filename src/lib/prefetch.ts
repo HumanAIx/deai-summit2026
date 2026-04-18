@@ -37,7 +37,8 @@ async function fetchFromAPI<T>(
       }
 
       const url = `${EXTERNAL_API_URL}${endpoint}`;
-      console.log(`[prefetch] ${url}`);
+      const keyPresent = !!API_KEY;
+      console.log(`[prefetch] ${url} (apiKey: ${keyPresent ? 'set' : 'MISSING'})`);
       const response = await fetch(url, {
         method: 'GET',
         headers,
@@ -45,14 +46,19 @@ async function fetchFromAPI<T>(
       });
 
       if (!response.ok) {
-        console.error(`API error ${response.status} for ${endpoint}`);
+        const bodyText = await response.text().catch(() => '');
+        console.error(
+          `[prefetch] API ${response.status} for ${endpoint}${bodyText ? ` — ${bodyText.slice(0, 200)}` : ''}`,
+        );
         return null;
       }
 
       const json = await response.json();
       return (json.data ?? json) as T;
-    } catch {
-      // API unavailable — silently fall back to hardcoded data
+    } catch (err) {
+      // Surface the real cause instead of swallowing silently — otherwise
+      // deploy-time env issues and network failures are invisible.
+      console.error(`[prefetch] fetch failed for ${endpoint}:`, err instanceof Error ? err.message : err);
       return null;
     }
   });
@@ -276,7 +282,16 @@ export async function prefetchCMSPage(pageSlug: string): Promise<CMSPageData | n
 }
 
 export async function prefetchNavigation(): Promise<NavigationAPIData | null> {
-  return fetchFromAPI<NavigationAPIData>('/settings/public/navigation', { cacheDuration: 60 });
+  const nav = await fetchFromAPI<NavigationAPIData>('/settings/public/navigation', { cacheDuration: 60 });
+  if (nav) {
+    console.log(
+      '[prefetch/nav] mainNav:',
+      (nav.mainNav || []).map((i) => `${i.slug}${i.published ? '' : '(hidden)'}`).join(', ') || '(empty)',
+    );
+  } else {
+    console.log('[prefetch/nav] null response — nav fallback to siteConfig');
+  }
+  return nav;
 }
 
 export function mapNavigationData(apiNav: NavigationAPIData): NavigationConfig {
@@ -287,6 +302,7 @@ export function mapNavigationData(apiNav: NavigationAPIData): NavigationConfig {
       label: item.label,
       href: `/${item.slug}`,
     }));
+  console.log('[mapNavigationData] main items →', mainItems.map(i => `${i.label}→${i.href}`).join(', '));
 
   const legalItems = (apiNav.footerCol2 || [])
     .filter(item => item.published)
