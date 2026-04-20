@@ -39,10 +39,15 @@ async function fetchFromAPI<T>(
       const url = `${EXTERNAL_API_URL}${endpoint}`;
       const keyPresent = !!API_KEY;
       console.log(`[prefetch] ${url} (apiKey: ${keyPresent ? 'set' : 'MISSING'})`);
+      // `cacheDuration: 0` opts out of the Next data cache for endpoints that
+      // must reflect draft/publish flips immediately (sponsor scroller, etc.).
+      const cacheDur = options?.cacheDuration ?? CACHE_DURATION;
       const response = await fetch(url, {
         method: 'GET',
         headers,
-        next: { revalidate: options?.cacheDuration ?? CACHE_DURATION },
+        ...(cacheDur === 0
+          ? { cache: 'no-store' as const }
+          : { next: { revalidate: cacheDur } }),
       });
 
       if (!response.ok) {
@@ -129,14 +134,16 @@ export async function prefetchSpeakerBySlug(slug: string): Promise<Member | null
   return fetchFromAPI<Member>(`/members/${slug}`);
 }
 
+// Publish/draft flips must propagate immediately on production — pass
+// cacheDuration: 0 so these fetches opt out of the Next data cache.
 export async function prefetchCompanies(): Promise<Company[]> {
-  const companies = await fetchFromAPI<Company[]>('/companies');
+  const companies = await fetchFromAPI<Company[]>('/companies', { cacheDuration: 0 });
   if (!companies) return [];
   return companies.filter(c => c.company_published);
 }
 
 export async function prefetchSponsors(): Promise<NormalizedSponsor[]> {
-  const companies = await fetchFromAPI<Company[]>('/companies/sponsors');
+  const companies = await fetchFromAPI<Company[]>('/companies/sponsors', { cacheDuration: 0 });
   if (!companies) return [];
   return companies
     .filter(c => c.company_published && c.sponsor_published && c.company_logo)
@@ -144,7 +151,7 @@ export async function prefetchSponsors(): Promise<NormalizedSponsor[]> {
 }
 
 export async function prefetchPartners(): Promise<NormalizedSponsor[]> {
-  const companies = await fetchFromAPI<Company[]>('/companies');
+  const companies = await fetchFromAPI<Company[]>('/companies', { cacheDuration: 0 });
   if (!companies) return [];
   return companies
     .filter(c => c.company_published && c.company_logo && (
@@ -154,7 +161,7 @@ export async function prefetchPartners(): Promise<NormalizedSponsor[]> {
 }
 
 export async function prefetchVenues(): Promise<Company[]> {
-  const companies = await fetchFromAPI<Company[]>('/companies/venues');
+  const companies = await fetchFromAPI<Company[]>('/companies/venues', { cacheDuration: 0 });
   if (!companies) return [];
   return companies.filter(c => c.company_published && c.venue_published);
 }

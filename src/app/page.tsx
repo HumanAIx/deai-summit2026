@@ -13,6 +13,10 @@ import type { CMSBlock } from '@/lib/api-types';
 
 const BASE_URL = process.env.NEXT_PUBLIC_SITE_URL || 'https://deaisummit.org';
 
+// Render on every request so unpublished companies drop out of the sponsor
+// scroller immediately (no waiting for ISR / CDN HTML cache to expire).
+export const dynamic = 'force-dynamic';
+
 export default async function Home() {
   let speakers: Awaited<ReturnType<typeof prefetchHomePageData>>['speakers'] = [];
   let sponsors: Awaited<ReturnType<typeof prefetchHomePageData>>['sponsors'] = [];
