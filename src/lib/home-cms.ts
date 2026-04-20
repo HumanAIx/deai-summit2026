@@ -128,8 +128,10 @@ function extractMarquee(blocks: CMSBlock[]): MarqueeItemData[] | undefined {
   if (!block) return undefined;
 
   const items = (block.items as unknown as CMSCompanyItem[] | undefined) ?? [];
+  // Strict `=== true` so drafts whose published flags are undefined/null are
+  // filtered out — the CMS API sometimes omits the field for unpublished rows.
   const mapped = items
-    .filter((c) => c.company_published !== false && c.sponsor_published !== false && c.company_logo)
+    .filter((c) => c.company_published === true && c.sponsor_published === true && c.company_logo)
     .map((c) => ({
       label: c.company_name,
       slug: c.company_slug || '',
