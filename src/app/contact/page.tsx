@@ -79,6 +79,7 @@ export default async function ContactPage() {
         socials={socials}
         captchaSiteKey={captchaConfig.site_key}
         captchaDisabled={captchaConfig.disabled === true}
+        captchaProvider={captchaConfig.provider}
       />
     </Suspense>
   );

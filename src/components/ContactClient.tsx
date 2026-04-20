@@ -26,6 +26,8 @@ interface ContactClientProps {
   captchaSiteKey?: string;
   /** When true, tenant has disabled captcha — never render the widget, never verify. */
   captchaDisabled?: boolean;
+  /** Captcha provider selected in dashboard: 'recaptcha' (v2 checkbox) or 'recaptcha-v3' (invisible). */
+  captchaProvider?: string;
 }
 
 function extractHero(blocks: CMSBlock[]) {
@@ -59,9 +61,12 @@ declare global {
   interface Window {
     grecaptcha?: {
       ready: (cb: () => void) => void;
-      render: (el: HTMLElement, opts: { sitekey: string; theme?: string }) => number;
-      getResponse: (id?: number) => string;
-      reset: (id?: number) => void;
+      // v2 (checkbox) — populated when script loaded with ?render=explicit
+      render?: (el: HTMLElement, opts: { sitekey: string; theme?: string }) => number;
+      getResponse?: (id?: number) => string;
+      reset?: (id?: number) => void;
+      // v3 (invisible)
+      execute?: (siteKey: string, opts: { action: string }) => Promise<string>;
     };
   }
 }
@@ -74,10 +79,11 @@ const FALLBACK_INQUIRY_OPTIONS = [
   'Request Sponsorship Deck',
 ];
 
-export function ContactClient({ blocks, inquiryOptions, navigationData, navigationAPIData, socials, captchaSiteKey, captchaDisabled }: ContactClientProps) {
+export function ContactClient({ blocks, inquiryOptions, navigationData, navigationAPIData, socials, captchaSiteKey, captchaDisabled, captchaProvider }: ContactClientProps) {
   // When the tenant has explicitly disabled captcha, skip everything — no widget,
   // no env-var fallback, no submit-time token check.
   const RECAPTCHA_SITE_KEY = captchaDisabled ? '' : (captchaSiteKey || FALLBACK_RECAPTCHA_SITE_KEY);
+  const isV3 = (captchaProvider || 'recaptcha') === 'recaptcha-v3';
   const hero = extractHero(blocks);
   const options = inquiryOptions && inquiryOptions.length > 0 ? inquiryOptions : FALLBACK_INQUIRY_OPTIONS;
   const searchParams = useSearchParams();
@@ -95,11 +101,11 @@ export function ContactClient({ blocks, inquiryOptions, navigationData, navigati
   const [status, setStatus] = useState<'idle' | 'submitting' | 'success' | 'error'>('idle');
   const [errorMessage, setErrorMessage] = useState<string>('');
 
+  // v2-only refs and render helper
   const recaptchaRef = useRef<HTMLDivElement>(null);
   const captchaWidgetId = useRef<number | null>(null);
-
-  const renderCaptcha = () => {
-    if (!RECAPTCHA_SITE_KEY) return;
+  const renderV2Captcha = () => {
+    if (!RECAPTCHA_SITE_KEY || isV3) return;
     if (captchaWidgetId.current !== null) return;
     if (!recaptchaRef.current || !window.grecaptcha?.render) return;
     try {
@@ -109,7 +115,7 @@ export function ContactClient({ blocks, inquiryOptions, navigationData, navigati
         theme: 'light',
       });
     } catch (err) {
-      console.error('reCAPTCHA render error:', err);
+      console.error('reCAPTCHA v2 render error:', err);
     }
   };
 
@@ -129,11 +135,30 @@ export function ContactClient({ blocks, inquiryOptions, navigationData, navigati
     let captchaToken: string | undefined;
     if (RECAPTCHA_SITE_KEY) {
       try {
-        captchaToken = window.grecaptcha?.getResponse(captchaWidgetId.current ?? undefined);
-      } catch {}
-      if (!captchaToken) {
+        if (isV3) {
+          captchaToken = await new Promise<string>((resolve, reject) => {
+            if (!window.grecaptcha?.ready || !window.grecaptcha.execute) {
+              reject(new Error('reCAPTCHA not ready'));
+              return;
+            }
+            window.grecaptcha.ready(() => {
+              window.grecaptcha!
+                .execute!(RECAPTCHA_SITE_KEY, { action: 'contact' })
+                .then(resolve)
+                .catch(reject);
+            });
+          });
+        } else {
+          captchaToken = window.grecaptcha?.getResponse?.(captchaWidgetId.current ?? undefined);
+          if (!captchaToken) {
+            setStatus('error');
+            setErrorMessage('Please complete the captcha verification.');
+            return;
+          }
+        }
+      } catch {
         setStatus('error');
-        setErrorMessage('Please complete the captcha verification.');
+        setErrorMessage('Captcha verification failed. Please reload and try again.');
         return;
       }
     }
@@ -153,11 +178,15 @@ export function ContactClient({ blocks, inquiryOptions, navigationData, navigati
       if (response.ok) {
         setStatus('success');
         (e.target as HTMLFormElement).reset();
-        try { window.grecaptcha?.reset(captchaWidgetId.current ?? undefined); } catch {}
+        if (!isV3) {
+          try { window.grecaptcha?.reset?.(captchaWidgetId.current ?? undefined); } catch {}
+        }
       } else {
         setStatus('error');
         setErrorMessage(result.error || 'Failed to send message. Please try again.');
-        try { window.grecaptcha?.reset(captchaWidgetId.current ?? undefined); } catch {}
+        if (!isV3) {
+          try { window.grecaptcha?.reset?.(captchaWidgetId.current ?? undefined); } catch {}
+        }
       }
     } catch {
       setStatus('error');
@@ -303,19 +332,34 @@ export function ContactClient({ blocks, inquiryOptions, navigationData, navigati
                   />
                 </div>
 
-                {RECAPTCHA_SITE_KEY && (
+                {RECAPTCHA_SITE_KEY && isV3 && (
+                  <>
+                    <Script
+                      src={`https://www.google.com/recaptcha/api.js?render=${RECAPTCHA_SITE_KEY}`}
+                      strategy="afterInteractive"
+                    />
+                    <p className="text-[11px] text-slate-500 text-center pt-2">
+                      This site is protected by reCAPTCHA and the Google{' '}
+                      <a href="https://policies.google.com/privacy" target="_blank" rel="noreferrer" className="underline">Privacy Policy</a>{' '}
+                      and{' '}
+                      <a href="https://policies.google.com/terms" target="_blank" rel="noreferrer" className="underline">Terms of Service</a>{' '}
+                      apply.
+                    </p>
+                  </>
+                )}
+                {RECAPTCHA_SITE_KEY && !isV3 && (
                   <>
                     <Script
                       src="https://www.google.com/recaptcha/api.js?render=explicit"
                       strategy="afterInteractive"
                       onReady={() => {
                         if (window.grecaptcha?.ready) {
-                          window.grecaptcha.ready(renderCaptcha);
+                          window.grecaptcha.ready(renderV2Captcha);
                         } else {
                           const t = setInterval(() => {
                             if (typeof window.grecaptcha?.render === 'function') {
                               clearInterval(t);
-                              renderCaptcha();
+                              renderV2Captcha();
                             }
                           }, 200);
                           setTimeout(() => clearInterval(t), 10000);
