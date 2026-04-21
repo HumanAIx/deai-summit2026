@@ -99,17 +99,27 @@ function extractHero(blocks: CMSBlock[]): Partial<HeroConfig> | undefined {
 
   const image = typeof block.image === 'string' ? block.image : Array.isArray(block.image) ? block.image[0] : undefined;
 
-  return {
-    backgroundImage: image as string | undefined,
-    badge: (block.badge as string) || block.subtitle || undefined,
-    headline: block.title || (block.content as string) || undefined,
-    subheadline: (block.description as string) || undefined,
-    location: (block.location as string) || undefined,
-    date: (block.date as string) || undefined,
-    ctaPrimary,
-    ctaSecondary,
-    ctaTertiary,
-  } as Partial<HeroConfig>;
+  // Only include keys with actual non-empty values so the caller's
+  // `{ ...siteConfig.hero, ...cmsHero }` merge keeps the siteConfig fallback
+  // whenever the CMS block is missing a field. Spreading `undefined` still
+  // sets the key and overwrites the fallback, hence this picky build-up.
+  const badge = (block.badge as string) || block.subtitle || '';
+  const headline = block.title || (block.content as string) || '';
+  const subheadline = (block.description as string) || '';
+  const location = (block.location as string) || '';
+  const date = (block.date as string) || '';
+
+  const out: Partial<HeroConfig> = {};
+  if (image) out.backgroundImage = image as string;
+  if (badge) out.badge = badge;
+  if (headline) out.headline = headline;
+  if (subheadline) out.subheadline = subheadline;
+  if (location) out.location = location;
+  if (date) out.date = date;
+  if (ctaPrimary) out.ctaPrimary = ctaPrimary;
+  if (ctaSecondary) out.ctaSecondary = ctaSecondary;
+  if (ctaTertiary) out.ctaTertiary = ctaTertiary;
+  return out;
 }
 
 function extractMarquee(blocks: CMSBlock[]): MarqueeItemData[] | undefined {
