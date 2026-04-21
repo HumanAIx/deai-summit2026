@@ -25,6 +25,12 @@ function renderHeroTitle(cmsTitle?: string) {
   return <>{cmsTitle}</>;
 }
 
+/** Strip any HTML tags and `**markers**` from a CMS title for plain-text display. */
+function plainTitle(cmsTitle?: string): string {
+  if (!cmsTitle) return 'Sponsors & Partners';
+  return cmsTitle.replace(/<[^>]*>/g, '').replace(/\*\*(.+?)\*\*/g, '$1').trim() || 'Sponsors & Partners';
+}
+
 export const PastSponsors: React.FC<PastSponsorsProps> = ({ data, onOpenContact, sectionData }) => {
   const sponsors = data.filter(d => d.isSponsor);
   const partners = data.filter(d => !d.isSponsor);
@@ -85,34 +91,17 @@ export const PastSponsors: React.FC<PastSponsorsProps> = ({ data, onOpenContact,
       <div className="bg-[#F0F0EF] py-20 px-6">
         <div className="max-w-[1440px] mx-auto">
 
-          {/* Sponsors */}
-          {sponsors.length > 0 && (
+          {/* Combined Sponsors & Partners */}
+          {(sponsors.length + partners.length) > 0 && (
             <div className="mb-16">
               <div className="flex items-center gap-4 mb-10">
                 <div className="w-1 h-8 bg-brand-cyan rounded-full" />
-                <h3 className="text-xl md:text-2xl font-display font-bold text-[#050A1F]">{cmsTitle || 'Sponsors'}</h3>
+                <h3 className="text-xl md:text-2xl font-display font-bold text-[#050A1F]">{plainTitle(cmsTitle)}</h3>
               </div>
               <div className="flex flex-wrap justify-center gap-5">
-                {sponsors.map((sponsor, index) => (
+                {[...sponsors, ...partners].map((item, index) => (
                   <div key={index} className="w-[calc(50%-10px)] sm:w-[calc(33.333%-14px)] lg:w-[calc(25%-15px)] xl:w-[calc(20%-16px)]">
-                    <SponsorCard item={sponsor} index={index} />
-                  </div>
-                ))}
-              </div>
-            </div>
-          )}
-
-          {/* Partners */}
-          {partners.length > 0 && (
-            <div className="mb-16">
-              <div className="flex items-center gap-4 mb-10">
-                <div className="w-1 h-8 bg-brand-blue rounded-full" />
-                <h3 className="text-xl md:text-2xl font-display font-bold text-[#050A1F]">Partners</h3>
-              </div>
-              <div className="flex flex-wrap justify-center gap-5">
-                {partners.map((partner, index) => (
-                  <div key={index} className="w-[calc(50%-10px)] sm:w-[calc(33.333%-14px)] lg:w-[calc(25%-15px)] xl:w-[calc(20%-16px)]">
-                    <SponsorCard item={partner} index={index + sponsors.length} />
+                    <SponsorCard item={item} index={index} />
                   </div>
                 ))}
               </div>
