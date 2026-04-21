@@ -101,7 +101,7 @@ export const SpeakerDetailClient: React.FC<SpeakerDetailClientProps> = ({ member
     }
   };
   const name = `${member.person_firstname} ${member.person_surname}`.trim();
-  const bio = member.speaker_bio || member.person_bio;
+  const bio = member.person_bio || member.speaker_bio;
   const photo = member.person_photo_nobg || member.person_photo;
   const firstCompany = member.person_companies?.[0];
 

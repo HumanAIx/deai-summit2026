@@ -1,81 +1,47 @@
 import { NextResponse } from 'next/server';
-import { Resend } from 'resend';
-import { verifyCaptchaToken } from '@/lib/prefetch';
 
-const resend = new Resend(process.env.RESEND_API_KEY);
+const EXTERNAL_API_URL = process.env.NEXT_PUBLIC_GCONF_API_URL || '';
+const API_KEY = process.env.NEXT_PUBLIC_GCONF_API_KEY || '';
 
+// Thin proxy to ep-api's generic form-submission endpoint. Email delivery, captcha
+// verification, rate-limiting, and submission logging all happen centrally on ep-api
+// using each tenant's own configuration — this project no longer ships with Resend.
 export async function POST(request: Request) {
     try {
         const body = await request.json();
-        const { firstName, lastName, email, inquiryType, message, company, phone, captchaToken } = body;
+        const { firstName, lastName, email, message, captchaToken, ...rest } = body;
 
-        // Validate required fields
         if (!firstName || !lastName || !email || !message) {
-            return NextResponse.json(
-                { error: 'Missing required fields' },
-                { status: 400 }
-            );
+            return NextResponse.json({ error: 'Missing required fields', success: false }, { status: 400 });
         }
 
-        // Verify captcha (tenant-scoped via ep-api). Skipped only when the tenant
-        // has not configured a captcha provider AND the platform env fallback is
-        // empty — in that case ep-api returns valid=false, which we treat as
-        // a soft-bypass when no captchaToken was submitted either.
-        if (captchaToken) {
-            const isValid = await verifyCaptchaToken(captchaToken);
-            if (!isValid) {
-                return NextResponse.json(
-                    { error: 'Captcha verification failed' },
-                    { status: 400 }
-                );
-            }
-        }
-
-        const fromEmail = process.env.RESEND_FROM_EMAIL || 'onboarding@resend.dev';
-        const fromName = process.env.RESEND_FROM_NAME || 'DeAI Summit';
-        const toEmail = process.env.RESEND_TO_EMAIL || fromEmail;
-
-        if (!process.env.RESEND_API_KEY) {
-            console.error('Resend API key is missing');
-            return NextResponse.json(
-                { error: 'Server configuration error' },
-                { status: 500 }
-            );
-        }
-
-        const emailContent = `
-            <strong>New Contact Form Submission</strong><br><br>
-            <strong>Name:</strong> ${firstName} ${lastName}<br>
-            <strong>Company:</strong> ${company || 'N/A'}<br>
-            <strong>Phone:</strong> ${phone || 'N/A'}<br>
-            <strong>Email:</strong> ${email}<br>
-            <strong>Inquiry Type:</strong> ${inquiryType}<br>
-            <strong>Message:</strong><br>
-            ${message.replace(/\n/g, '<br>')}
-        `;
-
-        const { data, error } = await resend.emails.send({
-            from: `${fromName} <${fromEmail}>`,
-            to: toEmail,
-            subject: `[DEAI Summit] Contact: ${inquiryType} from ${firstName} ${lastName}`,
-            html: emailContent,
-            replyTo: email,
+        const response = await fetch(`${EXTERNAL_API_URL}/forms/contact/submit`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'Authorization': `Bearer ${API_KEY}`,
+            },
+            body: JSON.stringify({
+                submission_data: { firstName, lastName, email, message, ...rest },
+                captcha_token: captchaToken,
+            }),
         });
 
-        if (error) {
-            console.error('Resend Error:', error);
+        const data = await response.json().catch(() => ({}));
+
+        if (!response.ok) {
             return NextResponse.json(
-                { error: 'Failed to send message' },
-                { status: 500 }
+                { error: data.error || 'Failed to submit form', success: false },
+                { status: response.status }
             );
         }
 
-        return NextResponse.json({ success: true, message: 'Email sent successfully', id: data?.id });
-    } catch (error: any) {
-        console.error('Internal Error:', error);
-        return NextResponse.json(
-            { error: 'Internal server error' },
-            { status: 500 }
-        );
+        return NextResponse.json({
+            success: true,
+            message: data.message || 'Message sent successfully',
+        });
+    } catch (error) {
+        console.error('Contact proxy error:', error);
+        return NextResponse.json({ error: 'Internal server error', success: false }, { status: 500 });
     }
 }

@@ -2,7 +2,7 @@
 import React, { useState } from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
-import { useRouter } from 'next/navigation';
+import { useRouter, usePathname } from 'next/navigation';
 import { NavigationConfig } from '@/config/types';
 
 interface NavbarProps {
@@ -14,6 +14,13 @@ interface NavbarProps {
 export const Navbar: React.FC<NavbarProps> = ({ onShowToast, onOpenContact, data }) => {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const router = useRouter();
+  const pathname = usePathname();
+
+  const isActive = (href: string) => {
+    if (!href.startsWith('/')) return false;
+    if (href === '/') return pathname === '/';
+    return pathname === href || pathname.startsWith(href + '/');
+  };
 
   const handleContactClick = (e: React.MouseEvent) => {
     e.preventDefault();
@@ -60,24 +67,34 @@ export const Navbar: React.FC<NavbarProps> = ({ onShowToast, onOpenContact, data
         {/* Desktop Links */}
         <div className="hidden lg:flex items-center gap-10">
           <div className="flex items-center gap-8">
-            {data.main.map((item) => (
-              <a
-                key={item.label}
-                href={item.href}
-                onClick={(e) => handleNavClick(e, item.href)}
-                className="text-base font-medium text-white/50 hover:text-white transition-colors"
-              >
-                {item.label}
-              </a>
-            ))}
+            {data.main.map((item) => {
+              const active = isActive(item.href);
+              return (
+                <a
+                  key={item.label}
+                  href={item.href}
+                  onClick={(e) => handleNavClick(e, item.href)}
+                  aria-current={active ? 'page' : undefined}
+                  className={`text-base font-medium transition-colors ${active ? 'text-white' : 'text-white/50 hover:text-white'}`}
+                >
+                  {item.label}
+                </a>
+              );
+            })}
 
-            <Link
-              href="/contact"
-              onClick={() => setIsMenuOpen(false)}
-              className="text-base font-medium text-white/50 hover:text-white transition-colors"
-            >
-              Contact Us
-            </Link>
+            {(() => {
+              const active = isActive('/contact');
+              return (
+                <Link
+                  href="/contact"
+                  onClick={() => setIsMenuOpen(false)}
+                  aria-current={active ? 'page' : undefined}
+                  className={`text-base font-medium transition-colors ${active ? 'text-white' : 'text-white/50 hover:text-white'}`}
+                >
+                  Contact Us
+                </Link>
+              );
+            })()}
           </div>
 
         </div>
@@ -106,24 +123,34 @@ export const Navbar: React.FC<NavbarProps> = ({ onShowToast, onOpenContact, data
       {isMenuOpen && (
         <div className="fixed inset-0 z-40 bg-[#050A1F]/95 backdrop-blur-xl pt-24 px-6 lg:hidden flex flex-col items-center gap-8 animate-in fade-in slide-in-from-top-5 duration-200">
           <div className="flex flex-col items-center gap-6 w-full max-w-sm">
-            {data.main.map((item) => (
-              <a
-                key={item.label}
-                href={item.href}
-                onClick={(e) => handleNavClick(e, item.href)}
-                className="text-2xl font-medium text-white/80 hover:text-white transition-colors w-full text-center py-2"
-              >
-                {item.label}
-              </a>
-            ))}
+            {data.main.map((item) => {
+              const active = isActive(item.href);
+              return (
+                <a
+                  key={item.label}
+                  href={item.href}
+                  onClick={(e) => handleNavClick(e, item.href)}
+                  aria-current={active ? 'page' : undefined}
+                  className={`text-2xl font-medium transition-colors w-full text-center py-2 ${active ? 'text-white' : 'text-white/80 hover:text-white'}`}
+                >
+                  {item.label}
+                </a>
+              );
+            })}
 
-            <Link
-              href="/contact"
-              onClick={() => setIsMenuOpen(false)}
-              className="text-2xl font-medium text-white/80 hover:text-white transition-colors w-full text-center py-2"
-            >
-              Contact Us
-            </Link>
+            {(() => {
+              const active = isActive('/contact');
+              return (
+                <Link
+                  href="/contact"
+                  onClick={() => setIsMenuOpen(false)}
+                  aria-current={active ? 'page' : undefined}
+                  className={`text-2xl font-medium transition-colors w-full text-center py-2 ${active ? 'text-white' : 'text-white/80 hover:text-white'}`}
+                >
+                  Contact Us
+                </Link>
+              );
+            })()}
 
             <div className="flex items-center justify-center gap-6">
               <a

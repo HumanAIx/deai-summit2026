@@ -130,6 +130,7 @@ export default async function Home() {
         highlightsData={highlightsData}
         networkingData={networkingData}
         speakerCtaData={cmsSections.speakerCta}
+        sponsorsSectionData={cmsSections.sponsorsAndPartners}
       />
     </>
   );

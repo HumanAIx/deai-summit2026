@@ -75,6 +75,7 @@ interface LandingPageProps {
     highlightsData?: HighlightsConfig;
     networkingData?: NetworkingItem[];
     speakerCtaData?: { title?: string; subtitle?: string; button?: { label: string; link: string } };
+    sponsorsSectionData?: { title?: string; badge?: string; subtitle?: string };
 }
 
 export const LandingPage: React.FC<LandingPageProps> = ({
@@ -90,6 +91,7 @@ export const LandingPage: React.FC<LandingPageProps> = ({
     highlightsData,
     networkingData,
     speakerCtaData,
+    sponsorsSectionData,
 }) => {
     const [toast, setToast] = useState({ visible: false, message: '' });
     const [isContactOpen, setIsContactOpen] = useState(false);
@@ -159,7 +161,7 @@ export const LandingPage: React.FC<LandingPageProps> = ({
                 <Networking data={networkingData || siteConfig.networking} />
 
                 {/* Sponsors Logo Grid */}
-                <PastSponsors data={partnerItems} onOpenContact={handleOpenContact} />
+                <PastSponsors data={partnerItems} onOpenContact={handleOpenContact} sectionData={sponsorsSectionData} />
             </main>
 
             <Footer

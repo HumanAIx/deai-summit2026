@@ -281,7 +281,14 @@ function extractNetworking(blocks: CMSBlock[]): NetworkingItem[] | undefined {
   }));
 }
 
-function extractSponsorsAndPartners(blocks: CMSBlock[]): PartnerItemData[] | undefined {
+export interface SponsorsAndPartnersSection {
+  title?: string;
+  badge?: string;
+  subtitle?: string;
+  items: PartnerItemData[];
+}
+
+function extractSponsorsAndPartners(blocks: CMSBlock[]): SponsorsAndPartnersSection | undefined {
   // The "Sponsors & Partners" strip at the bottom of the home page combines both.
   const block =
     findBySlot(blocks, 'sponsors') ??
@@ -295,10 +302,8 @@ function extractSponsorsAndPartners(blocks: CMSBlock[]): PartnerItemData[] | und
     });
   if (!block) return undefined;
 
-  const items = (block.items as unknown as CMSCompanyItem[] | undefined) ?? [];
-  if (items.length === 0) return undefined;
-
-  return items
+  const rawItems = (block.items as unknown as CMSCompanyItem[] | undefined) ?? [];
+  const items = rawItems
     .filter((c) => c.company_published !== false && c.company_logo)
     .filter((c) => (c.company_is_partner && c.partner_published !== false) || (c.company_is_sponsor && c.sponsor_published !== false))
     .map((c) => {
@@ -311,6 +316,15 @@ function extractSponsorsAndPartners(blocks: CMSBlock[]): PartnerItemData[] | und
         logoHasDarkBg: n.logoHasDarkBg,
       };
     });
+
+  if (items.length === 0) return undefined;
+
+  return {
+    title: (block.title as string) || undefined,
+    badge: (block.badge as string) || undefined,
+    subtitle: (block.subtitle as string) || (block.description as string) || undefined,
+    items,
+  };
 }
 
 export interface HomeSections {
@@ -323,6 +337,7 @@ export interface HomeSections {
   speakerCta?: { title?: string; subtitle?: string; button?: { label: string; link: string } };
   networking?: NetworkingItem[];
   partnerItems?: PartnerItemData[];
+  sponsorsAndPartners?: SponsorsAndPartnersSection;
 }
 
 export function extractHomeSections(blocks: CMSBlock[] | undefined | null): HomeSections {
@@ -337,6 +352,7 @@ export function extractHomeSections(blocks: CMSBlock[] | undefined | null): Home
     leadingVoices: extractLeadingVoices(published),
     speakerCta: extractSpeakerCta(published),
     networking: extractNetworking(published),
-    partnerItems: extractSponsorsAndPartners(published),
+    partnerItems: extractSponsorsAndPartners(published)?.items,
+    sponsorsAndPartners: extractSponsorsAndPartners(published),
   };
 }

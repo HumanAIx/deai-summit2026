@@ -62,13 +62,18 @@ export const SpeakerApplicationModal: React.FC<SpeakerApplicationModalProps> = (
                     <form className="space-y-5" onSubmit={async (e) => {
                         e.preventDefault();
                         const formData = new FormData(e.currentTarget);
+                        const portfolio = (formData.get('portfolio') as string) || '';
+                        const topic = (formData.get('topic') as string) || '';
+                        const bio = (formData.get('bio') as string) || '';
+
+                        // Speaker applications are routed through the generic contact form
+                        // on ep-api, with the speaker-specific fields folded into the message body.
                         const data = {
                             firstName: formData.get('firstName'),
                             lastName: formData.get('lastName'),
                             email: formData.get('email'),
-                            portfolio: formData.get('portfolio'),
-                            topic: formData.get('topic'),
-                            bio: formData.get('bio'),
+                            inquiryType: 'Speaker Application',
+                            message: `Topic: ${topic}\n\nBio:\n${bio}${portfolio ? `\n\nPortfolio / LinkedIn: ${portfolio}` : ''}`,
                         };
 
                         try {
@@ -78,7 +83,7 @@ export const SpeakerApplicationModal: React.FC<SpeakerApplicationModalProps> = (
                                 submitBtn.innerHTML = 'Sending...';
                             }
 
-                            const response = await fetch('/api/speakers', {
+                            const response = await fetch('/api/contact', {
                                 method: 'POST',
                                 headers: {
                                     'Content-Type': 'application/json',

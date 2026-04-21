@@ -10,11 +10,27 @@ import type { PartnerItemData } from '@/components/LandingPage';
 interface PastSponsorsProps {
   data: PartnerItemData[];
   onOpenContact: () => void;
+  sectionData?: { title?: string; badge?: string; subtitle?: string };
 }
 
-export const PastSponsors: React.FC<PastSponsorsProps> = ({ data, onOpenContact }) => {
+// Render the CMS title as HTML when the author embeds a span (e.g. coloured word);
+// otherwise fall through to the default hardcoded "Sponsors & Partners" wordmark.
+function renderHeroTitle(cmsTitle?: string) {
+  if (!cmsTitle) {
+    return <>Sponsors & <span className="text-brand-cyan">Partners</span></>;
+  }
+  if (cmsTitle.includes('<')) {
+    return <span dangerouslySetInnerHTML={{ __html: cmsTitle }} />;
+  }
+  return <>{cmsTitle}</>;
+}
+
+export const PastSponsors: React.FC<PastSponsorsProps> = ({ data, onOpenContact, sectionData }) => {
   const sponsors = data.filter(d => d.isSponsor);
   const partners = data.filter(d => !d.isSponsor);
+  const heroBadge = sectionData?.badge || 'Our Ecosystem';
+  const heroSubtitle = sectionData?.subtitle || 'Leading organizations powering the future of decentralized AI governance.';
+  const cmsTitle = sectionData?.title;
 
   return (
     <section id="sponsors" className="relative w-full overflow-hidden">
@@ -27,13 +43,13 @@ export const PastSponsors: React.FC<PastSponsorsProps> = ({ data, onOpenContact 
 
         <div className="relative z-10 max-w-[1440px] mx-auto text-center">
           <p className="text-brand-cyan text-sm font-mono uppercase tracking-widest mb-4">
-            Our Ecosystem
+            {heroBadge}
           </p>
           <h2 className="text-4xl md:text-5xl lg:text-6xl font-display font-bold tracking-tight leading-[1.1] mb-6">
-            Sponsors & <span className="text-brand-cyan">Partners</span>
+            {renderHeroTitle(cmsTitle)}
           </h2>
           <p className="text-white/50 text-lg max-w-2xl mx-auto mb-14">
-            Leading organizations powering the future of decentralized AI governance.
+            {heroSubtitle}
           </p>
 
           {/* Stats */}
@@ -74,7 +90,7 @@ export const PastSponsors: React.FC<PastSponsorsProps> = ({ data, onOpenContact 
             <div className="mb-16">
               <div className="flex items-center gap-4 mb-10">
                 <div className="w-1 h-8 bg-brand-cyan rounded-full" />
-                <h3 className="text-xl md:text-2xl font-display font-bold text-[#050A1F]">Sponsors</h3>
+                <h3 className="text-xl md:text-2xl font-display font-bold text-[#050A1F]">{cmsTitle || 'Sponsors'}</h3>
               </div>
               <div className="flex flex-wrap justify-center gap-5">
                 {sponsors.map((sponsor, index) => (

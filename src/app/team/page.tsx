@@ -208,6 +208,7 @@ export default async function TeamPage() {
       defaultHeroSubtitle="The organizers, curators, and operators bringing DeAI Summit to life."
       defaultPrimaryStatLabel="Team Members"
       emptyMessage="No team members available at the moment."
+      detailBasePath="/team"
     />
   );
 }
