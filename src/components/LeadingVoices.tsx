@@ -3,6 +3,7 @@ import React, { useState, useRef, useEffect, useCallback } from "react";
 import Image from "next/image";
 import Link from "next/link";
 import type { LeadingSpeakerData } from "@/components/LandingPage";
+import { formatPersonName } from "@/lib/utils";
 
 interface LeadingVoicesProps {
   data: LeadingSpeakerData[];
@@ -63,7 +64,7 @@ const SpeakerCard: React.FC<{
 
         {/* Name */}
         <h3 className="font-display font-bold text-white leading-tight text-base mb-1">
-          {speaker.name}
+          {formatPersonName(speaker.title, speaker.name)}
         </h3>
 
         {/* Role */}

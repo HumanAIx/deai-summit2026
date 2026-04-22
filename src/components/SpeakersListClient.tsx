@@ -8,6 +8,7 @@ import { DetailPageLayout } from '@/components/DetailPageLayout';
 import { AnimatedGrid } from '@/components/AnimatedGrid';
 import type { NormalizedSpeaker, NavigationAPIData } from '@/lib/api-types';
 import type { NavigationConfig } from '@/config/types';
+import { formatPersonName } from '@/lib/utils';
 
 /** Convert **text** markers or brand name to cyan-highlighted spans */
 function highlightTitle(text: string): string {
@@ -38,13 +39,14 @@ interface SpeakerCardProps {
 function SpeakerCard({ speaker, colorIndex, detailBasePath }: SpeakerCardProps) {
   const color = cardColors[colorIndex % cardColors.length];
   const canLink = !!detailBasePath && !!speaker.slug;
+  const displayName = formatPersonName(speaker.title, speaker.name);
 
   const inner = (
     <div className="relative h-[340px] p-6 flex flex-col">
       {/* Speaker Info */}
       <div className="flex-1 pr-[180px]">
         <h3 className={`text-white text-xl font-display font-bold leading-tight ${canLink ? 'group-hover:underline' : ''}`}>
-          {speaker.name}
+          {displayName}
         </h3>
         {speaker.company && (
           <p className="text-brand-cyan text-sm mt-2">

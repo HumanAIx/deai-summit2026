@@ -11,6 +11,7 @@ function normalizeCMSMember(item: CMSSpeakerItem): NormalizedSpeaker {
   return {
     id: item.id,
     name,
+    title: item.person_title || undefined,
     slug: item.person_slug || '',
     role: '',
     company: '',

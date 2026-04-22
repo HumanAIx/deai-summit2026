@@ -49,10 +49,13 @@ export function generatePersonSchema(
     ?.filter(c => c.company_name)
     .map(c => ({ '@type': 'Organization' as const, name: c.company_name! }));
 
+  const honorificPrefix = member?.person_title || undefined;
+
   return {
     '@context': 'https://schema.org',
     '@type': 'Person',
     name,
+    ...(honorificPrefix && { honorificPrefix }),
     ...(description && { description }),
     ...(image && { image }),
     url: `${baseUrl}/${pathPrefix}/${member?.person_slug}`,

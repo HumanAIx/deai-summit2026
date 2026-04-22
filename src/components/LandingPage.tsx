@@ -31,6 +31,7 @@ import type { NavigationAPIData } from '@/lib/api-types';
 
 export interface LeadingSpeakerData {
     name: string;
+    title?: string;
     slug: string;
     role: string;
     company: string;

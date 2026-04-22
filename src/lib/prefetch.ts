@@ -78,6 +78,7 @@ export function normalizeSpeaker(member: Member): NormalizedSpeaker {
   return {
     id: member.id,
     name,
+    title: member.person_title || undefined,
     slug: member.person_slug,
     role: firstCompany?.person_job_title || '',
     company: firstCompany?.company_name || '',

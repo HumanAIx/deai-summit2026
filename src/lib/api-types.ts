@@ -31,6 +31,7 @@ export interface Member {
   id: string;
   person_firstname: string;
   person_surname: string;
+  person_title?: string;
   person_slug: string;
   person_bio?: string;
   speaker_bio?: string;
@@ -115,6 +116,7 @@ export interface SEOSettings {
 export interface NormalizedSpeaker {
   id: string;
   name: string;
+  title?: string;
   slug: string;
   role: string;
   company: string;
@@ -203,6 +205,7 @@ export interface CMSSpeakerItem {
   id: string;
   person_firstname: string;
   person_surname: string;
+  person_title?: string;
   person_slug: string;
   person_bio?: string;
   person_photo?: string;

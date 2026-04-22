@@ -6,7 +6,7 @@ import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { DetailPageLayout } from '@/components/DetailPageLayout';
 import { AnimatedGrid } from '@/components/AnimatedGrid';
-import { markdownToHtml } from '@/lib/utils';
+import { markdownToHtml, formatPersonName } from '@/lib/utils';
 import type { Member, Company, PersonSocials, NavigationAPIData } from '@/lib/api-types';
 import type { NavigationConfig } from '@/config/types';
 
@@ -100,7 +100,8 @@ export const SpeakerDetailClient: React.FC<SpeakerDetailClientProps> = ({ member
       } catch {}
     }
   };
-  const name = `${member.person_firstname} ${member.person_surname}`.trim();
+  const baseName = `${member.person_firstname} ${member.person_surname}`.trim();
+  const name = formatPersonName(member.person_title, baseName);
   const bio = member.person_bio || member.speaker_bio;
   const photo = member.person_photo_nobg || member.person_photo;
   const firstCompany = member.person_companies?.[0];

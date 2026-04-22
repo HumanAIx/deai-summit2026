@@ -235,6 +235,7 @@ function extractLeadingVoices(blocks: CMSBlock[]): LeadingSpeakerData[] | undefi
       const n = normalizeSpeaker(fullMember);
       return {
         name: n.name,
+        title: n.title,
         slug: n.slug,
         role: n.role,
         company: n.company,

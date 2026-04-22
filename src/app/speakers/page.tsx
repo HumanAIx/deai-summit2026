@@ -12,6 +12,7 @@ function normalizeCMSSpeaker(item: CMSSpeakerItem, index: number): NormalizedSpe
   return {
     id: item.id,
     name,
+    title: item.person_title || undefined,
     slug: item.person_slug || '',
     role: '',
     company: '',

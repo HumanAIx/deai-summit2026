@@ -1,4 +1,18 @@
 /**
+ * Prefix a full name with a person's honorific (Dr, Prof) when present.
+ * Adds a period after the abbreviation (Dr → "Dr.", Prof → "Prof.") but leaves any
+ * other title value untouched so admins can use custom strings like "Sir" or "Dame".
+ */
+export function formatPersonName(title: string | null | undefined, name: string): string {
+  const t = (title || '').trim();
+  const n = (name || '').trim();
+  if (!t) return n;
+  const isAbbrev = /^(Dr|Prof)$/i.test(t);
+  const prefix = isAbbrev ? `${t}.` : t;
+  return `${prefix} ${n}`;
+}
+
+/**
  * Convert markdown text to simple HTML for rendering.
  */
 export function markdownToHtml(text: string): string {

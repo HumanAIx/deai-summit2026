@@ -4,6 +4,7 @@ import { prefetchSpeakerDetailPageData, prefetchNavigation, prefetchSocials, map
 import { generatePersonSchema } from '@/lib/structured-data';
 import { SEO_DEFAULTS } from '@/lib/seo-defaults';
 import { SpeakerDetailClient } from '@/components/SpeakerDetailClient';
+import { formatPersonName } from '@/lib/utils';
 
 const BASE_URL = process.env.NEXT_PUBLIC_SITE_URL || 'https://deaisummit.org';
 
@@ -15,7 +16,8 @@ export async function generateMetadata({ params }: { params: Promise<{ slug: str
     return { title: 'Speaker Not Found' };
   }
 
-  const name = `${member.person_firstname} ${member.person_surname}`.trim();
+  const baseName = `${member.person_firstname} ${member.person_surname}`.trim();
+  const name = formatPersonName(member.person_title, baseName);
   const firstCompany = member.person_companies?.[0];
   const bio = member.speaker_bio || member.person_bio || '';
 
