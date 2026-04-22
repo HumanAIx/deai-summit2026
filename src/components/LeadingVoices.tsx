@@ -122,6 +122,22 @@ export const LeadingVoices: React.FC<LeadingVoicesProps> = ({ data }) => {
   const pausedRef = useRef(false);
   const rafRef = useRef<number | null>(null);
 
+  // Shuffle client-side on mount so the scroller order varies across visits
+  // without causing SSR/hydration mismatch. The server renders `data` as-is;
+  // the client swaps to a Fisher-Yates-shuffled copy once hydrated.
+  const [order, setOrder] = useState<LeadingSpeakerData[]>(data);
+  useEffect(() => {
+    const shuffled = [...data];
+    for (let i = shuffled.length - 1; i > 0; i--) {
+      const j = Math.floor(Math.random() * (i + 1));
+      [shuffled[i], shuffled[j]] = [shuffled[j], shuffled[i]];
+    }
+    setOrder(shuffled);
+    // Reset scroll position so the shuffled order starts from the left
+    positionRef.current = 0;
+    if (trackRef.current) trackRef.current.style.transform = 'translateX(0px)';
+  }, [data]);
+
   const setPausedState = useCallback((val: boolean) => {
     pausedRef.current = val;
   }, []);
@@ -148,7 +164,7 @@ export const LeadingVoices: React.FC<LeadingVoicesProps> = ({ data }) => {
     };
   }, []);
 
-  const doubled = [...data, ...data];
+  const doubled = [...order, ...order];
 
   return (
     <section
