@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import { AnimatedCounter } from '@/components/AnimatedCounter';
 import Link from 'next/link';
 import Image from 'next/image';
@@ -29,6 +29,128 @@ const cardColors = [
   '#0C1A35', // navy blue
   '#081228', // midnight
 ];
+
+// Source images vary wildly: some have the person at the top of the canvas,
+// some at the bottom, some tightly cropped, some with lots of transparent
+// padding. Pure CSS object-fit can't normalize this, so we scan the alpha
+// channel to find the actual person bounds, then scale + position the image
+// so every person fills the card uniformly.
+const BOX_W = 240;
+const BOX_H = 214;
+const PADDING = 0.97; // leave a hair of breathing room
+
+interface PersonLayout {
+  width: number;
+  height: number;
+  left: number;
+  top: number;
+}
+
+function SpeakerImage({ src, alt }: { src: string; alt: string }) {
+  const [layout, setLayout] = useState<PersonLayout | null>(null);
+  const cancelRef = useRef(false);
+
+  useEffect(() => {
+    cancelRef.current = false;
+    if (typeof window === 'undefined') return;
+
+    const probe = new window.Image();
+    probe.crossOrigin = 'anonymous';
+
+    const analyze = () => {
+      if (cancelRef.current) return;
+      const w = probe.naturalWidth;
+      const h = probe.naturalHeight;
+      if (!w || !h) return;
+      try {
+        // Downscale large images for the alpha scan to keep memory and CPU bounded
+        const MAX_DIM = 600;
+        const ds = Math.min(1, MAX_DIM / Math.max(w, h));
+        const aw = Math.max(1, Math.round(w * ds));
+        const ah = Math.max(1, Math.round(h * ds));
+        const canvas = document.createElement('canvas');
+        canvas.width = aw;
+        canvas.height = ah;
+        const ctx = canvas.getContext('2d');
+        if (!ctx) return;
+        ctx.drawImage(probe, 0, 0, aw, ah);
+        const data = ctx.getImageData(0, 0, aw, ah).data;
+
+        let top = ah;
+        let bottom = 0;
+        let left = aw;
+        let right = 0;
+        const step = 2;
+        for (let y = 0; y < ah; y += step) {
+          for (let x = 0; x < aw; x += step) {
+            if (data[(y * aw + x) * 4 + 3] > 30) {
+              if (y < top) top = y;
+              if (y > bottom) bottom = y;
+              if (x < left) left = x;
+              if (x > right) right = x;
+            }
+          }
+        }
+
+        if (top >= bottom || left >= right) return;
+        // Convert downscaled bbox back to source pixel space
+        const srcTop = top / ds;
+        const srcBottom = bottom / ds;
+        const srcLeft = left / ds;
+        const srcRight = right / ds;
+        const personW = srcRight - srcLeft;
+        const personH = srcBottom - srcTop;
+        const scale = Math.min((BOX_W * PADDING) / personW, (BOX_H * PADDING) / personH);
+        const scaledW = w * scale;
+        const scaledH = h * scale;
+        const personCenterX = (srcLeft + srcRight) / 2;
+        const imgLeft = BOX_W / 2 - personCenterX * scale;
+        const imgTop = BOX_H - srcBottom * scale;
+
+        if (cancelRef.current) return;
+        setLayout({ width: scaledW, height: scaledH, left: imgLeft, top: imgTop });
+      } catch {
+        // CORS-tainted canvas — leave layout null and let the fallback render
+      }
+    };
+
+    probe.addEventListener('load', analyze);
+    probe.src = src;
+    if (probe.complete) analyze();
+
+    return () => {
+      cancelRef.current = true;
+      probe.removeEventListener('load', analyze);
+    };
+  }, [src]);
+
+  return (
+    <div className="absolute bottom-0 right-0 w-[240px] h-[214px] overflow-hidden">
+      {layout ? (
+        // eslint-disable-next-line @next/next/no-img-element
+        <img
+          src={src}
+          alt={alt}
+          className="absolute max-w-none"
+          style={{
+            width: `${layout.width}px`,
+            height: `${layout.height}px`,
+            left: `${layout.left}px`,
+            top: `${layout.top}px`,
+          }}
+        />
+      ) : (
+        <Image
+          src={src}
+          alt={alt}
+          fill
+          sizes="240px"
+          className="object-cover object-top"
+        />
+      )}
+    </div>
+  );
+}
 
 interface SpeakerCardProps {
   speaker: NormalizedSpeaker;
@@ -60,22 +182,15 @@ function SpeakerCard({ speaker, colorIndex, detailBasePath }: SpeakerCardProps) 
         )}
       </div>
 
-      {/* Speaker Image */}
-      <div className={`absolute bottom-0 right-0 overflow-hidden ${speaker.slug === 'alexiei-dingli' ? 'w-[360px] h-[468px]' : 'w-[240px] h-[312px]'}`}>
-        {speaker.image ? (
-          <Image
-            src={speaker.image}
-            alt={speaker.name}
-            fill
-            sizes={speaker.slug === 'alexiei-dingli' ? '360px' : '240px'}
-            className="object-contain object-bottom"
-          />
-        ) : (
-          <div className="w-full h-full flex items-end justify-center">
-            <i className="ri-user-line text-white/20 text-7xl mb-4"></i>
-          </div>
-        )}
-      </div>
+      {/* Speaker Image — content-aware sizing: SpeakerImage scans the alpha
+          channel to find the real person bbox and fills 240x214 uniformly. */}
+      {speaker.image ? (
+        <SpeakerImage src={speaker.image} alt={speaker.name} />
+      ) : (
+        <div className="absolute bottom-0 right-0 w-[240px] h-[214px] overflow-hidden flex items-end justify-center">
+          <i className="ri-user-line text-white/20 text-7xl mb-4"></i>
+        </div>
+      )}
 
       {/* View Profile indicator (only shown when card is linkable) */}
       {canLink && (
