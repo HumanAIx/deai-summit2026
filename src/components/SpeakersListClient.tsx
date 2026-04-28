@@ -48,7 +48,16 @@ interface PersonLayout {
 
 function SpeakerImage({ src, alt }: { src: string; alt: string }) {
   const [layout, setLayout] = useState<PersonLayout | null>(null);
+  const [analyzedVisible, setAnalyzedVisible] = useState(false);
   const cancelRef = useRef(false);
+
+  // Crossfade trigger: once layout is ready, mount the analyzed image at
+  // opacity 0, then flip to 1 on the next frame so the CSS transition runs.
+  useEffect(() => {
+    if (!layout) return;
+    const id = requestAnimationFrame(() => setAnalyzedVisible(true));
+    return () => cancelAnimationFrame(id);
+  }, [layout]);
 
   useEffect(() => {
     cancelRef.current = false;
@@ -126,7 +135,20 @@ function SpeakerImage({ src, alt }: { src: string; alt: string }) {
 
   return (
     <div className="absolute bottom-0 right-0 w-[240px] h-[214px] overflow-hidden">
-      {layout ? (
+      {/* Fallback (always rendered, fades out when analyzed image is ready) */}
+      <Image
+        src={src}
+        alt={alt}
+        fill
+        sizes="240px"
+        className="object-cover object-top"
+        style={{
+          opacity: analyzedVisible ? 0 : 1,
+          transition: 'opacity 400ms ease-out',
+        }}
+      />
+      {/* Analyzed (mounts after layout is computed, fades in on next frame) */}
+      {layout && (
         // eslint-disable-next-line @next/next/no-img-element
         <img
           src={src}
@@ -137,15 +159,9 @@ function SpeakerImage({ src, alt }: { src: string; alt: string }) {
             height: `${layout.height}px`,
             left: `${layout.left}px`,
             top: `${layout.top}px`,
+            opacity: analyzedVisible ? 1 : 0,
+            transition: 'opacity 400ms ease-out',
           }}
-        />
-      ) : (
-        <Image
-          src={src}
-          alt={alt}
-          fill
-          sizes="240px"
-          className="object-cover object-top"
         />
       )}
     </div>
