@@ -53,9 +53,25 @@ export default async function Home() {
 
   const eventSchema = generateEventSchema(BASE_URL);
 
-  // Leading voices: CMS → API → siteConfig.
+  // Leading voices: CMS → API → siteConfig. CMS-sourced entries are enriched
+  // with the API row's photo_settings (and resolved image) by slug so the
+  // scroller picks up the active snapshot / nobg URL even when the CMS hasn't
+  // synced the full photo data.
+  const apiSpeakerBySlug = new Map(speakers.map(s => [s.slug, s]));
   const leadingSpeakers = cmsSections.leadingVoices && cmsSections.leadingVoices.length > 0
-    ? cmsSections.leadingVoices
+    ? cmsSections.leadingVoices.map(v => {
+        const fromApi = v.slug ? apiSpeakerBySlug.get(v.slug) : undefined;
+        if (!fromApi) return v;
+        return {
+          ...v,
+          image: fromApi.image || v.image,
+          photoSource: {
+            person_photo: fromApi.person_photo,
+            person_photo_nobg: fromApi.person_photo_nobg,
+            photo_settings: fromApi.photo_settings,
+          },
+        };
+      })
     : speakers.length > 0
       ? speakers.map(s => ({
           name: s.name,
@@ -64,6 +80,11 @@ export default async function Home() {
           company: s.company,
           image: s.image,
           icon: 'ri-user-line',
+          photoSource: {
+            person_photo: s.person_photo,
+            person_photo_nobg: s.person_photo_nobg,
+            photo_settings: s.photo_settings,
+          },
         }))
       : siteConfig.speakers.leading.map(s => ({ ...s, slug: '' }));
 

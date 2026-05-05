@@ -37,6 +37,10 @@ export interface LeadingSpeakerData {
     company: string;
     image: string;
     icon: string;
+    /** Optional raw photo source so the renderer can apply
+     * `photo_settings` background / filter / animation. Set when the data
+     * came from the API; absent for static `siteConfig` / CMS entries. */
+    photoSource?: import('@/lib/personPhoto').PersonPhotoSource;
 }
 
 export interface MarqueeItemData {

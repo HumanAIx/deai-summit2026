@@ -37,6 +37,7 @@ export interface Member {
   speaker_bio?: string;
   person_photo?: string;
   person_photo_nobg?: string;
+  photo_settings?: import('./personPhoto').PersonPhotoSource['photo_settings'];
   person_website?: string;
   person_socials?: PersonSocials;
   person_companies?: PersonCompany[];
@@ -120,7 +121,13 @@ export interface NormalizedSpeaker {
   slug: string;
   role: string;
   company: string;
+  /** Resolved photo URL — `photo_settings.activeEnhancedUrl` ?? `person_photo_nobg` ?? `person_photo`. */
   image: string;
+  /** Raw photo source fields, so renderers can apply `getPhotoBackgroundCss` /
+   * `getPhotoCssFilter` / `getAnimatedSunraysStyle` from `lib/personPhoto`. */
+  person_photo?: string | null;
+  person_photo_nobg?: string | null;
+  photo_settings?: import('./personPhoto').PersonPhotoSource['photo_settings'];
   bio?: string;
   website?: string;
   socials?: PersonSocials;
@@ -210,6 +217,7 @@ export interface CMSSpeakerItem {
   person_bio?: string;
   person_photo?: string;
   person_photo_nobg?: string;
+  photo_settings?: import('./personPhoto').PersonPhotoSource['photo_settings'];
   person_socials?: PersonSocials;
   is_published?: boolean;
   is_speaker?: boolean;

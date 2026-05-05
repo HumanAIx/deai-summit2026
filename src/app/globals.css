@@ -305,6 +305,13 @@
   animation: zap 1.2s ease-in-out forwards;
 }
 
+/* Used by `getAnimatedSunraysStyle` (lib/personPhoto.ts) to spin the
+   decorative sunrays / swirl background behind person photos. */
+@keyframes photo-rays-spin {
+  from { transform: translate(-50%, -50%) rotate(0deg); }
+  to   { transform: translate(-50%, -50%) rotate(360deg); }
+}
+
 .zap-icon {
   fill: #00B0C2;
   transition: fill 0.3s ease;

@@ -1,9 +1,14 @@
 "use client";
 import React, { useState, useRef, useEffect, useCallback } from "react";
-import Image from "next/image";
 import Link from "next/link";
 import type { LeadingSpeakerData } from "@/components/LandingPage";
 import { formatPersonName } from "@/lib/utils";
+import {
+  resolvePersonPhotoSrc,
+  getPhotoCssFilter,
+  getPhotoTransform,
+  withPhotoCacheBuster,
+} from "@/lib/personPhoto";
 
 interface LeadingVoicesProps {
   data: LeadingSpeakerData[];
@@ -83,20 +88,35 @@ const SpeakerCard: React.FC<{
         </div>
       </div>
 
-      {/* Photo at bottom */}
+      {/* Photo region — original dark navy background; we no longer paint
+          photo_settings.background (gradient/sunrays/swirl) here. Animated
+          decoration is also removed from this surface. */}
       <div className="relative w-full flex-1 overflow-hidden">
-        <Image
-          src={speaker.image}
+        {/* eslint-disable-next-line @next/next/no-img-element */}
+        <img
+          src={
+            speaker.photoSource
+              ? withPhotoCacheBuster(
+                  resolvePersonPhotoSrc(speaker.photoSource) || speaker.image,
+                  speaker.photoSource,
+                )
+              : speaker.image
+          }
           alt={speaker.name}
-          fill
-          className={`object-cover transition-transform duration-700 ${speaker.slug === 'aaron-farrugia' ? 'object-[center_-90px]' : (speaker.slug === 'max-li' || speaker.slug === 'sean-yang') ? 'object-[center_-20px]' : 'object-top'}`}
+          className="absolute bottom-0 left-1/2 max-w-none transition-transform duration-700"
           style={{
-            transform: hovered ? "scale(1.08)" : "scale(1)",
+            height: '95%',
+            width: 'auto',
+            transform: `translateX(-50%) ${
+              speaker.photoSource ? (getPhotoTransform(speaker.photoSource) ?? '') : ''
+            } scale(${hovered ? 1.08 : 1})`,
+            transformOrigin: 'bottom center',
+            filter: speaker.photoSource ? getPhotoCssFilter(speaker.photoSource) : undefined,
           }}
         />
         {/* Subtle blend at top of photo */}
         <div
-          className="absolute inset-0"
+          className="absolute inset-0 pointer-events-none"
           style={{
             background: `linear-gradient(to bottom, #050A1F 0%, rgba(5,10,31,0) 18%)`,
           }}

@@ -75,6 +75,13 @@ export function normalizeSpeaker(member: Member): NormalizedSpeaker {
   const name = `${member.person_firstname || ''} ${member.person_surname || ''}`.trim();
   const firstCompany = member.person_companies?.[0];
 
+  // Render contract: activeEnhancedUrl (AI-baked) → person_photo_nobg → person_photo.
+  const image =
+    member.photo_settings?.activeEnhancedUrl ||
+    member.person_photo_nobg ||
+    member.person_photo ||
+    '';
+
   return {
     id: member.id,
     name,
@@ -82,7 +89,10 @@ export function normalizeSpeaker(member: Member): NormalizedSpeaker {
     slug: member.person_slug,
     role: firstCompany?.person_job_title || '',
     company: firstCompany?.company_name || '',
-    image: member.person_photo_nobg || member.person_photo || '',
+    image,
+    person_photo: member.person_photo ?? null,
+    person_photo_nobg: member.person_photo_nobg ?? null,
+    photo_settings: member.photo_settings ?? null,
     bio: member.speaker_bio || member.person_bio,
     website: member.person_website,
     socials: member.person_socials,
@@ -123,7 +133,9 @@ function getSpeakerContentScore(member: Member): number {
 // --- Prefetch functions ---
 
 export async function prefetchSpeakers(): Promise<NormalizedSpeaker[]> {
-  const members = await fetchFromAPI<Member[]>('/members?is_speaker=true&limit=100');
+  // cacheDuration: 0 — same rule as companies/sponsors below: publish/draft
+  // flag flips must propagate immediately, no Next data-cache window.
+  const members = await fetchFromAPI<Member[]>('/members?is_speaker=true&limit=100', { cacheDuration: 0 });
   if (!members) return [];
   return members
     .filter(m => m.is_speaker_published)
@@ -132,7 +144,15 @@ export async function prefetchSpeakers(): Promise<NormalizedSpeaker[]> {
 }
 
 export async function prefetchSpeakerBySlug(slug: string): Promise<Member | null> {
-  return fetchFromAPI<Member>(`/members/${slug}`);
+  return fetchFromAPI<Member>(`/members/${slug}`, { cacheDuration: 0 });
+}
+
+export async function prefetchTeam(): Promise<NormalizedSpeaker[]> {
+  // Same cacheDuration: 0 rule as speakers — publish/draft flips and Photo
+  // Studio saves should propagate immediately.
+  const members = await fetchFromAPI<Member[]>('/members?type=team&limit=100', { cacheDuration: 0 });
+  if (!members) return [];
+  return members.filter(m => m.is_published).map(normalizeSpeaker);
 }
 
 // Publish/draft flips must propagate immediately on production — pass

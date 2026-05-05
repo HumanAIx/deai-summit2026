@@ -7,8 +7,18 @@ import type { NormalizedSpeaker, CMSBlock, CMSSpeakerItem } from '@/lib/api-type
 
 const BASE_URL = process.env.NEXT_PUBLIC_SITE_URL || 'https://deaisummit.org';
 
+// Render on every request so Photo Studio saves (photo_settings) propagate
+// immediately without waiting for ISR / CDN HTML cache.
+export const dynamic = 'force-dynamic';
+
 function normalizeCMSSpeaker(item: CMSSpeakerItem, index: number): NormalizedSpeaker {
+  void index;
   const name = `${item.person_firstname || ''} ${item.person_surname || ''}`.trim();
+  const image =
+    item.photo_settings?.activeEnhancedUrl ||
+    item.person_photo_nobg ||
+    item.person_photo ||
+    '';
   return {
     id: item.id,
     name,
@@ -16,7 +26,10 @@ function normalizeCMSSpeaker(item: CMSSpeakerItem, index: number): NormalizedSpe
     slug: item.person_slug || '',
     role: '',
     company: '',
-    image: item.person_photo_nobg || item.person_photo || '',
+    image,
+    person_photo: item.person_photo ?? null,
+    person_photo_nobg: item.person_photo_nobg ?? null,
+    photo_settings: item.photo_settings ?? null,
     bio: item.person_bio,
     socials: item.person_socials,
     isFeatured: item.is_speaker_featured || false,
@@ -178,15 +191,38 @@ export default async function SpeakersPage() {
   const [apiNav, socials] = await Promise.all([prefetchNavigation(), prefetchSocials()]);
   const navigationData = apiNav ? mapNavigationData(apiNav) : undefined;
 
-  try {
-    const cmsPage = await prefetchCMSPage('speakers');
+  // Pull CMS + API in parallel; enrich CMS-curated speakers with full
+  // photo_settings (and any other API-only fields) by matching on slug.
+  const [cmsResult, apiSpeakers] = await Promise.allSettled([
+    prefetchCMSPage('speakers'),
+    prefetchSpeakers(),
+  ]);
 
+  const apiBySlug = new Map<string, NormalizedSpeaker>();
+  if (apiSpeakers.status === 'fulfilled') {
+    for (const s of apiSpeakers.value) {
+      if (s.slug) apiBySlug.set(s.slug, s);
+    }
+  }
+
+  try {
+    const cmsPage = cmsResult.status === 'fulfilled' ? cmsResult.value : null;
     if (cmsPage?.content?.blocks) {
       const blocks: CMSBlock[] = Array.isArray(cmsPage.content.blocks)
         ? cmsPage.content.blocks
         : Object.values(cmsPage.content.blocks) as CMSBlock[];
 
-      speakers = extractSpeakersFromBlocks(blocks);
+      speakers = extractSpeakersFromBlocks(blocks).map(m => {
+        const fromApi = m.slug ? apiBySlug.get(m.slug) : undefined;
+        if (!fromApi) return m;
+        return {
+          ...m,
+          image: fromApi.image || m.image,
+          person_photo: fromApi.person_photo ?? m.person_photo,
+          person_photo_nobg: fromApi.person_photo_nobg ?? m.person_photo_nobg,
+          photo_settings: fromApi.photo_settings ?? m.photo_settings,
+        };
+      });
       heroData = extractHeroFromBlocks(blocks);
       stats = extractStatsFromBlocks(blocks);
       ctaData = extractCtaFromBlocks(blocks);
@@ -195,13 +231,9 @@ export default async function SpeakersPage() {
     console.error('Failed to fetch CMS speakers page:', error);
   }
 
-  // Fallback: if CMS returned no speakers, try the members API directly
-  if (speakers.length === 0) {
-    try {
-      speakers = await prefetchSpeakers();
-    } catch (error) {
-      console.error('Failed to fetch speakers from members API:', error);
-    }
+  // Fallback: if CMS returned no speakers, use the API list directly
+  if (speakers.length === 0 && apiSpeakers.status === 'fulfilled') {
+    speakers = apiSpeakers.value;
   }
 
   // Final fallback to hardcoded data

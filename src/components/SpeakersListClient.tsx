@@ -1,14 +1,18 @@
 'use client';
 
-import React, { useEffect, useRef, useState } from 'react';
+import React, { useState } from 'react';
 import { AnimatedCounter } from '@/components/AnimatedCounter';
 import Link from 'next/link';
-import Image from 'next/image';
 import { DetailPageLayout } from '@/components/DetailPageLayout';
 import { AnimatedGrid } from '@/components/AnimatedGrid';
 import type { NormalizedSpeaker, NavigationAPIData } from '@/lib/api-types';
 import type { NavigationConfig } from '@/config/types';
 import { formatPersonName } from '@/lib/utils';
+import {
+  resolvePersonPhotoSrc,
+  withPhotoCacheBuster,
+  type PersonPhotoSource,
+} from '@/lib/personPhoto';
 
 /** Convert **text** markers or brand name to cyan-highlighted spans */
 function highlightTitle(text: string): string {
@@ -30,141 +34,31 @@ const cardColors = [
   '#081228', // midnight
 ];
 
-// Source images vary wildly: some have the person at the top of the canvas,
-// some at the bottom, some tightly cropped, some with lots of transparent
-// padding. Pure CSS object-fit can't normalize this, so we scan the alpha
-// channel to find the actual person bounds, then scale + position the image
-// so every person fills the card uniformly.
-const BOX_W = 240;
-const BOX_H = 214;
-const PADDING = 0.97; // leave a hair of breathing room
-
-interface PersonLayout {
-  width: number;
-  height: number;
-  left: number;
-  top: number;
-}
-
-function SpeakerImage({ src, alt }: { src: string; alt: string }) {
-  const [layout, setLayout] = useState<PersonLayout | null>(null);
-  const [analyzedVisible, setAnalyzedVisible] = useState(false);
-  const cancelRef = useRef(false);
-
-  // Crossfade trigger: once layout is ready, mount the analyzed image at
-  // opacity 0, then flip to 1 on the next frame so the CSS transition runs.
-  useEffect(() => {
-    if (!layout) return;
-    const id = requestAnimationFrame(() => setAnalyzedVisible(true));
-    return () => cancelAnimationFrame(id);
-  }, [layout]);
-
-  useEffect(() => {
-    cancelRef.current = false;
-    if (typeof window === 'undefined') return;
-
-    const probe = new window.Image();
-    probe.crossOrigin = 'anonymous';
-
-    const analyze = () => {
-      if (cancelRef.current) return;
-      const w = probe.naturalWidth;
-      const h = probe.naturalHeight;
-      if (!w || !h) return;
-      try {
-        // Downscale large images for the alpha scan to keep memory and CPU bounded
-        const MAX_DIM = 600;
-        const ds = Math.min(1, MAX_DIM / Math.max(w, h));
-        const aw = Math.max(1, Math.round(w * ds));
-        const ah = Math.max(1, Math.round(h * ds));
-        const canvas = document.createElement('canvas');
-        canvas.width = aw;
-        canvas.height = ah;
-        const ctx = canvas.getContext('2d');
-        if (!ctx) return;
-        ctx.drawImage(probe, 0, 0, aw, ah);
-        const data = ctx.getImageData(0, 0, aw, ah).data;
-
-        let top = ah;
-        let bottom = 0;
-        let left = aw;
-        let right = 0;
-        const step = 2;
-        for (let y = 0; y < ah; y += step) {
-          for (let x = 0; x < aw; x += step) {
-            if (data[(y * aw + x) * 4 + 3] > 30) {
-              if (y < top) top = y;
-              if (y > bottom) bottom = y;
-              if (x < left) left = x;
-              if (x > right) right = x;
-            }
-          }
-        }
-
-        if (top >= bottom || left >= right) return;
-        // Convert downscaled bbox back to source pixel space
-        const srcTop = top / ds;
-        const srcBottom = bottom / ds;
-        const srcLeft = left / ds;
-        const srcRight = right / ds;
-        const personW = srcRight - srcLeft;
-        const personH = srcBottom - srcTop;
-        const scale = Math.min((BOX_W * PADDING) / personW, (BOX_H * PADDING) / personH);
-        const scaledW = w * scale;
-        const scaledH = h * scale;
-        const personCenterX = (srcLeft + srcRight) / 2;
-        const imgLeft = BOX_W / 2 - personCenterX * scale;
-        const imgTop = BOX_H - srcBottom * scale;
-
-        if (cancelRef.current) return;
-        setLayout({ width: scaledW, height: scaledH, left: imgLeft, top: imgTop });
-      } catch {
-        // CORS-tainted canvas — leave layout null and let the fallback render
-      }
-    };
-
-    probe.addEventListener('load', analyze);
-    probe.src = src;
-    if (probe.complete) analyze();
-
-    return () => {
-      cancelRef.current = true;
-      probe.removeEventListener('load', analyze);
-    };
-  }, [src]);
+// Photo at 80% of tile height, width auto-derived from the PNG aspect, bottom
+// anchored, horizontally centered. The full subject is always visible — no
+// cropping. Wider poses simply spill past the tile sides (clipped by the
+// wrapper's overflow:hidden), narrower portraits leave transparent side gaps.
+//
+// API-side photo_settings styling (filter/scale/tint/shadow/background/anim)
+// is intentionally NOT applied here — the user wants the grid tiles to use
+// only the original `cardColors` palette and the subject as-is. Only the
+// resolved photo URL + cache buster are taken from photo_settings.
+function SpeakerImage({ src, alt, photoSource }: { src: string; alt: string; photoSource?: PersonPhotoSource }) {
+  const resolvedSrc = photoSource
+    ? withPhotoCacheBuster(resolvePersonPhotoSrc(photoSource) || src, photoSource)
+    : src;
 
   return (
-    <div className="absolute bottom-0 right-0 w-[240px] h-[214px] overflow-hidden">
-      {/* Fallback (always rendered, fades out when analyzed image is ready) */}
-      <Image
-        src={src}
-        alt={alt}
-        fill
-        sizes="240px"
-        className="object-cover object-top"
-        style={{
-          opacity: analyzedVisible ? 0 : 1,
-          transition: 'opacity 400ms ease-out',
-        }}
-      />
-      {/* Analyzed (mounts after layout is computed, fades in on next frame) */}
-      {layout && (
-        // eslint-disable-next-line @next/next/no-img-element
-        <img
-          src={src}
-          alt={alt}
-          className="absolute max-w-none"
-          style={{
-            width: `${layout.width}px`,
-            height: `${layout.height}px`,
-            left: `${layout.left}px`,
-            top: `${layout.top}px`,
-            opacity: analyzedVisible ? 1 : 0,
-            transition: 'opacity 400ms ease-out',
-          }}
-        />
-      )}
-    </div>
+    // eslint-disable-next-line @next/next/no-img-element
+    <img
+      src={resolvedSrc}
+      alt={alt}
+      className="absolute bottom-0 left-1/2 -translate-x-1/2 max-w-none pointer-events-none z-[1]"
+      style={{
+        height: '80%',
+        width: 'auto',
+      }}
+    />
   );
 }
 
@@ -175,14 +69,24 @@ interface SpeakerCardProps {
 }
 
 function SpeakerCard({ speaker, colorIndex, detailBasePath }: SpeakerCardProps) {
-  const color = cardColors[colorIndex % cardColors.length];
   const canLink = !!detailBasePath && !!speaker.slug;
   const displayName = formatPersonName(speaker.title, speaker.name);
 
+  const photoSource = {
+    person_photo: speaker.person_photo,
+    person_photo_nobg: speaker.person_photo_nobg,
+    photo_settings: speaker.photo_settings,
+  };
+  // Tile background is the original cardColors palette only — no API-side
+  // overrides (no tint, no shadow, no animation, no background settings).
+  const wrapperStyle: React.CSSProperties = {
+    backgroundColor: cardColors[colorIndex % cardColors.length],
+  };
+
   const inner = (
     <div className="relative h-[340px] p-6 flex flex-col">
-      {/* Speaker Info */}
-      <div className="flex-1 pr-[180px]">
+      {/* Text + photo */}
+      <div className="relative z-[1]">
         <h3 className={`text-white text-xl font-display font-bold leading-tight ${canLink ? 'group-hover:underline' : ''}`}>
           {displayName}
         </h3>
@@ -201,16 +105,20 @@ function SpeakerCard({ speaker, colorIndex, detailBasePath }: SpeakerCardProps) 
       {/* Speaker Image — content-aware sizing: SpeakerImage scans the alpha
           channel to find the real person bbox and fills 240x214 uniformly. */}
       {speaker.image ? (
-        <SpeakerImage src={speaker.image} alt={speaker.name} />
+        <SpeakerImage
+          src={speaker.image}
+          alt={speaker.name}
+          photoSource={photoSource}
+        />
       ) : (
-        <div className="absolute bottom-0 right-0 w-[240px] h-[214px] overflow-hidden flex items-end justify-center">
+        <div className="absolute bottom-0 left-1/2 -translate-x-1/2 w-[320px] h-[272px] overflow-hidden flex items-end justify-center">
           <i className="ri-user-line text-white/20 text-7xl mb-4"></i>
         </div>
       )}
 
       {/* View Profile indicator (only shown when card is linkable) */}
       {canLink && (
-        <div className="absolute bottom-4 left-6 text-white/70 text-xs flex items-center gap-1 group-hover:text-white transition-colors font-mono uppercase tracking-widest">
+        <div className="absolute bottom-4 left-6 text-white/70 text-xs flex items-center gap-1 group-hover:text-white transition-colors font-mono uppercase tracking-widest z-[2]">
           View Profile
           <svg className="w-3 h-3 group-hover:translate-x-1 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
@@ -224,8 +132,8 @@ function SpeakerCard({ speaker, colorIndex, detailBasePath }: SpeakerCardProps) 
     return (
       <Link
         href={`${detailBasePath}/${speaker.slug}`}
-        className="group block overflow-hidden rounded-2xl transition-all duration-300 hover:scale-[1.02] hover:shadow-xl no-underline"
-        style={{ backgroundColor: color }}
+        className="group relative block overflow-hidden rounded-2xl transition-all duration-300 hover:scale-[1.02] hover:shadow-xl no-underline"
+        style={wrapperStyle}
       >
         {inner}
       </Link>
@@ -234,8 +142,8 @@ function SpeakerCard({ speaker, colorIndex, detailBasePath }: SpeakerCardProps) 
 
   return (
     <div
-      className="block overflow-hidden rounded-2xl"
-      style={{ backgroundColor: color }}
+      className="relative block overflow-hidden rounded-2xl"
+      style={wrapperStyle}
     >
       {inner}
     </div>
