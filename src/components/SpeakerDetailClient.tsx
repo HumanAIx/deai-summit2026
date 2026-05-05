@@ -7,6 +7,7 @@ import { useRouter } from 'next/navigation';
 import { DetailPageLayout } from '@/components/DetailPageLayout';
 import { AnimatedGrid } from '@/components/AnimatedGrid';
 import { markdownToHtml, formatPersonName } from '@/lib/utils';
+import { resolvePersonPhotoSrc, withPhotoCacheBuster } from '@/lib/personPhoto';
 import type { Member, Company, PersonSocials, NavigationAPIData } from '@/lib/api-types';
 import type { NavigationConfig } from '@/config/types';
 
@@ -103,7 +104,17 @@ export const SpeakerDetailClient: React.FC<SpeakerDetailClientProps> = ({ member
   const baseName = `${member.person_firstname} ${member.person_surname}`.trim();
   const name = formatPersonName(member.person_title, baseName);
   const bio = member.person_bio || member.speaker_bio;
-  const photo = member.person_photo_nobg || member.person_photo;
+  // Render contract: activeEnhancedUrl (AI-baked snapshot) → person_photo_nobg
+  // → person_photo. Cache-buster keys off photo_settings.updatedAt.
+  const photoSource = {
+    person_photo: member.person_photo,
+    person_photo_nobg: member.person_photo_nobg,
+    photo_settings: member.photo_settings,
+  };
+  const resolvedPhoto = resolvePersonPhotoSrc(photoSource);
+  const photo = resolvedPhoto
+    ? withPhotoCacheBuster(resolvedPhoto, photoSource)
+    : '';
   const firstCompany = member.person_companies?.[0];
 
   return (
@@ -116,16 +127,17 @@ export const SpeakerDetailClient: React.FC<SpeakerDetailClientProps> = ({ member
         </div>
         <div className="relative z-10 max-w-[1440px] mx-auto px-6 py-20 md:py-28">
           <div className="flex flex-col md:flex-row gap-12 md:gap-16 items-center mx-auto w-fit">
-            {/* Photo */}
+            {/* Photo — same model as the grid: bottom-anchored, height 90%
+                of tile, width auto, full subject visible (no cropping). */}
             {photo && (
               <div className="flex-shrink-0">
                 <div className="relative w-56 h-56 md:w-72 md:h-72 rounded-2xl overflow-hidden border-2 border-white/10 shadow-2xl shadow-brand-cyan/10">
-                  <Image
+                  {/* eslint-disable-next-line @next/next/no-img-element */}
+                  <img
                     src={photo}
                     alt={name}
-                    fill
-                    className="object-cover"
-                    priority
+                    className="absolute bottom-0 left-1/2 -translate-x-1/2 max-w-none"
+                    style={{ height: '90%', width: 'auto' }}
                   />
                 </div>
               </div>
