@@ -36,6 +36,23 @@ function normalizeCMSSpeaker(item: CMSSpeakerItem, index: number): NormalizedSpe
   };
 }
 
+/**
+ * True when the CMS block opts into a "dynamic" speakers list — i.e. the
+ * dashboard wants the page to show every current speaker rather than the
+ * hardcoded `items` array. Treats any `membersListType` starting with
+ * `all-` as dynamic so the dashboard can introduce new modes (e.g.
+ * `all-speakers`, `all-speakers-nobg`) without code changes here.
+ */
+function blocksRequestDynamicSpeakers(blocks: CMSBlock[]): boolean {
+  for (const block of blocks) {
+    if (block.type === 'members-list' || block.addon === 'members-list') {
+      const t = (block as { membersListType?: string }).membersListType;
+      if (t && t.startsWith('all-')) return true;
+    }
+  }
+  return false;
+}
+
 function extractSpeakersFromBlocks(blocks: CMSBlock[]): NormalizedSpeaker[] {
   for (const block of blocks) {
     // Direct members-list block
@@ -212,17 +229,28 @@ export default async function SpeakersPage() {
         ? cmsPage.content.blocks
         : Object.values(cmsPage.content.blocks) as CMSBlock[];
 
-      speakers = extractSpeakersFromBlocks(blocks).map(m => {
-        const fromApi = m.slug ? apiBySlug.get(m.slug) : undefined;
-        if (!fromApi) return m;
-        return {
-          ...m,
-          image: fromApi.image || m.image,
-          person_photo: fromApi.person_photo ?? m.person_photo,
-          person_photo_nobg: fromApi.person_photo_nobg ?? m.person_photo_nobg,
-          photo_settings: fromApi.photo_settings ?? m.photo_settings,
-        };
-      });
+      // When the CMS block requests a dynamic list (membersListType
+      // `all-*`), bypass the hardcoded `items` array and source straight
+      // from the API. This is what makes "publish a speaker in the
+      // dashboard → automatically appears on the public site" actually
+      // work — without it the dashboard's curated `items` snapshot freezes
+      // the roster and new speakers never show until someone re-saves the
+      // CMS page.
+      if (blocksRequestDynamicSpeakers(blocks) && apiSpeakers.status === 'fulfilled') {
+        speakers = apiSpeakers.value;
+      } else {
+        speakers = extractSpeakersFromBlocks(blocks).map(m => {
+          const fromApi = m.slug ? apiBySlug.get(m.slug) : undefined;
+          if (!fromApi) return m;
+          return {
+            ...m,
+            image: fromApi.image || m.image,
+            person_photo: fromApi.person_photo ?? m.person_photo,
+            person_photo_nobg: fromApi.person_photo_nobg ?? m.person_photo_nobg,
+            photo_settings: fromApi.photo_settings ?? m.photo_settings,
+          };
+        });
+      }
       heroData = extractHeroFromBlocks(blocks);
       stats = extractStatsFromBlocks(blocks);
       ctaData = extractCtaFromBlocks(blocks);

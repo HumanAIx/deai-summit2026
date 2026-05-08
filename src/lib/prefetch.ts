@@ -112,10 +112,18 @@ export function normalizeSponsor(company: Company): NormalizedSponsor {
     socials: company.company_socials,
     isSponsor: company.company_is_sponsor,
     isPartner: company.company_is_partner,
-    logoHasDarkBg:
-      company.company_logo_has_dark_bg ??
-      (company as unknown as Record<string, unknown>).logo_has_dark_bg as boolean | undefined ??
-      (company as unknown as Record<string, unknown>).logo_background_dark as boolean | undefined,
+    logoHasDarkBg: (() => {
+      // The canonical DB column is `logo_background_white` (inverted —
+      // `false` = the logo has a dark background and must render on a
+      // dark tile). The other names are legacy / aspirational that a few
+      // older rows might still carry; checked last as a fallback.
+      const c = company as unknown as Record<string, unknown>;
+      if (typeof c.logo_background_white === 'boolean') return !c.logo_background_white;
+      if (typeof c.company_logo_has_dark_bg === 'boolean') return c.company_logo_has_dark_bg as boolean;
+      if (typeof c.logo_has_dark_bg === 'boolean') return c.logo_has_dark_bg as boolean;
+      if (typeof c.logo_background_dark === 'boolean') return c.logo_background_dark as boolean;
+      return undefined;
+    })(),
   };
 }
 
@@ -139,7 +147,16 @@ export async function prefetchSpeakers(): Promise<NormalizedSpeaker[]> {
   if (!members) return [];
   return members
     .filter(m => m.is_speaker_published)
-    .sort((a, b) => getSpeakerContentScore(b) - getSpeakerContentScore(a))
+    // Primary order: hand-curated `sort_order` (lower = first; NULL =
+    // sort to the end). Tail fallback: content score so empty rows still
+    // surface the most-complete profiles first. The dashboard's Reorder
+    // dialog writes `sort_order`, and that overrides everything else.
+    .sort((a, b) => {
+      const ao = (a as unknown as { sort_order?: number | null }).sort_order ?? Number.POSITIVE_INFINITY;
+      const bo = (b as unknown as { sort_order?: number | null }).sort_order ?? Number.POSITIVE_INFINITY;
+      if (ao !== bo) return ao - bo;
+      return getSpeakerContentScore(b) - getSpeakerContentScore(a);
+    })
     .map(normalizeSpeaker);
 }
 
