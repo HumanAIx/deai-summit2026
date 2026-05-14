@@ -53,7 +53,7 @@ function SpeakerImage({ src, alt, photoSource }: { src: string; alt: string; pho
     <img
       src={resolvedSrc}
       alt={alt}
-      className="absolute bottom-0 left-1/2 -translate-x-1/2 max-w-none pointer-events-none z-[1]"
+      className="absolute bottom-0 left-1/2 z-[10] max-w-none -translate-x-1/2 pointer-events-none"
       style={{
         height: '80%',
         width: 'auto',
@@ -84,9 +84,9 @@ function SpeakerCard({ speaker, colorIndex, detailBasePath }: SpeakerCardProps) 
   };
 
   const inner = (
-    <div className="relative h-[340px] p-6 flex flex-col">
-      {/* Text + photo */}
-      <div className="relative z-[1]">
+    <div className="relative isolate flex h-[340px] flex-col p-6">
+      {/* Text stacks above the photo (photo uses transforms → its own layer). */}
+      <div className="relative z-20">
         <h3 className={`text-white text-xl font-display font-bold leading-tight ${canLink ? 'group-hover:underline' : ''}`}>
           {displayName}
         </h3>
@@ -111,14 +111,14 @@ function SpeakerCard({ speaker, colorIndex, detailBasePath }: SpeakerCardProps) 
           photoSource={photoSource}
         />
       ) : (
-        <div className="absolute bottom-0 left-1/2 -translate-x-1/2 w-[320px] h-[272px] overflow-hidden flex items-end justify-center">
+        <div className="pointer-events-none absolute bottom-0 left-1/2 z-[10] flex h-[272px] w-[320px] -translate-x-1/2 items-end justify-center overflow-hidden">
           <i className="ri-user-line text-white/20 text-7xl mb-4"></i>
         </div>
       )}
 
       {/* View Profile indicator (only shown when card is linkable) */}
       {canLink && (
-        <div className="absolute bottom-4 left-6 text-white/70 text-xs flex items-center gap-1 group-hover:text-white transition-colors font-mono uppercase tracking-widest z-[2]">
+        <div className="absolute bottom-4 left-6 z-30 flex items-center gap-1 font-mono text-xs uppercase tracking-widest text-white/70 transition-colors group-hover:text-white">
           View Profile
           <svg className="w-3 h-3 group-hover:translate-x-1 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
