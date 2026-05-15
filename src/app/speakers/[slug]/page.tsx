@@ -1,7 +1,7 @@
 import { notFound } from 'next/navigation';
 import type { Metadata } from 'next';
 import { prefetchSpeakerDetailPageData, prefetchNavigation, prefetchSocials, mapNavigationData } from '@/lib/prefetch';
-import { generatePersonSchema } from '@/lib/structured-data';
+import { generatePersonSchema, jsonLdSafe } from '@/lib/structured-data';
 import { SEO_DEFAULTS } from '@/lib/seo-defaults';
 import { SpeakerDetailClient } from '@/components/SpeakerDetailClient';
 import { formatPersonName } from '@/lib/utils';
@@ -75,7 +75,7 @@ export default async function SpeakerDetailPage({ params }: { params: Promise<{ 
       {finalSchema && (
         <script
           type="application/ld+json"
-          dangerouslySetInnerHTML={{ __html: JSON.stringify(finalSchema) }}
+          dangerouslySetInnerHTML={{ __html: jsonLdSafe(finalSchema) }}
         />
       )}
       <SpeakerDetailClient

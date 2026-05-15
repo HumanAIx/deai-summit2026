@@ -5,8 +5,14 @@
  * Run from your Mac terminal: node scripts/remove-speaker-backgrounds.mjs
  */
 
-const API_URL = 'http://localhost:3000/api';
-const API_KEY = '1865980a-f7ff-4598-bab7-2d1141a66a86';
+const API_URL = process.env.GCONF_API_URL || 'http://localhost:3000/api';
+const API_KEY = process.env.GCONF_API_KEY;
+
+if (!API_KEY) {
+  console.error('GCONF_API_KEY is not set. Export it before running this script:');
+  console.error('  export GCONF_API_KEY=<your-key>');
+  process.exit(1);
+}
 
 const headers = {
   'Authorization': `Bearer ${API_KEY}`,

@@ -1,5 +1,20 @@
 import type { Member, Company, PersonSocials, CompanySocials } from './api-types';
 
+/**
+ * Serialise an object for inclusion inside an inline <script type="application/ld+json">.
+ *
+ * `JSON.stringify` does NOT escape `<`, `>` or `&`, which lets any CMS-controlled
+ * string containing a literal `</script>` close the surrounding tag and inject
+ * arbitrary HTML / JavaScript. Escaping those three characters to their `\uXXXX`
+ * forms is the standard React mitigation and is invisible to JSON parsers.
+ */
+export function jsonLdSafe(value: unknown): string {
+  return JSON.stringify(value)
+    .replace(/</g, '\\u003c')
+    .replace(/>/g, '\\u003e')
+    .replace(/&/g, '\\u0026');
+}
+
 function stripHtml(text: string): string {
   return text.replace(/<[^>]*>/g, '');
 }

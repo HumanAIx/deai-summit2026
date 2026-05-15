@@ -1,7 +1,9 @@
 import { NextResponse } from 'next/server';
 
 const EXTERNAL_API_URL = process.env.NEXT_PUBLIC_GCONF_API_URL || '';
-const API_KEY = process.env.NEXT_PUBLIC_GCONF_API_KEY || '';
+// SECURITY: prefer server-only GCONF_API_KEY. NEXT_PUBLIC_* is inlined into the
+// client bundle and must be rotated upstream. Fallback retained for migration.
+const API_KEY = process.env.GCONF_API_KEY || process.env.NEXT_PUBLIC_GCONF_API_KEY || '';
 const FORM_SLUG = 'get-in-touch';
 
 // Client keys (sent from ContactClient) mapped to the normalized labels we expect on the

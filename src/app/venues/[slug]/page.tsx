@@ -1,7 +1,7 @@
 import { notFound } from 'next/navigation';
 import type { Metadata } from 'next';
 import { prefetchVenueDetailPageData, prefetchNavigation, prefetchSocials, mapNavigationData } from '@/lib/prefetch';
-import { generateOrganizationSchema } from '@/lib/structured-data';
+import { generateOrganizationSchema, jsonLdSafe } from '@/lib/structured-data';
 import { SEO_DEFAULTS } from '@/lib/seo-defaults';
 import { VenueDetailClient } from '@/components/VenueDetailClient';
 
@@ -68,7 +68,7 @@ export default async function VenueDetailPage({ params }: { params: Promise<{ sl
       {finalSchema && (
         <script
           type="application/ld+json"
-          dangerouslySetInnerHTML={{ __html: JSON.stringify(finalSchema) }}
+          dangerouslySetInnerHTML={{ __html: jsonLdSafe(finalSchema) }}
         />
       )}
       <VenueDetailClient

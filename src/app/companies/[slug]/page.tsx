@@ -1,7 +1,7 @@
 import { notFound } from 'next/navigation';
 import type { Metadata } from 'next';
 import { prefetchCompanyDetailPageData, prefetchNavigation, prefetchSocials, mapNavigationData } from '@/lib/prefetch';
-import { generateOrganizationSchema } from '@/lib/structured-data';
+import { generateOrganizationSchema, jsonLdSafe } from '@/lib/structured-data';
 import { SEO_DEFAULTS } from '@/lib/seo-defaults';
 import { CompanyDetailClient } from '@/components/CompanyDetailClient';
 
@@ -68,7 +68,7 @@ export default async function CompanyDetailPage({ params }: { params: Promise<{ 
       {finalSchema && (
         <script
           type="application/ld+json"
-          dangerouslySetInnerHTML={{ __html: JSON.stringify(finalSchema) }}
+          dangerouslySetInnerHTML={{ __html: jsonLdSafe(finalSchema) }}
         />
       )}
       <CompanyDetailClient

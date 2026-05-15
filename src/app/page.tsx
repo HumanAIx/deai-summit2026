@@ -7,7 +7,7 @@ import {
 } from '@/lib/prefetch';
 import type { SocialLink } from '@/lib/prefetch';
 import { siteConfig } from '@/config/site';
-import { generateEventSchema } from '@/lib/structured-data';
+import { generateEventSchema, jsonLdSafe } from '@/lib/structured-data';
 import { extractHomeSections } from '@/lib/home-cms';
 import type { CMSBlock } from '@/lib/api-types';
 
@@ -135,7 +135,7 @@ export default async function Home() {
       {eventSchema && (
         <script
           type="application/ld+json"
-          dangerouslySetInnerHTML={{ __html: JSON.stringify(eventSchema) }}
+          dangerouslySetInnerHTML={{ __html: jsonLdSafe(eventSchema) }}
         />
       )}
       <LandingPage
