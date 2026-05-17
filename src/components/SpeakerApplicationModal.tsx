@@ -94,6 +94,14 @@ export const SpeakerApplicationModal: React.FC<SpeakerApplicationModalProps> = (
                             const result = await response.json();
 
                             if (response.ok) {
+                                  // ---- Reddit Pixel: Fire Lead event with email match key ----
+                                if (typeof window !== 'undefined' && (window as any).rdt) {
+                                (window as any).rdt('init', 'a2_j0va7jmob8u4', {
+                                    email: data.email as string,
+                                });
+                                (window as any).rdt('track', 'Lead');
+                                }
+                                // ---- End Reddit Pixel ----
                                 alert('Application submitted successfully!');
                                 handleClose();
                             } else {

@@ -181,11 +181,23 @@ export function ContactClient({ blocks, inquiryOptions, navigationData, navigati
         if (!isV3) {
           try { window.grecaptcha?.reset?.(captchaWidgetId.current ?? undefined); } catch {}
         }
+
+        // ---- Reddit Pixel: Fire Lead event with email match key ----
+        if (typeof window !== 'undefined' && (window as any).rdt) {
+          (window as any).rdt('init', 'a2_j0va7jmob8u4', {
+            email: data.email as string,
+          });
+          (window as any).rdt('track', 'Lead');
+        }
       } else {
         setStatus('error');
         setErrorMessage(result.error || 'Failed to send message. Please try again.');
         if (!isV3) {
-          try { window.grecaptcha?.reset?.(captchaWidgetId.current ?? undefined); } catch {}
+          try {
+            window.grecaptcha?.reset?.(captchaWidgetId.current ?? undefined);
+          } catch {
+            /* ignore */
+          }
         }
       }
     } catch {
