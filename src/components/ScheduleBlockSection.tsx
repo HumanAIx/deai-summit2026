@@ -1,7 +1,8 @@
 'use client';
 
-import React, { useEffect, useMemo, useState } from 'react';
+import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import { createPortal } from 'react-dom';
+import Link from 'next/link';
 import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
 
@@ -11,12 +12,34 @@ export interface ScheduleSpeaker {
   person_firstname?: string;
   person_surname?: string;
   person_photo?: string;
+  /** Hydrated by ep-api so the schedule can deep-link to /speakers/<slug> or /team/<slug>. */
+  person_slug?: string;
+  is_speaker?: boolean;
+  is_speaker_published?: boolean;
+  is_team_member?: boolean;
+  is_published?: boolean;
+}
+
+/**
+ * Decide which public profile (if any) a schedule speaker chip should link to.
+ * Prefers the /speakers route when the person is a speaker; falls back to /team
+ * when they're a team member; returns null when we can't safely link (no slug,
+ * unpublished, or person isn't surfaced on either listing).
+ */
+function speakerHref(s: ScheduleSpeaker): string | null {
+  const slug = s.person_slug?.trim();
+  if (!slug) return null;
+  if (s.is_published === false) return null;
+  if (s.is_speaker || s.is_speaker_published) return `/speakers/${slug}`;
+  if (s.is_team_member) return `/team/${slug}`;
+  return null;
 }
 
 export interface ScheduleAgendaItem {
   id: string;
   title: string;
-  description?: string;
+  description?: string | null;
+  short_description?: string | null;
   agenda_date?: string;
   start_time?: string;
   end_time?: string;
@@ -196,6 +219,33 @@ function enumerateDateRange(start?: string | null, end?: string | null): string[
   return out;
 }
 
+function formatDayLong(dateKey: string): string {
+  if (dateKey === 'unset') return 'Unscheduled';
+  const d = new Date(`${dateKey}T12:00:00`);
+  if (Number.isNaN(d.getTime())) return dateKey;
+  return d.toLocaleDateString('en-GB', {
+    weekday: 'long',
+    day: 'numeric',
+    month: 'long',
+    year: 'numeric',
+  });
+}
+
+function formatDateRange(start?: string | null, end?: string | null): string {
+  if (!start && !end) return '';
+  const s = start ? new Date(`${start}T12:00:00`) : null;
+  const e = end ? new Date(`${end}T12:00:00`) : null;
+  const fmt = (d: Date) =>
+    d.toLocaleDateString('en-GB', { day: 'numeric', month: 'long', year: 'numeric' });
+  if (s && e && !Number.isNaN(s.getTime()) && !Number.isNaN(e.getTime())) {
+    if (s.toDateString() === e.toDateString()) return fmt(s);
+    return `${fmt(s)} – ${fmt(e)}`;
+  }
+  if (s && !Number.isNaN(s.getTime())) return fmt(s);
+  if (e && !Number.isNaN(e.getTime())) return fmt(e);
+  return '';
+}
+
 /* ---------- markdown ---------- */
 
 function hasMarkdown(text: string): boolean {
@@ -253,16 +303,250 @@ function Markdown({
   );
 }
 
+/* ---------- expandable description ---------- */
+
+function ChevronDown({ open }: { open: boolean }) {
+  return (
+    <svg
+      width="12"
+      height="12"
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="2.4"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      aria-hidden="true"
+      className="transition-transform duration-300 ease-out"
+      style={{ transform: open ? 'rotate(180deg)' : 'rotate(0deg)' }}
+    >
+      <polyline points="6 9 12 15 18 9" />
+    </svg>
+  );
+}
+
+function DescriptionBlock({
+  short,
+  full,
+  tone,
+  className = '',
+  metaClass,
+}: {
+  short?: string | null;
+  full?: string | null;
+  tone: CardTone;
+  className?: string;
+  metaClass: string;
+}) {
+  const [expanded, setExpanded] = useState(false);
+  const s = (short ?? '').trim();
+  const f = (full ?? '').trim();
+  if (!s && !f) return null;
+  // Only one source available — render directly, no toggle.
+  if (!s || !f || s === f) {
+    return (
+      <div className={className}>
+        <Markdown source={s || f} tone={tone} />
+      </div>
+    );
+  }
+  // Both differ → short by default, full collapsible (still in DOM for SEO).
+  const transitionStyle: React.CSSProperties = {
+    transition: 'grid-template-rows 460ms cubic-bezier(0.4,0,0.2,1), opacity 360ms ease',
+  };
+  return (
+    <div className={className}>
+      <div
+        className="grid"
+        style={{
+          ...transitionStyle,
+          gridTemplateRows: expanded ? '0fr' : '1fr',
+          opacity: expanded ? 0 : 1,
+        }}
+        aria-hidden={expanded}
+      >
+        <div className="overflow-hidden min-h-0">
+          <Markdown source={s} tone={tone} />
+        </div>
+      </div>
+      <div
+        className="grid"
+        style={{
+          ...transitionStyle,
+          gridTemplateRows: expanded ? '1fr' : '0fr',
+          opacity: expanded ? 1 : 0,
+        }}
+        aria-hidden={!expanded}
+      >
+        <div className="overflow-hidden min-h-0">
+          <Markdown source={f} tone={tone} />
+        </div>
+      </div>
+      <button
+        type="button"
+        onClick={() => setExpanded((v) => !v)}
+        aria-expanded={expanded}
+        aria-label={expanded ? 'Show less' : 'Show more'}
+        className={`mt-3 inline-flex items-center gap-1.5 font-mono text-[10px] md:text-xs uppercase tracking-[0.22em] ${metaClass} hover:opacity-100 opacity-80 [transition:opacity_220ms_ease]`}
+      >
+        <span>{expanded ? 'Less' : 'More'}</span>
+        <ChevronDown open={expanded} />
+      </button>
+    </div>
+  );
+}
+
+/* ---------- bookmarks (localStorage) ---------- */
+
+type BookmarksAPI = {
+  bookmarks: Set<string>;
+  toggle: (id: string) => void;
+  has: (id: string) => boolean;
+  ready: boolean;
+};
+
+function useBookmarks(scheduleId: string | undefined): BookmarksAPI {
+  const storageKey = scheduleId ? `schedule:bookmarks:${scheduleId}` : null;
+  const [bookmarks, setBookmarks] = useState<Set<string>>(new Set());
+  const [ready, setReady] = useState(false);
+
+  useEffect(() => {
+    if (!storageKey || typeof window === 'undefined') {
+      setReady(true);
+      return;
+    }
+    try {
+      const raw = window.localStorage.getItem(storageKey);
+      if (raw) {
+        const parsed = JSON.parse(raw);
+        if (Array.isArray(parsed)) {
+          setBookmarks(new Set(parsed.filter((x): x is string => typeof x === 'string')));
+        }
+      }
+    } catch {
+      /* ignore corrupted JSON */
+    }
+    setReady(true);
+  }, [storageKey]);
+
+  // Stay in sync across tabs / windows for the same schedule.
+  useEffect(() => {
+    if (!storageKey || typeof window === 'undefined') return;
+    const onStorage = (e: StorageEvent) => {
+      if (e.key !== storageKey) return;
+      try {
+        const parsed = e.newValue ? JSON.parse(e.newValue) : [];
+        if (Array.isArray(parsed)) {
+          setBookmarks(new Set(parsed.filter((x): x is string => typeof x === 'string')));
+        } else {
+          setBookmarks(new Set());
+        }
+      } catch {
+        setBookmarks(new Set());
+      }
+    };
+    window.addEventListener('storage', onStorage);
+    return () => window.removeEventListener('storage', onStorage);
+  }, [storageKey]);
+
+  const toggle = useCallback(
+    (id: string) => {
+      setBookmarks((prev) => {
+        const next = new Set(prev);
+        if (next.has(id)) next.delete(id);
+        else next.add(id);
+        if (storageKey && typeof window !== 'undefined') {
+          try {
+            window.localStorage.setItem(storageKey, JSON.stringify(Array.from(next)));
+          } catch {
+            /* quota exceeded or storage disabled — ignore */
+          }
+        }
+        return next;
+      });
+    },
+    [storageKey],
+  );
+
+  const has = useCallback((id: string) => bookmarks.has(id), [bookmarks]);
+
+  return { bookmarks, toggle, has, ready };
+}
+
+const IconBookmark = ({ filled }: { filled: boolean }) => (
+  <svg
+    width="14"
+    height="14"
+    viewBox="0 0 24 24"
+    fill={filled ? 'currentColor' : 'none'}
+    stroke="currentColor"
+    strokeWidth="2"
+    strokeLinecap="round"
+    strokeLinejoin="round"
+    aria-hidden="true"
+  >
+    <path d="M19 21l-7-5-7 5V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z" />
+  </svg>
+);
+
+function BookmarkButton({
+  bookmarked,
+  onToggle,
+  tone,
+  size = 'md',
+}: {
+  bookmarked: boolean;
+  onToggle: () => void;
+  tone: CardTone;
+  size?: 'sm' | 'md';
+}) {
+  const dim = size === 'sm' ? 'w-7 h-7' : 'w-9 h-9';
+  const palette =
+    tone === 'light'
+      ? bookmarked
+        ? 'bg-[#050A1F] text-white border-[#050A1F] shadow-[0_4px_18px_-6px_rgba(5,10,31,0.5)]'
+        : 'bg-white/85 text-[#050A1F] border-[#050A1F]/15 hover:bg-white hover:border-[#050A1F]/30'
+      : bookmarked
+      ? 'bg-white text-[#050A1F] border-white shadow-[0_4px_18px_-6px_rgba(0,0,0,0.45)]'
+      : 'bg-white/15 text-white border-white/30 backdrop-blur-sm hover:bg-white/25 hover:border-white/45';
+  return (
+    <button
+      type="button"
+      onClick={(e) => {
+        e.preventDefault();
+        e.stopPropagation();
+        onToggle();
+      }}
+      aria-pressed={bookmarked}
+      aria-label={bookmarked ? 'Remove bookmark' : 'Bookmark this session'}
+      title={bookmarked ? 'Remove bookmark' : 'Bookmark this session'}
+      className={[
+        'inline-flex items-center justify-center rounded-full border',
+        dim,
+        '[transition:background-color_280ms_ease,border-color_280ms_ease,color_280ms_ease,transform_280ms_ease,box-shadow_280ms_ease]',
+        'hover:scale-[1.08] active:scale-95',
+        palette,
+      ].join(' ')}
+    >
+      <IconBookmark filled={bookmarked} />
+    </button>
+  );
+}
+
 /* ---------- session card ---------- */
 
 function SessionCard({
   item,
   index,
   density = 'comfortable',
+  bookmarked = false,
+  onToggleBookmark,
 }: {
   item: ScheduleAgendaItem;
   index: number;
   density?: 'comfortable' | 'compact';
+  bookmarked?: boolean;
+  onToggleBookmark?: (id: string) => void;
 }) {
   const color = getSessionColor(item);
   const surface = sessionCardSurface(color);
@@ -271,9 +555,14 @@ function SessionCard({
     density === 'compact'
       ? 'text-base md:text-lg'
       : 'text-xl md:text-2xl lg:text-[1.65rem]';
+  const stageReserveCls = onToggleBookmark
+    ? density === 'compact'
+      ? 'pr-9'
+      : 'pr-12 md:pr-14'
+    : '';
   return (
     <div
-      className="group relative h-full overflow-hidden rounded-sm border border-[#050A1F]/[0.08] shadow-[0_4px_40px_-12px_rgba(5,10,31,0.35)] ring-1 ring-black/[0.04] [transition:transform_480ms_cubic-bezier(0.4,0,0.2,1),box-shadow_480ms_cubic-bezier(0.4,0,0.2,1)] hover:-translate-y-0.5 hover:shadow-[0_12px_48px_-12px_rgba(5,10,31,0.45)]"
+      className="group relative h-full overflow-hidden rounded-[15px] border border-[#050A1F]/[0.08] shadow-[0_4px_40px_-12px_rgba(5,10,31,0.35)] ring-1 ring-black/[0.04] [transition:transform_480ms_cubic-bezier(0.4,0,0.2,1),box-shadow_480ms_cubic-bezier(0.4,0,0.2,1)] hover:-translate-y-0.5 hover:shadow-[0_12px_48px_-12px_rgba(5,10,31,0.45)]"
       style={{
         animation: `fadeInUp 0.55s cubic-bezier(0.4, 0, 0.2, 1) ${Math.min(index, 12) * 0.05}s both`,
         ...(surface.background ? { background: surface.background } : {}),
@@ -283,8 +572,24 @@ function SessionCard({
       {surface.overlayClass && (
         <div className={`pointer-events-none absolute inset-0 ${surface.overlayClass}`} />
       )}
+      {onToggleBookmark && (
+        <div
+          className={`absolute z-[3] ${
+            density === 'compact' ? 'top-2.5 right-2.5' : 'top-4 right-4 md:top-5 md:right-5'
+          } schedule-bookmark-control`}
+        >
+          <BookmarkButton
+            bookmarked={bookmarked}
+            onToggle={() => onToggleBookmark(item.id)}
+            tone={surface.tone}
+            size={density === 'compact' ? 'sm' : 'md'}
+          />
+        </div>
+      )}
       <div className={`relative z-[1] ${padding}`}>
-        <div className="flex flex-wrap gap-3 items-start justify-between gap-y-2 border-b border-current/10 pb-3 mb-3 md:pb-5 md:mb-5">
+        <div
+          className={`flex flex-wrap gap-3 items-start justify-between gap-y-2 border-b border-current/10 pb-3 mb-3 md:pb-5 md:mb-5 ${stageReserveCls}`}
+        >
           <div className={`font-mono text-xs md:text-sm tracking-wide ${surface.metaClass}`}>
             <span className="font-semibold tabular-nums">
               {formatTime(item.start_time)} – {formatTime(item.end_time)}
@@ -303,10 +608,12 @@ function SessionCard({
         >
           {item.title}
         </h3>
-        {density !== 'compact' && item.description && (
-          <Markdown
-            source={item.description}
+        {density !== 'compact' && (item.description || item.short_description) && (
+          <DescriptionBlock
+            short={item.short_description}
+            full={item.description}
             tone={surface.tone}
+            metaClass={surface.metaClass}
             className={`mt-3 md:mt-4 text-sm md:text-base leading-relaxed max-w-4xl ${surface.metaClass}`}
           />
         )}
@@ -318,12 +625,11 @@ function SessionCard({
         {item.speakers && item.speakers.length > 0 && (
           <div className={`flex flex-wrap gap-3 ${density === 'compact' ? 'mt-3' : 'mt-6'}`}>
             {item.speakers.map((s) => {
-              const photoSize = density === 'compact' ? 'w-[72px] h-[72px]' : 'w-[108px] h-[108px]';
-              return (
-                <div
-                  key={s.id}
-                  className={`flex items-center gap-3 rounded-full py-2 pl-2 pr-5 border ${surface.chipClass}`}
-                >
+              const photoSize = density === 'compact' ? 'w-[50px] h-[50px]' : 'w-[76px] h-[76px]';
+              const fullName = [s.person_firstname, s.person_surname].filter(Boolean).join(' ');
+              const href = speakerHref(s);
+              const chipInner = (
+                <>
                   {s.person_photo && (
                     // eslint-disable-next-line @next/next/no-img-element
                     <img
@@ -333,9 +639,27 @@ function SessionCard({
                     />
                   )}
                   <span className={`text-sm md:text-base font-medium ${surface.textClass}`}>
-                    {[s.person_firstname, s.person_surname].filter(Boolean).join(' ')}
+                    {fullName}
                     {s.role ? ` · ${s.role}` : ''}
                   </span>
+                </>
+              );
+              const baseChipCls = `flex items-center gap-3 rounded-full py-2 pl-2 pr-5 border ${surface.chipClass}`;
+              if (href) {
+                return (
+                  <Link
+                    key={s.id}
+                    href={href}
+                    aria-label={fullName ? `View profile of ${fullName}` : 'View profile'}
+                    className={`${baseChipCls} cursor-pointer [transition:transform_280ms_ease,box-shadow_280ms_ease,background-color_280ms_ease] hover:scale-[1.02] hover:shadow-[0_4px_18px_-6px_rgba(0,0,0,0.35)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-cyan/70`}
+                  >
+                    {chipInner}
+                  </Link>
+                );
+              }
+              return (
+                <div key={s.id} className={baseChipCls}>
+                  {chipInner}
                 </div>
               );
             })}
@@ -348,7 +672,13 @@ function SessionCard({
 
 /* ---------- view: list ---------- */
 
-function ListView({ items }: { items: ScheduleAgendaItem[] }) {
+interface ViewProps {
+  items: ScheduleAgendaItem[];
+  bookmarks?: Set<string>;
+  onToggleBookmark?: (id: string) => void;
+}
+
+function ListView({ items, bookmarks, onToggleBookmark }: ViewProps) {
   if (items.length === 0) {
     return (
       <p className="text-center py-16 text-[#050A1F]/45 font-mono text-sm uppercase tracking-widest">
@@ -360,7 +690,12 @@ function ListView({ items }: { items: ScheduleAgendaItem[] }) {
     <ul className="flex flex-col gap-4 md:gap-5">
       {items.map((item, i) => (
         <li key={item.id}>
-          <SessionCard item={item} index={i} />
+          <SessionCard
+            item={item}
+            index={i}
+            bookmarked={bookmarks?.has(item.id) ?? false}
+            onToggleBookmark={onToggleBookmark}
+          />
         </li>
       ))}
     </ul>
@@ -369,7 +704,7 @@ function ListView({ items }: { items: ScheduleAgendaItem[] }) {
 
 /* ---------- view: grid (2-column with time gutter) ---------- */
 
-function GridView({ items }: { items: ScheduleAgendaItem[] }) {
+function GridView({ items, bookmarks, onToggleBookmark }: ViewProps) {
   if (items.length === 0) {
     return (
       <p className="text-center py-16 text-[#050A1F]/45 font-mono text-sm uppercase tracking-widest">
@@ -397,7 +732,13 @@ function GridView({ items }: { items: ScheduleAgendaItem[] }) {
           </div>
           <div className="grid gap-4 md:gap-5 md:grid-cols-2">
             {group.items.map((item, i) => (
-              <SessionCard key={item.id} item={item} index={gi + i} />
+              <SessionCard
+                key={item.id}
+                item={item}
+                index={gi + i}
+                bookmarked={bookmarks?.has(item.id) ?? false}
+                onToggleBookmark={onToggleBookmark}
+              />
             ))}
           </div>
         </div>
@@ -453,7 +794,7 @@ function formatSlotLabel(min: number): string {
   return `${String(h).padStart(2, '0')}:${String(m).padStart(2, '0')}`;
 }
 
-function TimetableView({ items }: { items: ScheduleAgendaItem[] }) {
+function TimetableView({ items, bookmarks, onToggleBookmark }: ViewProps) {
   const model = useMemo(() => buildTimetable(items), [items]);
   if (!model || items.length === 0) {
     return (
@@ -532,7 +873,13 @@ function TimetableView({ items }: { items: ScheduleAgendaItem[] }) {
                 padding: '2px',
               }}
             >
-              <SessionCard item={item} index={i} density="compact" />
+              <SessionCard
+                item={item}
+                index={i}
+                density="compact"
+                bookmarked={bookmarks?.has(item.id) ?? false}
+                onToggleBookmark={onToggleBookmark}
+              />
             </div>
           );
         })}
@@ -582,17 +929,78 @@ function IconBtn({
   );
 }
 
+function BookmarkPill({
+  active,
+  count,
+  onClick,
+  tone,
+}: {
+  active: boolean;
+  count: number;
+  onClick: () => void;
+  tone: 'dark' | 'light';
+}) {
+  const palette =
+    tone === 'light'
+      ? active
+        ? 'bg-[#050A1F] text-white border-[#050A1F] shadow-[0_6px_24px_-10px_rgba(5,10,31,0.6)]'
+        : 'bg-white/75 text-[#050A1F] border-[#050A1F]/15 hover:bg-white hover:border-[#050A1F]/30'
+      : active
+      ? 'bg-white text-[#050A1F] border-white shadow-[0_6px_24px_-10px_rgba(0,0,0,0.6)]'
+      : 'bg-white/[0.06] text-white/85 border-white/15 hover:bg-white/[0.12] hover:border-white/30';
+  const badgePalette =
+    tone === 'light'
+      ? active
+        ? 'bg-white/95 text-[#050A1F]'
+        : 'bg-[#050A1F] text-white'
+      : active
+      ? 'bg-[#050A1F] text-white'
+      : 'bg-white/90 text-[#050A1F]';
+  return (
+    <button
+      type="button"
+      onClick={onClick}
+      aria-pressed={active}
+      title={active ? 'Show all sessions' : 'Show only my bookmarks'}
+      className={[
+        'inline-flex items-center gap-2 h-9 md:h-10 px-3 md:px-3.5 rounded-sm border font-mono uppercase tracking-[0.2em] text-[10px] md:text-[11px]',
+        '[transition:background-color_280ms_ease,border-color_280ms_ease,color_280ms_ease,box-shadow_280ms_ease]',
+        palette,
+      ].join(' ')}
+    >
+      <IconBookmark filled={active} />
+      <span className="hidden md:inline">My Bookmarks</span>
+      <span className="md:hidden">Saved</span>
+      {count > 0 && (
+        <span
+          className={`ml-0.5 inline-flex items-center justify-center min-w-[18px] h-[18px] px-1 rounded-full text-[10px] tabular-nums font-semibold tracking-normal ${badgePalette}`}
+        >
+          {count}
+        </span>
+      )}
+    </button>
+  );
+}
+
 function Toolbar({
   viewMode,
   onViewMode,
   fullscreen,
   onToggleFullscreen,
+  onPrint,
+  bookmarksOnly,
+  onToggleBookmarksOnly,
+  bookmarkCount,
   tone = 'light',
 }: {
   viewMode: ViewMode;
   onViewMode: (m: ViewMode) => void;
   fullscreen: boolean;
   onToggleFullscreen: () => void;
+  onPrint?: () => void;
+  bookmarksOnly?: boolean;
+  onToggleBookmarksOnly?: () => void;
+  bookmarkCount?: number;
   tone?: 'dark' | 'light';
 }) {
   const groupClass =
@@ -600,7 +1008,15 @@ function Toolbar({
       ? 'flex items-center gap-1 rounded-sm border border-[#050A1F]/10 bg-white/60 p-1'
       : 'flex items-center gap-1 rounded-sm border border-white/10 bg-white/[0.04] p-1';
   return (
-    <div className="flex items-center gap-2">
+    <div className="flex items-center gap-2 flex-wrap">
+      {onToggleBookmarksOnly && (
+        <BookmarkPill
+          active={!!bookmarksOnly}
+          count={bookmarkCount ?? 0}
+          onClick={onToggleBookmarksOnly}
+          tone={tone}
+        />
+      )}
       <div className={`hidden sm:flex ${groupClass}`}>
         <IconBtn tone={tone} active={viewMode === 'list'} onClick={() => onViewMode('list')} title="List view">
           <IconList />
@@ -620,6 +1036,11 @@ function Toolbar({
       >
         {fullscreen ? <IconCompress /> : <IconExpand />}
       </IconBtn>
+      {onPrint && (
+        <IconBtn tone={tone} onClick={onPrint} title="Print schedule">
+          <IconPrint />
+        </IconBtn>
+      )}
     </div>
   );
 }
@@ -667,6 +1088,13 @@ const IconCompress = () => (
     <line x1="3" y1="21" x2="10" y2="14" />
   </svg>
 );
+const IconPrint = () => (
+  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+    <polyline points="6 9 6 2 18 2 18 9" />
+    <path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2" />
+    <rect x="6" y="14" width="12" height="8" />
+  </svg>
+);
 
 /* ---------- main component ---------- */
 
@@ -694,6 +1122,9 @@ export function ScheduleBlockSection({
   const [viewMode, setViewMode] = useState<ViewMode>('list');
   const [fullscreen, setFullscreen] = useState(false);
   const [mounted, setMounted] = useState(false);
+  const [bookmarksOnly, setBookmarksOnly] = useState(false);
+
+  const { bookmarks, toggle: toggleBookmark } = useBookmarks(schedule?.id);
 
   useEffect(() => {
     setMounted(true);
@@ -704,6 +1135,33 @@ export function ScheduleBlockSection({
       setActiveDate(dates[0]);
     }
   }, [dates, activeDate]);
+
+  // Count bookmarks that map to a real session on this schedule (filters stale IDs).
+  const totalBookmarksOnSchedule = useMemo(() => {
+    if (!schedule || bookmarks.size === 0) return 0;
+    let n = 0;
+    for (const dayItems of Object.values(schedule.agenda_items_by_date ?? {})) {
+      for (const it of dayItems) {
+        if (bookmarks.has(it.id)) n += 1;
+      }
+    }
+    return n;
+  }, [schedule, bookmarks]);
+
+  // When the bookmarks filter is on, jump to a day that actually has bookmarks
+  // so the user doesn't land on an empty tab.
+  useEffect(() => {
+    if (!bookmarksOnly || !schedule || dates.length === 0) return;
+    const items = activeDate ? schedule.agenda_items_by_date?.[activeDate] ?? [] : [];
+    if (items.some((it) => bookmarks.has(it.id))) return;
+    for (const d of dates) {
+      const dayItems = schedule.agenda_items_by_date?.[d] ?? [];
+      if (dayItems.some((it) => bookmarks.has(it.id))) {
+        setActiveDate(d);
+        return;
+      }
+    }
+  }, [bookmarksOnly, schedule, activeDate, bookmarks, dates]);
 
   // Lock body scroll & support ESC while fullscreen
   useEffect(() => {
@@ -723,10 +1181,75 @@ export function ScheduleBlockSection({
   const sortedItems = useMemo(() => {
     if (!activeDate) return [] as ScheduleAgendaItem[];
     const raw = schedule?.agenda_items_by_date?.[activeDate] ?? [];
-    return [...raw].sort(compareItems);
-  }, [schedule, activeDate]);
+    let list = [...raw].sort(compareItems);
+    if (bookmarksOnly) {
+      list = list.filter((it) => bookmarks.has(it.id));
+    }
+    return list;
+  }, [schedule, activeDate, bookmarksOnly, bookmarks]);
+
+  const handlePrint = () => {
+    if (typeof window !== 'undefined') window.print();
+  };
 
   if (!schedule || dates.length === 0) return null;
+
+  const containerCls = fullscreen
+    ? 'w-full px-4 sm:px-6 md:px-10'
+    : 'max-w-[1400px] mx-auto px-6';
+
+  const tabsInner = (
+    <>
+      <p className="hidden sm:block text-[10px] font-mono uppercase tracking-[0.35em] text-white/40 mb-3 pl-1">
+        Programme days
+      </p>
+      <div className="flex gap-2 md:gap-3 overflow-x-auto px-2 py-2 -mx-2 [scrollbar-width:thin]">
+        {dates.map((d) => {
+          const { line1, line2 } = formatDayTab(d);
+          const active = activeDate === d;
+          const sizeCls = fullscreen
+            ? 'min-w-[132px] sm:min-w-[148px] md:min-w-[168px] px-3 py-2.5 md:py-3'
+            : 'min-w-[108px] sm:min-w-[132px] md:flex-1 px-3 py-3 md:py-4';
+          const line1Cls = fullscreen
+            ? 'block font-display text-base md:text-lg font-semibold tracking-wide'
+            : 'block font-display text-lg md:text-xl font-semibold tracking-wide';
+          return (
+            <button
+              key={d}
+              type="button"
+              onClick={() => setActiveDate(d)}
+              className={[
+                'group flex-shrink-0 text-center rounded-[15px] border',
+                sizeCls,
+                '[transition:background-color_420ms_cubic-bezier(0.4,0,0.2,1),border-color_420ms_cubic-bezier(0.4,0,0.2,1),transform_420ms_cubic-bezier(0.4,0,0.2,1),box-shadow_420ms_cubic-bezier(0.4,0,0.2,1)]',
+                active
+                  ? 'bg-white/[0.09] border-brand-cyan/55 shadow-[0_0_0_1px_rgba(0,176,194,0.25),inset_0_1px_0_rgba(255,255,255,0.08)] scale-[1.02] z-10'
+                  : 'bg-white/[0.03] border-white/[0.08] hover:bg-white/[0.06] hover:border-white/15',
+              ].join(' ')}
+              aria-pressed={active}
+            >
+              <span
+                className={`${line1Cls} ${
+                  active ? 'text-white' : 'text-white/80 group-hover:text-white'
+                } [transition:color_380ms_cubic-bezier(0.4,0,0.2,1)]`}
+              >
+                {line1}
+              </span>
+              {line2 && (
+                <span
+                  className={`mt-1 block text-[10px] md:text-xs font-mono uppercase tracking-widest ${
+                    active ? 'text-brand-cyan/95' : 'text-white/45 group-hover:text-white/55'
+                  } [transition:color_380ms_cubic-bezier(0.4,0,0.2,1)]`}
+                >
+                  {line2}
+                </span>
+              )}
+            </button>
+          );
+        })}
+      </div>
+    </>
+  );
 
   const dayBar = (
     <div
@@ -734,56 +1257,20 @@ export function ScheduleBlockSection({
       style={{ transition: 'box-shadow 480ms cubic-bezier(0.4, 0, 0.2, 1)' }}
     >
       <div className="absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-brand-cyan/35 to-transparent" />
-      <div className="max-w-[1400px] mx-auto px-4 sm:px-6 py-4 md:py-5">
-        <p className="hidden sm:block text-[10px] font-mono uppercase tracking-[0.35em] text-white/40 mb-3 pl-1">
-          Programme days
-        </p>
-        <div className="flex gap-2 md:gap-3 overflow-x-auto pb-1 [scrollbar-width:thin]">
-          {dates.map((d) => {
-            const { line1, line2 } = formatDayTab(d);
-            const active = activeDate === d;
-            return (
-              <button
-                key={d}
-                type="button"
-                onClick={() => setActiveDate(d)}
-                className={[
-                  'group flex-shrink-0 min-w-[108px] sm:min-w-[132px] md:flex-1 text-center rounded-sm border px-3 py-3 md:py-4',
-                  '[transition:background-color_420ms_cubic-bezier(0.4,0,0.2,1),border-color_420ms_cubic-bezier(0.4,0,0.2,1),transform_420ms_cubic-bezier(0.4,0,0.2,1),box-shadow_420ms_cubic-bezier(0.4,0,0.2,1)]',
-                  active
-                    ? 'bg-white/[0.09] border-brand-cyan/55 shadow-[0_0_0_1px_rgba(0,176,194,0.25),inset_0_1px_0_rgba(255,255,255,0.08)] scale-[1.02] z-10'
-                    : 'bg-white/[0.03] border-white/[0.08] hover:bg-white/[0.06] hover:border-white/15',
-                ].join(' ')}
-                aria-pressed={active}
-              >
-                <span
-                  className={`block font-display text-lg md:text-xl font-semibold tracking-wide ${
-                    active ? 'text-white' : 'text-white/80 group-hover:text-white'
-                  } [transition:color_380ms_cubic-bezier(0.4,0,0.2,1)]`}
-                >
-                  {line1}
-                </span>
-                {line2 && (
-                  <span
-                    className={`mt-1 block text-[10px] md:text-xs font-mono uppercase tracking-widest ${
-                      active ? 'text-brand-cyan/95' : 'text-white/45 group-hover:text-white/55'
-                    } [transition:color_380ms_cubic-bezier(0.4,0,0.2,1)]`}
-                  >
-                    {line2}
-                  </span>
-                )}
-              </button>
-            );
-          })}
+      {fullscreen ? (
+        <div className={`${containerCls} py-4 md:py-5`}>{tabsInner}</div>
+      ) : (
+        <div className="max-w-[1400px] mx-auto px-6">
+          <div className="max-w-[1400px] mx-auto px-6 py-4 md:py-5">{tabsInner}</div>
         </div>
-      </div>
+      )}
       <div className="absolute inset-x-0 bottom-0 h-px bg-gradient-to-r from-transparent via-white/10 to-transparent" />
     </div>
   );
 
   const headingText = title || 'Schedule';
   const intro = (
-    <div className="max-w-[1400px] mx-auto px-6 mb-10 md:mb-14">
+    <div className={`${containerCls} mb-10 md:mb-14`}>
       <div className="flex flex-wrap items-end justify-between gap-x-6 gap-y-4">
         <div className="min-w-0">
           {subtitle && (
@@ -805,6 +1292,10 @@ export function ScheduleBlockSection({
             onViewMode={setViewMode}
             fullscreen={fullscreen}
             onToggleFullscreen={() => setFullscreen((v) => !v)}
+            onPrint={handlePrint}
+            bookmarksOnly={bookmarksOnly}
+            onToggleBookmarksOnly={() => setBookmarksOnly((v) => !v)}
+            bookmarkCount={totalBookmarksOnSchedule}
           />
         </div>
       </div>
@@ -816,11 +1307,97 @@ export function ScheduleBlockSection({
     </div>
   );
 
+  const showFilterEmpty = bookmarksOnly && sortedItems.length === 0;
   const body = (
-    <div key={`${activeDate ?? 'none'}-${viewMode}`} className="max-w-[1400px] mx-auto px-6">
-      {viewMode === 'list' && <ListView items={sortedItems} />}
-      {viewMode === 'grid' && <GridView items={sortedItems} />}
-      {viewMode === 'timetable' && <TimetableView items={sortedItems} />}
+    <div
+      key={`${activeDate ?? 'none'}-${viewMode}-${bookmarksOnly ? 'b' : 'a'}`}
+      className={containerCls}
+    >
+      {bookmarksOnly && (
+        <div className="mb-5 md:mb-6 flex flex-wrap items-center justify-between gap-3 rounded-[15px] border border-[#050A1F]/10 bg-white/70 backdrop-blur-sm px-4 py-3 md:px-5 md:py-4">
+          <div className="flex items-center gap-3 min-w-0">
+            <span className="inline-flex items-center justify-center w-9 h-9 rounded-full bg-[#050A1F] text-white flex-shrink-0">
+              <IconBookmark filled />
+            </span>
+            <div className="min-w-0">
+              <p className="font-display font-semibold text-[#050A1F] text-sm md:text-base leading-tight">
+                {totalBookmarksOnSchedule > 0
+                  ? `Showing your bookmarked sessions (${totalBookmarksOnSchedule})`
+                  : 'Showing your bookmarked sessions'}
+              </p>
+              <p className="text-[11px] md:text-xs text-[#050A1F]/60 mt-0.5">
+                Saved locally on this device · tap the bookmark on any session to add or remove
+              </p>
+            </div>
+          </div>
+          <button
+            type="button"
+            onClick={() => setBookmarksOnly(false)}
+            className="font-mono text-[10px] md:text-xs uppercase tracking-[0.22em] text-[#050A1F]/70 hover:text-[#050A1F] underline underline-offset-[5px] [transition:color_220ms_ease]"
+          >
+            Show all sessions
+          </button>
+        </div>
+      )}
+      {showFilterEmpty ? (
+        <div className="py-16 md:py-20 text-center max-w-xl mx-auto">
+          <div className="mx-auto inline-flex items-center justify-center w-14 h-14 md:w-16 md:h-16 rounded-full bg-[#050A1F]/[0.06] text-[#050A1F]/55 mb-5">
+            <svg
+              width="22"
+              height="22"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              strokeWidth="1.6"
+              strokeLinecap="round"
+              strokeLinejoin="round"
+            >
+              <path d="M19 21l-7-5-7 5V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z" />
+            </svg>
+          </div>
+          <h3 className="font-display font-semibold text-xl md:text-2xl text-[#050A1F] tracking-tight">
+            {totalBookmarksOnSchedule > 0
+              ? 'No bookmarks on this day'
+              : 'No bookmarks yet'}
+          </h3>
+          <p className="mt-3 text-[#050A1F]/65 text-sm md:text-base leading-relaxed">
+            {totalBookmarksOnSchedule > 0
+              ? 'You have bookmarks on other days. Try switching tabs above.'
+              : 'Tap the bookmark icon on any session to save it here for later. Bookmarks are stored on this device only.'}
+          </p>
+          <button
+            type="button"
+            onClick={() => setBookmarksOnly(false)}
+            className="mt-6 inline-flex items-center gap-2 px-4 py-2.5 rounded-sm border border-[#050A1F]/15 bg-white/80 hover:bg-white hover:border-[#050A1F]/30 font-mono uppercase tracking-[0.22em] text-[11px] text-[#050A1F]/80 hover:text-[#050A1F] [transition:all_240ms_ease]"
+          >
+            Browse full programme
+          </button>
+        </div>
+      ) : (
+        <>
+          {viewMode === 'list' && (
+            <ListView
+              items={sortedItems}
+              bookmarks={bookmarks}
+              onToggleBookmark={toggleBookmark}
+            />
+          )}
+          {viewMode === 'grid' && (
+            <GridView
+              items={sortedItems}
+              bookmarks={bookmarks}
+              onToggleBookmark={toggleBookmark}
+            />
+          )}
+          {viewMode === 'timetable' && (
+            <TimetableView
+              items={sortedItems}
+              bookmarks={bookmarks}
+              onToggleBookmark={toggleBookmark}
+            />
+          )}
+        </>
+      )}
     </div>
   );
 
@@ -832,11 +1409,128 @@ export function ScheduleBlockSection({
     </div>
   );
 
-  if (!fullscreen) return inFlow;
+  const printNode = (
+    <div className="schedule-print-portal" aria-hidden="true">
+      <header className="schedule-print-header">
+        {/* eslint-disable-next-line @next/next/no-img-element */}
+        <img src="/icontransparent.png" alt="" />
+        <div className="schedule-print-header-text">
+          <h1>{schedule.name || headingText}</h1>
+          <p>{formatDateRange(schedule.start_date, schedule.end_date) || 'Programme'}</p>
+          {bookmarksOnly && totalBookmarksOnSchedule > 0 && (
+            <p className="schedule-print-filter-note">
+              My bookmarks · {totalBookmarksOnSchedule} session
+              {totalBookmarksOnSchedule === 1 ? '' : 's'}
+            </p>
+          )}
+        </div>
+      </header>
+
+      {dates
+        .map((dateKey) => {
+          let dayItems = [
+            ...(schedule.agenda_items_by_date?.[dateKey] ?? []),
+          ].sort(compareItems);
+          if (bookmarksOnly) {
+            dayItems = dayItems.filter((it) => bookmarks.has(it.id));
+          }
+          return { dateKey, dayItems };
+        })
+        .filter(({ dayItems }) => !bookmarksOnly || dayItems.length > 0)
+        .map(({ dateKey, dayItems }) => {
+        return (
+          <section className="schedule-print-day" key={`print-${dateKey}`}>
+            <h2 className="schedule-print-day-title">{formatDayLong(dateKey)}</h2>
+            {dayItems.length === 0 ? (
+              <p className="schedule-print-empty">No sessions scheduled.</p>
+            ) : (
+              <ul className="schedule-print-sessions">
+                {dayItems.map((item) => {
+                  const timeRange = [formatTime(item.start_time), formatTime(item.end_time)]
+                    .filter(Boolean)
+                    .join(' – ');
+                  const meta = [item.stage_name, item.company_name].filter(Boolean).join(' · ');
+                  const desc = item.description || item.short_description || '';
+                  const speakers = (item.speakers ?? []).filter(
+                    (s) => s.person_firstname || s.person_surname,
+                  );
+                  return (
+                    <li className="schedule-print-session" key={`print-${item.id}`}>
+                      <div className="schedule-print-time">{timeRange || '—'}</div>
+                      <div className="schedule-print-body">
+                        <h3 className="schedule-print-title">{item.title}</h3>
+                        {meta && <p className="schedule-print-meta">{meta}</p>}
+                        {desc && (
+                          <div className="schedule-print-description">
+                            <ReactMarkdown remarkPlugins={[remarkGfm]}>{desc}</ReactMarkdown>
+                          </div>
+                        )}
+                        {speakers.length > 0 && (
+                          <ul className="schedule-print-speakers">
+                            {speakers.map((s) => {
+                              const name = [s.person_firstname, s.person_surname]
+                                .filter(Boolean)
+                                .join(' ');
+                              return (
+                                <li key={s.id}>
+                                  <span className="schedule-print-speaker-name">{name}</span>
+                                  {s.role && (
+                                    <span className="schedule-print-speaker-role"> — {s.role}</span>
+                                  )}
+                                </li>
+                              );
+                            })}
+                          </ul>
+                        )}
+                      </div>
+                    </li>
+                  );
+                })}
+              </ul>
+            )}
+          </section>
+        );
+      })}
+
+      <footer className="schedule-print-footer">
+        <span>{schedule.name || headingText}</span>
+        <span>Printed from deaisummit.org</span>
+      </footer>
+    </div>
+  );
+
+  if (!fullscreen) {
+    return (
+      <>
+        {inFlow}
+        {mounted && createPortal(printNode, document.body)}
+      </>
+    );
+  }
+
+  const brandHeader = (
+    <div className="bg-[#050A1F] border-b border-white/10">
+      <div className={`${containerCls} flex items-center gap-3 py-3`}>
+        {/* eslint-disable-next-line @next/next/no-img-element */}
+        <img
+          src="/icontransparent.png"
+          alt={schedule.name || 'Event logo'}
+          className="w-8 h-8 object-contain flex-shrink-0"
+        />
+        <span className="text-white font-display font-semibold text-base md:text-lg tracking-tight">
+          {schedule.name || headingText}
+        </span>
+        <span className="ml-3 hidden sm:block text-[10px] font-mono uppercase tracking-[0.32em] text-white/40">
+          Programme
+        </span>
+      </div>
+    </div>
+  );
 
   const fsContent = (
     <div className="fixed inset-0 z-[10001] overflow-y-auto bg-gradient-to-b from-[#EAE7E2] via-[#F2F0EC] to-[#E8E5E0]">
       <div className="min-h-full pb-20">
+        {brandHeader}
         <div className="mb-10 md:mb-14">{dayBar}</div>
         {intro}
         {body}
@@ -849,6 +1543,7 @@ export function ScheduleBlockSection({
       {/* Keep a placeholder so the page below doesn't reflow when going fullscreen */}
       <div className="mb-20 md:mb-28" aria-hidden="true" />
       {mounted && createPortal(fsContent, document.body)}
+      {mounted && createPortal(printNode, document.body)}
     </>
   );
 }
