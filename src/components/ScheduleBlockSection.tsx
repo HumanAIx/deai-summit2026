@@ -22,16 +22,18 @@ export interface ScheduleSpeaker {
 
 /**
  * Decide which public profile (if any) a schedule speaker chip should link to.
- * Prefers the /speakers route when the person is a speaker; falls back to /team
- * when they're a team member; returns null when we can't safely link (no slug,
- * unpublished, or person isn't surfaced on either listing).
+ *
+ * Precedence is team-first per product intent: a person flagged as a team member
+ * always routes to /team/<slug>, even if they're also speaking at this event.
+ * Pure speakers route to /speakers/<slug>. Returns null when we can't safely
+ * link (no slug, unpublished, or person isn't surfaced on either listing).
  */
 function speakerHref(s: ScheduleSpeaker): string | null {
   const slug = s.person_slug?.trim();
   if (!slug) return null;
   if (s.is_published === false) return null;
-  if (s.is_speaker || s.is_speaker_published) return `/speakers/${slug}`;
   if (s.is_team_member) return `/team/${slug}`;
+  if (s.is_speaker || s.is_speaker_published) return `/speakers/${slug}`;
   return null;
 }
 
@@ -670,6 +672,46 @@ function SessionCard({
   );
 }
 
+/* ---------- shared empty state ---------- */
+
+function EmptyDayState() {
+  return (
+    <div className="flex flex-col items-center justify-center text-center py-20 md:py-24 px-6">
+      <div
+        aria-hidden="true"
+        className="relative mb-5 inline-flex items-center justify-center w-16 h-16 md:w-[72px] md:h-[72px] rounded-full bg-[#050A1F]/[0.04] ring-1 ring-[#050A1F]/10"
+      >
+        {/* Calendar with a dashed crossing line — reads as "empty / nothing planned" */}
+        <svg
+          width="32"
+          height="32"
+          viewBox="0 0 24 24"
+          fill="none"
+          stroke="currentColor"
+          strokeWidth="1.6"
+          strokeLinecap="round"
+          strokeLinejoin="round"
+          className="text-[#050A1F]/45"
+        >
+          <rect x="3.5" y="5" width="17" height="15" rx="2.2" />
+          <line x1="3.5" y1="9.5" x2="20.5" y2="9.5" />
+          <line x1="8" y1="3" x2="8" y2="6" />
+          <line x1="16" y1="3" x2="16" y2="6" />
+          {/* Subtle empty-row marks inside the calendar body */}
+          <line x1="7" y1="14" x2="13" y2="14" strokeDasharray="1.5 2" opacity="0.55" />
+          <line x1="7" y1="17" x2="11" y2="17" strokeDasharray="1.5 2" opacity="0.35" />
+        </svg>
+      </div>
+      <p className="font-display text-base md:text-lg font-semibold text-[#050A1F]/70">
+        No sessions scheduled
+      </p>
+      <p className="mt-1.5 max-w-sm text-sm leading-relaxed text-[#050A1F]/45 font-light">
+        Nothing planned for this day yet. Check back closer to the event — the programme is still being finalised.
+      </p>
+    </div>
+  );
+}
+
 /* ---------- view: list ---------- */
 
 interface ViewProps {
@@ -680,11 +722,7 @@ interface ViewProps {
 
 function ListView({ items, bookmarks, onToggleBookmark }: ViewProps) {
   if (items.length === 0) {
-    return (
-      <p className="text-center py-16 text-[#050A1F]/45 font-mono text-sm uppercase tracking-widest">
-        No sessions for this day
-      </p>
-    );
+    return <EmptyDayState />;
   }
   return (
     <ul className="flex flex-col gap-4 md:gap-5">
@@ -706,11 +744,7 @@ function ListView({ items, bookmarks, onToggleBookmark }: ViewProps) {
 
 function GridView({ items, bookmarks, onToggleBookmark }: ViewProps) {
   if (items.length === 0) {
-    return (
-      <p className="text-center py-16 text-[#050A1F]/45 font-mono text-sm uppercase tracking-widest">
-        No sessions for this day
-      </p>
-    );
+    return <EmptyDayState />;
   }
   const groups = groupByStartTime(items);
   return (
@@ -797,11 +831,7 @@ function formatSlotLabel(min: number): string {
 function TimetableView({ items, bookmarks, onToggleBookmark }: ViewProps) {
   const model = useMemo(() => buildTimetable(items), [items]);
   if (!model || items.length === 0) {
-    return (
-      <p className="text-center py-16 text-[#050A1F]/45 font-mono text-sm uppercase tracking-widest">
-        No sessions for this day
-      </p>
-    );
+    return <EmptyDayState />;
   }
   const ROW_HEIGHT = 56;
   const TIME_COL = 96;
@@ -1200,19 +1230,17 @@ export function ScheduleBlockSection({
 
   const tabsInner = (
     <>
-      <p className="hidden sm:block text-[10px] font-mono uppercase tracking-[0.35em] text-white/40 mb-3 pl-1">
+      <p className="hidden sm:block text-center text-[10px] font-mono uppercase tracking-[0.35em] text-white/40 mb-3">
         Programme days
       </p>
-      <div className="flex gap-2 md:gap-3 overflow-x-auto px-2 py-2 -mx-2 [scrollbar-width:thin]">
+      <div className="flex justify-center gap-2 md:gap-3 overflow-x-auto px-2 py-2 -mx-2 [scrollbar-width:thin]">
         {dates.map((d) => {
           const { line1, line2 } = formatDayTab(d);
           const active = activeDate === d;
-          const sizeCls = fullscreen
-            ? 'min-w-[132px] sm:min-w-[148px] md:min-w-[168px] px-3 py-2.5 md:py-3'
-            : 'min-w-[108px] sm:min-w-[132px] md:flex-1 px-3 py-3 md:py-4';
-          const line1Cls = fullscreen
-            ? 'block font-display text-base md:text-lg font-semibold tracking-wide'
-            : 'block font-display text-lg md:text-xl font-semibold tracking-wide';
+          // Use the compact fullscreen sizing in both views — keeps the day bar
+          // tidy and consistent regardless of fullscreen state.
+          const sizeCls = 'min-w-[132px] sm:min-w-[148px] md:min-w-[168px] px-3 py-2.5 md:py-3';
+          const line1Cls = 'block font-display text-base md:text-lg font-semibold tracking-wide';
           return (
             <button
               key={d}
