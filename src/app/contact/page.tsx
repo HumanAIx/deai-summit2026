@@ -1,6 +1,7 @@
 import type { Metadata } from 'next';
 import { Suspense } from 'react';
-import { prefetchCMSPage, prefetchNavigation, prefetchSocials, mapNavigationData, prefetchCaptchaConfig } from '@/lib/prefetch';
+import { prefetchCMSPage, prefetchNavigation, prefetchSocials, mapNavigationData, prefetchCaptchaConfig, prefetchPublicAnalyticsTags } from '@/lib/prefetch';
+import { redditContactLeadPixel } from '@/lib/analytics-tags';
 import { SEO_DEFAULTS } from '@/lib/seo-defaults';
 import { ContactClient } from '@/components/ContactClient';
 import type { CMSBlock, CMSFormConfig } from '@/lib/api-types';
@@ -52,11 +53,12 @@ export async function generateMetadata(): Promise<Metadata> {
 }
 
 export default async function ContactPage() {
-  const [cmsPage, apiNav, socials, captchaConfig] = await Promise.all([
+  const [cmsPage, apiNav, socials, captchaConfig, analyticsTags] = await Promise.all([
     prefetchCMSPage('contact'),
     prefetchNavigation(),
     prefetchSocials(),
     prefetchCaptchaConfig(),
+    prefetchPublicAnalyticsTags(),
   ]);
 
   const navigationData = apiNav ? mapNavigationData(apiNav) : undefined;
@@ -80,6 +82,9 @@ export default async function ContactPage() {
         captchaSiteKey={captchaConfig.site_key}
         captchaDisabled={captchaConfig.disabled === true}
         captchaProvider={captchaConfig.provider}
+        redditContactLeadPixelId={
+          redditContactLeadPixel(analyticsTags) || undefined
+        }
       />
     </Suspense>
   );

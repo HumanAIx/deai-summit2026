@@ -4,7 +4,9 @@ import {
   prefetchNavigation,
   prefetchCMSPage,
   mapNavigationData,
+  prefetchPublicAnalyticsTags,
 } from '@/lib/prefetch';
+import { redditSpeakerLeadPixel } from '@/lib/analytics-tags';
 import type { SocialLink } from '@/lib/prefetch';
 import { siteConfig } from '@/config/site';
 import { generateEventSchema, jsonLdSafe } from '@/lib/structured-data';
@@ -25,6 +27,7 @@ export default async function Home() {
 
   const apiNav = await prefetchNavigation();
   const navigationData = apiNav ? mapNavigationData(apiNav) : undefined;
+  const analyticsTags = await prefetchPublicAnalyticsTags();
 
   try {
     const data = await prefetchHomePageData();
@@ -152,6 +155,9 @@ export default async function Home() {
         networkingData={networkingData}
         speakerCtaData={cmsSections.speakerCta}
         sponsorsSectionData={cmsSections.sponsorsAndPartners}
+        redditSpeakerLeadPixelId={
+          redditSpeakerLeadPixel(analyticsTags) || undefined
+        }
       />
     </>
   );

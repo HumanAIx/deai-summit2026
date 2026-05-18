@@ -1,11 +1,15 @@
 import React, { useState, useEffect } from 'react';
 
+import { fireRedditLeadConversion } from '@/lib/reddit-pixel';
+
 interface SpeakerApplicationModalProps {
     isOpen: boolean;
     onClose: () => void;
+    /** Reddit advertiser id for Lead on successful application — only fires when set server-side. */
+    redditSpeakerLeadPixelId?: string;
 }
 
-export const SpeakerApplicationModal: React.FC<SpeakerApplicationModalProps> = ({ isOpen, onClose }) => {
+export const SpeakerApplicationModal: React.FC<SpeakerApplicationModalProps> = ({ isOpen, onClose, redditSpeakerLeadPixelId }) => {
     const [isClosing, setIsClosing] = useState(false);
     const [isVisible, setIsVisible] = useState(false);
 
@@ -94,14 +98,7 @@ export const SpeakerApplicationModal: React.FC<SpeakerApplicationModalProps> = (
                             const result = await response.json();
 
                             if (response.ok) {
-                                  // ---- Reddit Pixel: Fire Lead event with email match key ----
-                                if (typeof window !== 'undefined' && (window as any).rdt) {
-                                (window as any).rdt('init', 'a2_j0va7jmob8u4', {
-                                    email: data.email as string,
-                                });
-                                (window as any).rdt('track', 'Lead');
-                                }
-                                // ---- End Reddit Pixel ----
+                                fireRedditLeadConversion(redditSpeakerLeadPixelId, data.email as string);
                                 alert('Application submitted successfully!');
                                 handleClose();
                             } else {

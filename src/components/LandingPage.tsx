@@ -81,6 +81,7 @@ interface LandingPageProps {
     networkingData?: NetworkingItem[];
     speakerCtaData?: { title?: string; subtitle?: string; button?: { label: string; link: string } };
     sponsorsSectionData?: { title?: string; badge?: string; subtitle?: string };
+    redditSpeakerLeadPixelId?: string;
 }
 
 export const LandingPage: React.FC<LandingPageProps> = ({
@@ -97,6 +98,7 @@ export const LandingPage: React.FC<LandingPageProps> = ({
     networkingData,
     speakerCtaData,
     sponsorsSectionData,
+    redditSpeakerLeadPixelId,
 }) => {
     const [toast, setToast] = useState({ visible: false, message: '' });
     const [isContactOpen, setIsContactOpen] = useState(false);
@@ -185,6 +187,7 @@ export const LandingPage: React.FC<LandingPageProps> = ({
             <SpeakerApplicationModal
                 isOpen={isSpeakerModalOpen}
                 onClose={() => setIsSpeakerModalOpen(false)}
+                redditSpeakerLeadPixelId={redditSpeakerLeadPixelId}
             />
 
             <WaitlistModal

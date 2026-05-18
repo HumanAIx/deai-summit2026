@@ -1,5 +1,10 @@
 import { Member, Company, SEOSettings, NormalizedSpeaker, NormalizedSponsor, CMSPageData, NavigationAPIData } from './api-types';
 import type { NavigationConfig } from '@/config/types';
+import {
+  resolveAnalyticsTagsFromApi,
+  type AnalyticsTagsPartial,
+  type PublicAnalyticsTagsResolved,
+} from './analytics-tags';
 
 const EXTERNAL_API_URL = process.env.NEXT_PUBLIC_GCONF_API_URL || 'http://localhost:3000/api';
 // SECURITY: prefer server-only GCONF_API_KEY. NEXT_PUBLIC_* is inlined into the
@@ -10,6 +15,9 @@ const CACHE_DURATION = 60; // 1 minute
 
 // Request deduplication within same render
 const requestCache = new Map<string, Promise<unknown>>();
+
+/** Reduce dev console noise: layout + metadata + page each prefetch analytics */
+let devWarnedPublicAnalyticsTagsEmpty = false;
 
 function getCachedRequest<T>(key: string, fn: () => Promise<T>): Promise<T> {
   if (requestCache.has(key)) {
@@ -253,6 +261,36 @@ export interface CaptchaConfig {
 export async function prefetchCaptchaConfig(): Promise<CaptchaConfig> {
   const data = await fetchFromAPI<CaptchaConfig>('/settings/public/captcha', { noAuth: false, cacheDuration: 60 });
   return data || { provider: 'recaptcha', site_key: '', disabled: false };
+}
+
+export async function prefetchPublicAnalyticsTags(): Promise<PublicAnalyticsTagsResolved> {
+  const keyPresent = API_KEY.trim().length > 0;
+  const raw = await fetchFromAPI<AnalyticsTagsPartial>(
+    '/settings/public/analytics-tags',
+    { noAuth: false, cacheDuration: 60 },
+  );
+  const resolved = resolveAnalyticsTagsFromApi(raw);
+  if (
+    process.env.NODE_ENV === 'development' &&
+    !Object.values(resolved).some(Boolean) &&
+    !devWarnedPublicAnalyticsTagsEmpty
+  ) {
+    devWarnedPublicAnalyticsTagsEmpty = true;
+    if (!keyPresent) {
+      console.warn(
+        '[analytics-tags] All empty — set GCONF_API_KEY (same tenant Website API Key as Dashboard) so /settings/public/analytics-tags can resolve.',
+      );
+    } else if (raw == null) {
+      console.warn(
+        '[analytics-tags] All empty — API request failed (see [prefetch] errors above). Often 401 Invalid API key or wrong NEXT_PUBLIC_GCONF_API_URL.',
+      );
+    } else {
+      console.warn(
+        '[analytics-tags] API OK but no IDs for this key’s tenant (settings.analytics_tags is {} or values were stripped). If Dashboard shows IDs, the Dashboard session may be another tenant or hitting a different API/DB than NEXT_PUBLIC_GCONF_API_URL. Confirm with: curl -sS -H "Authorization: Bearer <GCONF_API_KEY>" "<API>/settings/public/analytics-tags"',
+      );
+    }
+  }
+  return resolved;
 }
 
 /** Verifies a captcha token server-side via ep-api, using the tenant's secret. */

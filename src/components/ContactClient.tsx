@@ -8,6 +8,8 @@ import { AnimatedGrid } from '@/components/AnimatedGrid';
 import type { CMSBlock, NavigationAPIData } from '@/lib/api-types';
 import type { NavigationConfig } from '@/config/types';
 
+import { fireRedditLeadConversion } from '@/lib/reddit-pixel';
+
 interface SocialLinkData {
   key: string;
   label: string;
@@ -28,6 +30,8 @@ interface ContactClientProps {
   captchaDisabled?: boolean;
   /** Captcha provider selected in dashboard: 'recaptcha' (v2 checkbox) or 'recaptcha-v3' (invisible). */
   captchaProvider?: string;
+  /** Reddit advertiser id for Lead on successful contact submit — only when set server-side. */
+  redditContactLeadPixelId?: string;
 }
 
 function extractHero(blocks: CMSBlock[]) {
@@ -79,7 +83,7 @@ const FALLBACK_INQUIRY_OPTIONS = [
   'Request Sponsorship Deck',
 ];
 
-export function ContactClient({ blocks, inquiryOptions, navigationData, navigationAPIData, socials, captchaSiteKey, captchaDisabled, captchaProvider }: ContactClientProps) {
+export function ContactClient({ blocks, inquiryOptions, navigationData, navigationAPIData, socials, captchaSiteKey, captchaDisabled, captchaProvider, redditContactLeadPixelId }: ContactClientProps) {
   // When the tenant has explicitly disabled captcha, skip everything — no widget,
   // no env-var fallback, no submit-time token check.
   const RECAPTCHA_SITE_KEY = captchaDisabled ? '' : (captchaSiteKey || FALLBACK_RECAPTCHA_SITE_KEY);
@@ -182,13 +186,7 @@ export function ContactClient({ blocks, inquiryOptions, navigationData, navigati
           try { window.grecaptcha?.reset?.(captchaWidgetId.current ?? undefined); } catch {}
         }
 
-        // ---- Reddit Pixel: Fire Lead event with email match key ----
-        if (typeof window !== 'undefined' && (window as any).rdt) {
-          (window as any).rdt('init', 'a2_j0va7jmob8u4', {
-            email: data.email as string,
-          });
-          (window as any).rdt('track', 'Lead');
-        }
+        fireRedditLeadConversion(redditContactLeadPixelId, data.email as string);
       } else {
         setStatus('error');
         setErrorMessage(result.error || 'Failed to send message. Please try again.');
