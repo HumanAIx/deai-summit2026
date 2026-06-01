@@ -185,7 +185,10 @@ export async function prefetchTeam(): Promise<NormalizedSpeaker[]> {
 // Publish/draft flips must propagate immediately on production — pass
 // cacheDuration: 0 so these fetches opt out of the Next data cache.
 export async function prefetchCompanies(): Promise<Company[]> {
-  const companies = await fetchFromAPI<Company[]>('/companies', { cacheDuration: 0 });
+  // Same paginated `/companies` as prefetchPartners: the default 25-row cap
+  // silently drops everything past row 25 before the client-side filter, so
+  // request the full set (sitemap + llms.txt rely on this being complete).
+  const companies = await fetchFromAPI<Company[]>('/companies?limit=500', { cacheDuration: 0 });
   if (!companies) return [];
   return companies.filter(c => c.company_published);
 }
@@ -199,7 +202,11 @@ export async function prefetchSponsors(): Promise<NormalizedSponsor[]> {
 }
 
 export async function prefetchPartners(): Promise<NormalizedSponsor[]> {
-  const companies = await fetchFromAPI<Company[]>('/companies', { cacheDuration: 0 });
+  // `/companies` is paginated (default 25). The sponsor/partner filter runs
+  // client-side, so without a high limit any company past row 25 (by
+  // sort_order) is dropped before it can match — silently hiding partners
+  // and sponsors. Request the full set so the grid sees every published row.
+  const companies = await fetchFromAPI<Company[]>('/companies?limit=500', { cacheDuration: 0 });
   if (!companies) return [];
   return companies
     .filter(c => c.company_published && c.company_logo && (
