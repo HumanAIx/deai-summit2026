@@ -1,0 +1,45 @@
+name: Deploy to Vercel
+
+# Push to `main` → production deploy via the Vercel CLI.
+# This bypasses the Vercel GitHub App webhook entirely, which has historically
+# been unreliable for this project (the Vercel link metadata is still bound
+# to the original `crmn111` owner from before the repo moved to HumanAIx —
+# webhooks drop pushes silently as a result). The CLI uses VERCEL_TOKEN
+# directly and doesn't care about any upstream webhook plumbing.
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch: {}
+
+# Don't pile up overlapping prod deploys for the same branch — cancel any
+# in-flight run when a newer commit lands.
+concurrency:
+  group: vercel-deploy-${{ github.ref }}
+  cancel-in-progress: true
+
+env:
+  VERCEL_ORG_ID: team_KyQSgvuB90aXBkYXVJY88NH4
+  VERCEL_PROJECT_ID: prj_HkqdEYF4QRl3KYHuR2s9Gqn8uJO8
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '24'
+
+      - name: Install Vercel CLI
+        run: npm install -g vercel@latest
+
+      - name: Pull Vercel environment
+        run: vercel pull --yes --environment=production --token=${{ secrets.VERCEL_TOKEN }}
+
+      - name: Build for production
+        run: vercel build --prod --token=${{ secrets.VERCEL_TOKEN }}
+
+      - name: Deploy prebuilt bundle to production
+        run: vercel deploy --prebuilt --prod --token=${{ secrets.VERCEL_TOKEN }}
