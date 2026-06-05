@@ -25,6 +25,8 @@ function renderHeroTitle(cmsTitle?: string) {
   return <>{cmsTitle}</>;
 }
 
+const HOME_SPONSORS_PARTNERS_MAX = 15;
+
 /** Strip any HTML tags and `**markers**` from a CMS title for plain-text display. */
 function plainTitle(cmsTitle?: string): string {
   if (!cmsTitle) return 'Sponsors & Partners';
@@ -32,8 +34,7 @@ function plainTitle(cmsTitle?: string): string {
 }
 
 export const PastSponsors: React.FC<PastSponsorsProps> = ({ data, onOpenContact, sectionData }) => {
-  const sponsors = data.filter(d => d.isSponsor);
-  const partners = data.filter(d => !d.isSponsor);
+  const displayedItems = data.slice(0, HOME_SPONSORS_PARTNERS_MAX);
   const heroBadge = sectionData?.badge || 'Our Ecosystem';
   const heroSubtitle = sectionData?.subtitle || 'Leading organizations powering the future of decentralized AI governance.';
   const cmsTitle = sectionData?.title;
@@ -91,31 +92,32 @@ export const PastSponsors: React.FC<PastSponsorsProps> = ({ data, onOpenContact,
       <div className="bg-[#F0F0EF] py-20 px-6">
         <div className="max-w-[1440px] mx-auto">
 
-          {/* Combined Sponsors & Partners */}
-          {(sponsors.length + partners.length) > 0 && (
-            <div className="mb-16">
+          {data.length > 0 && (
+            <div className="mb-12">
               <div className="flex items-center gap-4 mb-10">
                 <div className="w-1 h-8 bg-brand-cyan rounded-full" />
-                <h3 className="text-xl md:text-2xl font-display font-bold text-[#050A1F]">{plainTitle(cmsTitle)}</h3>
+                <h3 className="text-xl md:text-2xl font-display font-bold text-[#050A1F]">
+                  {plainTitle(cmsTitle)}
+                </h3>
               </div>
               <div className="flex flex-wrap justify-center gap-5">
-                {[...sponsors, ...partners].map((item, index) => (
-                  <div key={index} className="w-[calc(50%-10px)] sm:w-[calc(33.333%-14px)] lg:w-[calc(25%-15px)] xl:w-[calc(20%-16px)]">
+                {displayedItems.map((item, index) => (
+                  <div key={item.slug || index} className="w-[calc(50%-10px)] sm:w-[calc(33.333%-14px)] lg:w-[calc(25%-15px)] xl:w-[calc(20%-16px)]">
                     <SponsorCard item={item} index={index} />
                   </div>
                 ))}
               </div>
-            </div>
-          )}
-
-          {/* All together if no distinction */}
-          {sponsors.length === 0 && partners.length === 0 && data.length > 0 && (
-            <div className="flex flex-wrap justify-center gap-5 mb-16">
-              {data.map((item, index) => (
-                <div key={index} className="w-[calc(50%-10px)] sm:w-[calc(33.333%-14px)] lg:w-[calc(25%-15px)] xl:w-[calc(20%-16px)]">
-                  <SponsorCard item={item} index={index} />
-                </div>
-              ))}
+              <div className="flex justify-center mt-10">
+                <Link
+                  href="/partners"
+                  className="group px-8 py-3 rounded-full border-2 border-[#050A1F] text-[#050A1F] hover:bg-[#050A1F] hover:text-white transition-all duration-300 text-sm font-bold flex items-center gap-2 no-underline"
+                >
+                  View More
+                  <svg className="w-4 h-4 group-hover:translate-x-1 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+                  </svg>
+                </Link>
+              </div>
             </div>
           )}
 

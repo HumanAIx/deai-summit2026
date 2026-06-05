@@ -306,7 +306,7 @@ function extractSponsorsAndPartners(blocks: CMSBlock[]): SponsorsAndPartnersSect
   const rawItems = (block.items as unknown as CMSCompanyItem[] | undefined) ?? [];
   const items = rawItems
     .filter((c) => c.company_published !== false && c.company_logo)
-    .filter((c) => (c.company_is_partner && c.partner_published !== false) || (c.company_is_sponsor && c.sponsor_published !== false))
+    .filter((c) => c.company_is_partner || (c.company_is_sponsor && c.sponsor_published !== false))
     .map((c) => {
       const n = normalizeSponsor(c as unknown as Parameters<typeof normalizeSponsor>[0]);
       return {
@@ -314,6 +314,7 @@ function extractSponsorsAndPartners(blocks: CMSBlock[]): SponsorsAndPartnersSect
         slug: n.slug,
         logo: n.logo,
         isSponsor: !!n.isSponsor,
+        isPartner: !!n.isPartner,
         logoHasDarkBg: n.logoHasDarkBg,
       };
     });

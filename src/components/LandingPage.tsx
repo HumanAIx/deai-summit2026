@@ -55,6 +55,7 @@ export interface PartnerItemData {
     slug: string;
     logo: string;
     isSponsor: boolean;
+    isPartner: boolean;
     logoHasDarkBg?: boolean;
 }
 

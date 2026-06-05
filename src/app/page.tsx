@@ -105,15 +105,25 @@ export default async function Home() {
   // Sponsors & Partners grid: CMS → API → siteConfig.
   const partnerItems = cmsSections.partnerItems && cmsSections.partnerItems.length > 0
     ? cmsSections.partnerItems
-    : partners.length > 0
-      ? partners.map(p => ({
-          name: p.name,
-          slug: p.slug,
-          logo: p.logo,
-          isSponsor: p.isSponsor,
-          logoHasDarkBg: p.logoHasDarkBg,
-        }))
-      : siteConfig.partners.map(p => ({ ...p, slug: '', isSponsor: false }));
+    : sponsors.length > 0 || partners.length > 0
+      ? (() => {
+          const sponsorSlugs = new Set(sponsors.map(s => s.slug).filter(Boolean));
+          const toItem = (p: (typeof sponsors)[number]) => ({
+            name: p.name,
+            slug: p.slug,
+            logo: p.logo,
+            isSponsor: p.isSponsor,
+            isPartner: p.isPartner,
+            logoHasDarkBg: p.logoHasDarkBg,
+          });
+          return [
+            ...sponsors.map(toItem),
+            ...partners
+              .filter(p => p.isPartner && (!p.slug || !sponsorSlugs.has(p.slug)))
+              .map(toItem),
+          ];
+        })()
+      : siteConfig.partners.map(p => ({ ...p, slug: '', isSponsor: false, isPartner: true }));
 
   // Merge CMS overrides onto the siteConfig defaults for the content-heavy
   // sections. Missing CMS fields fall through to siteConfig.

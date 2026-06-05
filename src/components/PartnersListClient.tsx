@@ -23,11 +23,6 @@ interface PartnersListClientProps {
   socials?: { key: string; label: string; url: string; icon?: string; color?: string }[];
 }
 
-/** Strip `**markers**` (used for hero highlighting) to get a clean plain-text heading. */
-function stripHighlightMarkers(text: string): string {
-  return text.replace(/\*\*(.+?)\*\*/g, '$1');
-}
-
 /** Convert **text** markers or brand name to cyan-highlighted spans */
 function highlightTitle(text: string): string {
   // First, handle explicit **markers**
@@ -106,20 +101,22 @@ function CompanyCard({ company, type, index }: { company: NormalizedSponsor; typ
   );
 }
 
+function CompanyGrid({ companies, type }: { companies: NormalizedSponsor[]; type: 'sponsor' | 'partner' }) {
+  return (
+    <div className="flex flex-wrap justify-center gap-6">
+      {companies.map((company, index) => (
+        <div key={company.id} className="w-full sm:w-[calc(50%-12px)] lg:w-[calc(33.333%-16px)] xl:w-[calc(25%-18px)]">
+          <CompanyCard company={company} type={type} index={index} />
+        </div>
+      ))}
+    </div>
+  );
+}
+
 export function PartnersListClient({ sponsors, partners, heroTitle, heroSubtitle, heroBadge, ctaTitle, ctaSubtitle, ctaButtons, navigationData, navigationAPIData, socials }: PartnersListClientProps) {
-  const totalCompanies = sponsors.length + partners.length;
-
-  // Merge sponsors + partners into a single list (dedupe by id), preserving sponsor-first order.
-  const seenIds = new Set<string>();
-  const combined: NormalizedSponsor[] = [];
-  for (const item of [...sponsors, ...partners]) {
-    if (!seenIds.has(item.id)) {
-      seenIds.add(item.id);
-      combined.push(item);
-    }
-  }
-
-  const sectionHeading = heroTitle ? stripHighlightMarkers(heroTitle) : 'Sponsors & Partners';
+  const sponsorIds = new Set(sponsors.map(s => s.id));
+  const partnerCompanies = partners.filter(p => p.isPartner && !sponsorIds.has(p.id));
+  const totalCompanies = sponsors.length + partnerCompanies.length;
 
   return (
     <DetailPageLayout navigationData={navigationData} navigationAPIData={navigationAPIData} socials={socials}>
@@ -162,14 +159,14 @@ export function PartnersListClient({ sponsors, partners, heroTitle, heroSubtitle
                   </p>
                 </div>
               )}
-              {sponsors.length > 0 && partners.length > 0 && (
+              {sponsors.length > 0 && partnerCompanies.length > 0 && (
                 <div className="w-[1px] h-20 bg-white/10" />
               )}
-              {partners.length > 0 && (
+              {partnerCompanies.length > 0 && (
                 <div className="text-center relative">
                   <div className="absolute inset-0 blur-3xl opacity-15 rounded-full scale-150 bg-brand-blue" />
                   <p className="text-brand-blue text-6xl md:text-7xl font-display font-bold mb-3 relative">
-                    <AnimatedCounter value={String(partners.length)} duration={2200} delay={300} />
+                    <AnimatedCounter value={String(partnerCompanies.length)} duration={2200} delay={300} />
                   </p>
                   <div className="w-12 h-[3px] mx-auto mb-3 rounded-full bg-brand-blue" />
                   <p className="text-white/50 text-sm font-mono uppercase tracking-widest">
@@ -183,23 +180,32 @@ export function PartnersListClient({ sponsors, partners, heroTitle, heroSubtitle
         )}
       </section>
 
-      {/* Combined Sponsors & Partners Section */}
-      {combined.length > 0 && (
+      {/* Sponsors & Partners — separate sections */}
+      {totalCompanies > 0 && (
         <section className="bg-[#F0F0EF] pt-16 pb-[100px]">
-          <div className="max-w-[1440px] mx-auto px-6">
-            <div className="flex items-center gap-4 mb-10">
-              <div className="w-1 h-8 bg-brand-cyan rounded-full" />
-              <h2 className="text-2xl md:text-3xl font-display font-bold text-[#050A1F]">
-                {sectionHeading}
-              </h2>
-            </div>
-            <div className="flex flex-wrap justify-center gap-6">
-              {combined.map((company, index) => (
-                <div key={company.id} className="w-full sm:w-[calc(50%-12px)] lg:w-[calc(33.333%-16px)] xl:w-[calc(25%-18px)]">
-                  <CompanyCard company={company} type={company.isSponsor ? 'sponsor' : 'partner'} index={index} />
+          <div className="max-w-[1440px] mx-auto px-6 space-y-16">
+            {sponsors.length > 0 && (
+              <div>
+                <div className="flex items-center gap-4 mb-10">
+                  <div className="w-1 h-8 bg-brand-cyan rounded-full" />
+                  <h2 className="text-2xl md:text-3xl font-display font-bold text-[#050A1F]">
+                    Sponsors
+                  </h2>
                 </div>
-              ))}
-            </div>
+                <CompanyGrid companies={sponsors} type="sponsor" />
+              </div>
+            )}
+            {partnerCompanies.length > 0 && (
+              <div>
+                <div className="flex items-center gap-4 mb-10">
+                  <div className="w-1 h-8 bg-brand-blue rounded-full" />
+                  <h2 className="text-2xl md:text-3xl font-display font-bold text-[#050A1F]">
+                    Partners
+                  </h2>
+                </div>
+                <CompanyGrid companies={partnerCompanies} type="partner" />
+              </div>
+            )}
           </div>
         </section>
       )}

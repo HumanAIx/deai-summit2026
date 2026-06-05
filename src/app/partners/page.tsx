@@ -31,29 +31,34 @@ function extractCompaniesFromBlocks(blocks: CMSBlock[]): {
     const items = block.items as unknown as CMSCompanyItem[] | undefined;
     if (!items || items.length === 0) continue;
 
-    const listType = block.listType || block.companiesListType;
+    const listType = (block.listType || block.companiesListType) as string | undefined;
 
     const publishedSponsors = (list: CMSCompanyItem[]) =>
-      list.filter(i => i.company_published !== false && i.sponsor_published !== false);
+      list.filter(i => i.company_published !== false && i.company_is_sponsor && i.sponsor_published !== false);
     const publishedPartners = (list: CMSCompanyItem[]) =>
-      list.filter(i => i.company_published !== false && i.partner_published !== false);
+      list.filter(i => i.company_published !== false && i.company_is_partner);
+
+    const assignFromListType = (resolvedListType: string | undefined, list: CMSCompanyItem[]) => {
+      if (resolvedListType === 'all-sponsors') {
+        sponsors = publishedSponsors(list).map(item => normalizeCMSCompany(item, true, !!item.company_is_partner));
+      } else if (resolvedListType === 'all-partners') {
+        partners = publishedPartners(list).map(item => normalizeCMSCompany(item, !!item.company_is_sponsor, true));
+      } else if (resolvedListType === 'all-companies') {
+        sponsors = publishedSponsors(list).map(item => normalizeCMSCompany(item, true, !!item.company_is_partner));
+        partners = publishedPartners(list)
+          .filter(item => !item.company_is_sponsor || item.sponsor_published === false)
+          .map(item => normalizeCMSCompany(item, !!item.company_is_sponsor, true));
+      }
+    };
 
     // Direct companies-list block
     if (block.type === 'companies-list') {
-      if (listType === 'all-sponsors') {
-        sponsors = publishedSponsors(items).map(item => normalizeCMSCompany(item, true, false));
-      } else if (listType === 'all-partners') {
-        partners = publishedPartners(items).map(item => normalizeCMSCompany(item, false, true));
-      }
+      assignFromListType(listType, items);
     }
     // Content block with companies-list addon
     if (block.addon === 'companies-list') {
       const addonListType = (block as Record<string, unknown>).companiesListType || block.listType;
-      if (addonListType === 'all-sponsors') {
-        sponsors = publishedSponsors(items).map(item => normalizeCMSCompany(item, true, false));
-      } else if (addonListType === 'all-partners') {
-        partners = publishedPartners(items).map(item => normalizeCMSCompany(item, false, true));
-      }
+      assignFromListType(typeof addonListType === 'string' ? addonListType : undefined, items);
     }
   }
 
@@ -198,20 +203,18 @@ export default async function PartnersPage() {
     console.error('Failed to fetch CMS partners page:', error);
   }
 
-  // Fallback: if CMS returned no companies, try the direct APIs
-  if (sponsors.length === 0 && partners.length === 0) {
-    try {
-      [sponsors, partners] = await Promise.all([
-        prefetchSponsors(),
-        prefetchPartners(),
-      ]);
-
-      // Separate partners that aren't already sponsors
-      const sponsorIds = new Set(sponsors.map(s => s.id));
-      partners = partners.filter(p => !sponsorIds.has(p.id) && p.isPartner);
-    } catch (error) {
-      console.error('Failed to fetch partners from direct API:', error);
-    }
+  // Fill gaps from API — CMS may use all-companies (no role flags on items) or
+  // only include one list type, so fetch each side independently.
+  try {
+    const [apiSponsors, apiPartners] = await Promise.all([
+      sponsors.length === 0 ? prefetchSponsors() : Promise.resolve(sponsors),
+      partners.length === 0 ? prefetchPartners() : Promise.resolve(partners),
+    ]);
+    sponsors = apiSponsors;
+    const sponsorIds = new Set(sponsors.map(s => s.id));
+    partners = apiPartners.filter(p => p.isPartner && !sponsorIds.has(p.id));
+  } catch (error) {
+    console.error('Failed to fetch sponsors/partners from direct API:', error);
   }
 
   return (

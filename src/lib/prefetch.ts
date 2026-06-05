@@ -193,26 +193,32 @@ export async function prefetchCompanies(): Promise<Company[]> {
   return companies.filter(c => c.company_published);
 }
 
+export function isPublishedSponsorCompany(company: Company): boolean {
+  return !!(
+    company.company_published &&
+    company.company_logo &&
+    company.company_is_sponsor &&
+    company.sponsor_published !== false
+  );
+}
+
+/** Partner section: companies flagged `company_is_partner` on the company record. */
+export function isMarkedPartnerCompany(company: Company): boolean {
+  return !!(company.company_published && company.company_logo && company.company_is_partner);
+}
+
 export async function prefetchSponsors(): Promise<NormalizedSponsor[]> {
   const companies = await fetchFromAPI<Company[]>('/companies/sponsors', { cacheDuration: 0 });
   if (!companies) return [];
-  return companies
-    .filter(c => c.company_published && c.sponsor_published && c.company_logo)
-    .map(normalizeSponsor);
+  return companies.filter(isPublishedSponsorCompany).map(normalizeSponsor);
 }
 
 export async function prefetchPartners(): Promise<NormalizedSponsor[]> {
-  // `/companies` is paginated (default 25). The sponsor/partner filter runs
-  // client-side, so without a high limit any company past row 25 (by
-  // sort_order) is dropped before it can match — silently hiding partners
-  // and sponsors. Request the full set so the grid sees every published row.
+  // `/companies` is paginated (default 25). Filter client-side after fetching
+  // the full set so partners past row 25 are not silently dropped.
   const companies = await fetchFromAPI<Company[]>('/companies?limit=500', { cacheDuration: 0 });
   if (!companies) return [];
-  return companies
-    .filter(c => c.company_published && c.company_logo && (
-      (c.company_is_partner && c.partner_published) || (c.company_is_sponsor && c.sponsor_published)
-    ))
-    .map(normalizeSponsor);
+  return companies.filter(isMarkedPartnerCompany).map(normalizeSponsor);
 }
 
 export async function prefetchVenues(): Promise<Company[]> {
