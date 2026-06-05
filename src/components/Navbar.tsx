@@ -75,7 +75,7 @@ export const Navbar: React.FC<NavbarProps> = ({ onShowToast, onOpenContact, data
                   href={item.href}
                   onClick={(e) => handleNavClick(e, item.href)}
                   aria-current={active ? 'page' : undefined}
-                  className={`text-base font-medium transition-colors ${active ? 'text-white' : 'text-white/50 hover:text-white'}`}
+                  className={`text-base font-medium transition-colors ${active ? 'text-white' : 'text-white/85 hover:text-white'}`}
                 >
                   {item.label}
                 </a>
@@ -89,7 +89,7 @@ export const Navbar: React.FC<NavbarProps> = ({ onShowToast, onOpenContact, data
                   href="/contact"
                   onClick={() => setIsMenuOpen(false)}
                   aria-current={active ? 'page' : undefined}
-                  className={`text-base font-medium transition-colors ${active ? 'text-white' : 'text-white/50 hover:text-white'}`}
+                  className={`text-base font-medium transition-colors ${active ? 'text-white' : 'text-white/85 hover:text-white'}`}
                 >
                   Contact Us
                 </Link>
@@ -131,7 +131,7 @@ export const Navbar: React.FC<NavbarProps> = ({ onShowToast, onOpenContact, data
                   href={item.href}
                   onClick={(e) => handleNavClick(e, item.href)}
                   aria-current={active ? 'page' : undefined}
-                  className={`text-2xl font-medium transition-colors w-full text-center py-2 ${active ? 'text-white' : 'text-white/80 hover:text-white'}`}
+                  className={`text-2xl font-medium transition-colors w-full text-center py-2 ${active ? 'text-white' : 'text-white/90 hover:text-white'}`}
                 >
                   {item.label}
                 </a>
@@ -145,7 +145,7 @@ export const Navbar: React.FC<NavbarProps> = ({ onShowToast, onOpenContact, data
                   href="/contact"
                   onClick={() => setIsMenuOpen(false)}
                   aria-current={active ? 'page' : undefined}
-                  className={`text-2xl font-medium transition-colors w-full text-center py-2 ${active ? 'text-white' : 'text-white/80 hover:text-white'}`}
+                  className={`text-2xl font-medium transition-colors w-full text-center py-2 ${active ? 'text-white' : 'text-white/90 hover:text-white'}`}
                 >
                   Contact Us
                 </Link>

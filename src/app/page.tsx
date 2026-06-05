@@ -99,6 +99,7 @@ export default async function Home() {
           label: s.name,
           slug: s.slug,
           logo: s.logo,
+          logoHasDarkBg: s.logoHasDarkBg,
         }))
       : siteConfig.marquee.map(m => ({ ...m, slug: '' }));
 

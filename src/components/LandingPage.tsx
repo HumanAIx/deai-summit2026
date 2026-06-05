@@ -47,6 +47,7 @@ export interface MarqueeItemData {
     label: string;
     slug: string;
     logo?: string;
+    logoHasDarkBg?: boolean;
     iconType?: string;
 }
 
