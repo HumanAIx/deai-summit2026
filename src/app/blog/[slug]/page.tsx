@@ -6,18 +6,13 @@ import {
   prefetchSocials,
   mapNavigationData,
 } from '@/lib/prefetch';
-import { SEO_DEFAULTS } from '@/lib/seo-defaults';
+import { getAbsoluteImageUrl, resolveBlogOgImage, SEO_DEFAULTS } from '@/lib/seo-defaults';
 import { generateArticleSchema, jsonLdSafe } from '@/lib/structured-data';
 import { BlogDetailClient } from '@/components/BlogDetailClient';
 import type { BlogPost } from '@/lib/api-types';
 
 const BASE_URL = process.env.NEXT_PUBLIC_SITE_URL || 'https://deaisummit.org';
-
-function getAbsoluteImageUrl(image: string | null | undefined, baseUrl: string): string {
-  if (!image) return `${baseUrl}/og-image.png`;
-  if (image.startsWith('http://') || image.startsWith('https://')) return image;
-  return `${baseUrl}${image.startsWith('/') ? '' : '/'}${image}`;
-}
+const DEFAULT_OG_IMAGE = `${BASE_URL}/og-image.png`;
 
 interface BlogDetailPageProps {
   params: Promise<{ slug: string }>;
@@ -40,7 +35,8 @@ export async function generateMetadata({ params }: BlogDetailPageProps): Promise
   const description = seo?.meta_description || blogPost.meta_description || SEO_DEFAULTS.defaultDescription;
   const ogTitle = seo?.og_title || title;
   const ogDescription = seo?.og_description || description;
-  const ogImage = getAbsoluteImageUrl(seo?.og_image || blogPost.featured_image, BASE_URL);
+  const ogImageSource = resolveBlogOgImage(blogPost.featured_image, seo?.og_image, blogPost.slug || slug);
+  const ogImage = getAbsoluteImageUrl(ogImageSource, BASE_URL) || DEFAULT_OG_IMAGE;
   const canonicalUrl = seo?.canonical_url || `${BASE_URL}/blog/${blogPost.slug || slug}`;
 
   return {
@@ -52,6 +48,7 @@ export async function generateMetadata({ params }: BlogDetailPageProps): Promise
     openGraph: {
       title: ogTitle,
       description: ogDescription,
+      url: canonicalUrl,
       images: [{ url: ogImage, alt: blogPost.title || 'Blog Post' }],
       type: 'article',
       siteName: SEO_DEFAULTS.siteName,

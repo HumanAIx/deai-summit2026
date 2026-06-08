@@ -42,10 +42,35 @@ export const PAGE_CANONICALS: Record<string, string> = {
   privacy: '/privacy',
 };
 
-function getAbsoluteImageUrl(image: string | undefined | null, baseUrl: string): string | undefined {
+export function getAbsoluteImageUrl(image: string | undefined | null, baseUrl: string): string | undefined {
   if (!image) return undefined;
   if (image.startsWith('http')) return image;
   return `${baseUrl}${image.startsWith('/') ? '' : '/'}${image}`;
+}
+
+/** Blog storage folder name derived from slug (matches ep-api upload paths). */
+export function slugToBlogStorageFolder(slug: string): string {
+  return slug
+    .toLowerCase()
+    .replace(/[^a-z0-9_-]/g, '-')
+    .replace(/-+/g, '-')
+    .replace(/(^-|-$)/g, '');
+}
+
+/**
+ * Prefer featured_image when seo.og_image still points at a pre-rename storage folder.
+ * Stale og_image URLs break Telegram/Facebook previews (404 on fetch).
+ */
+export function resolveBlogOgImage(
+  featuredImage: string | null | undefined,
+  seoOgImage: string | null | undefined,
+  slug: string | null | undefined,
+): string | null | undefined {
+  if (!seoOgImage) return featuredImage;
+  if (!featuredImage || !slug) return seoOgImage;
+  const folder = slugToBlogStorageFolder(slug);
+  if (seoOgImage.includes(`/blog/${folder}/`)) return seoOgImage;
+  return featuredImage;
 }
 
 type ValidOgType = 'website' | 'article' | 'profile' | 'book' | 'music.song' | 'music.album' | 'music.playlist' | 'music.radio_station' | 'video.movie' | 'video.episode' | 'video.tv_show' | 'video.other';

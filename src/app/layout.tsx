@@ -19,9 +19,12 @@ const playfair = Playfair_Display({
   weight: ["400", "500", "600"],
 });
 
+const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL || "https://deaisummit.org";
+
 export async function generateMetadata(): Promise<Metadata> {
   const tags = await prefetchPublicAnalyticsTags();
   const meta: Metadata = {
+    metadataBase: new URL(SITE_URL),
     title: "DeAI Summit 2026 - Malta",
     description:
       "Join the Decentralized AI Summit 2026 in Malta. The premier event for the future of AI.",
