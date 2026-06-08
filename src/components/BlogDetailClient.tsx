@@ -206,11 +206,20 @@ export function BlogDetailClient({
     <DetailPageLayout navigationData={navigationData} navigationAPIData={navigationAPIData} socials={socials}>
       {/* Hero */}
       {post.featured_image ? (
-        <section className="relative -mt-[140px] pt-[140px]">
-          <div className="relative w-full h-[38vh] sm:h-[42vh] md:h-[45vh] min-h-[240px] sm:min-h-[300px] max-h-[520px]">
-            <Image src={post.featured_image} alt={post.title} fill priority className="object-cover" sizes="100vw" />
+        <section className="relative -mt-[140px]">
+          {/* +140px extends the image behind the fixed nav; visible height below nav unchanged */}
+          <div className="relative w-full overflow-hidden h-[calc(38vh+140px)] sm:h-[calc(42vh+140px)] md:h-[calc(45vh+140px)] min-h-[380px] sm:min-h-[440px] max-h-[660px]">
+            <Image
+              src={post.featured_image}
+              alt={post.title}
+              fill
+              priority
+              className="object-cover object-center"
+              sizes="100vw"
+            />
             <div className="absolute inset-0 bg-gradient-to-t from-[#050A1F] via-[#050A1F]/40 to-[#050A1F]/20" />
-            <div className="absolute bottom-0 left-0 right-0 py-6 sm:py-8 md:py-12">
+            <div className="absolute inset-x-0 top-0 h-36 bg-gradient-to-b from-[#050A1F]/75 to-transparent pointer-events-none" />
+            <div className="absolute bottom-0 left-0 right-0 py-6 sm:py-8 md:py-12 z-10">
               <div className="max-w-[1440px] mx-auto px-4 sm:px-6">
                 <Link
                   href="/blog"
