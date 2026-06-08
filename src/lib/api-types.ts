@@ -95,6 +95,15 @@ export interface Company {
   venue_photo?: string;
   logo_background_white?: boolean;
   company_logo_has_dark_bg?: boolean;
+  logo_settings?: {
+    vectorSvgUrl?: string;
+    slots?: Partial<Record<'scroller' | 'general' | 'primary', {
+      url?: string;
+      snapshotId?: string;
+      scale?: number;
+      invert?: boolean;
+    }>>;
+  } | null;
   brochure_url?: string;
   tenant_id: string;
   seo?: SEOSettings;
@@ -231,6 +240,7 @@ export interface CMSCompanyItem {
   company_slug: string;
   company_bio?: string;
   company_logo?: string;
+  logo_settings?: Company['logo_settings'];
   company_country?: string;
   company_socials?: CompanySocials;
   logo_background_white?: boolean;
@@ -281,4 +291,59 @@ export interface CMSPageData {
     formConfigs?: Record<string, CMSFormConfig>;
   };
   seo?: SEOSettings;
+}
+
+// Blog types (ep-api /blog)
+
+export interface BlogContentBlock {
+  id: string;
+  type: 'markdown' | 'gallery' | 'carousel' | 'youtube' | 'tweet';
+  content?: string;
+  title?: string;
+  galleryId?: string;
+  carouselId?: string;
+  videoUrl?: string;
+  tweetUrl?: string;
+  published?: boolean;
+}
+
+export interface BlogPost {
+  id: string;
+  title: string;
+  slug: string;
+  content?: string;
+  content_blocks?: BlogContentBlock[];
+  featured_image: string | null;
+  published: boolean;
+  published_at: string;
+  created_at: string;
+  last_updated: string;
+  author_id: string;
+  meta_title?: string;
+  meta_description?: string;
+  reading_time: number;
+  editors: string[];
+  deleted_at?: string | null;
+  deleted_by?: string | null;
+  seo?: SEOSettings;
+}
+
+export interface BlogPublisher {
+  name: string;
+  id: string;
+  slug?: string;
+  isTeam?: boolean;
+  isSpeaker?: boolean;
+  image?: string;
+  role: 'author' | 'editor';
+}
+
+export interface CMSBlogArticleItem {
+  id: string;
+  title: string;
+  slug: string;
+  published_at: string;
+  meta_description: string;
+  reading_time: number;
+  featured_image: string | null;
 }

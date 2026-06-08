@@ -1,4 +1,5 @@
-import { Member, Company, SEOSettings, NormalizedSpeaker, NormalizedSponsor, CMSPageData, NavigationAPIData } from './api-types';
+import { Member, Company, SEOSettings, NormalizedSpeaker, NormalizedSponsor, CMSPageData, NavigationAPIData, BlogPost, BlogPublisher } from './api-types';
+import { resolveGeneralLogoSrc, resolveScrollerLogoHasDarkBg, resolveScrollerLogoSrc } from './companyLogo';
 import type { NavigationConfig } from '@/config/types';
 import {
   resolveAnalyticsTagsFromApi,
@@ -112,28 +113,18 @@ export function normalizeSpeaker(member: Member): NormalizedSpeaker {
 }
 
 export function normalizeSponsor(company: Company): NormalizedSponsor {
+  const logo = resolveScrollerLogoSrc(company);
   return {
     id: company.id,
     name: company.company_name,
     slug: company.company_slug,
-    logo: company.company_logo || '',
+    logo,
     bio: company.company_bio,
     website: company.company_website,
     socials: company.company_socials,
     isSponsor: company.company_is_sponsor,
     isPartner: company.company_is_partner,
-    logoHasDarkBg: (() => {
-      // The canonical DB column is `logo_background_white` (inverted —
-      // `false` = the logo has a dark background and must render on a
-      // dark tile). The other names are legacy / aspirational that a few
-      // older rows might still carry; checked last as a fallback.
-      const c = company as unknown as Record<string, unknown>;
-      if (typeof c.logo_background_white === 'boolean') return !c.logo_background_white;
-      if (typeof c.company_logo_has_dark_bg === 'boolean') return c.company_logo_has_dark_bg as boolean;
-      if (typeof c.logo_has_dark_bg === 'boolean') return c.logo_has_dark_bg as boolean;
-      if (typeof c.logo_background_dark === 'boolean') return c.logo_background_dark as boolean;
-      return undefined;
-    })(),
+    logoHasDarkBg: resolveScrollerLogoHasDarkBg(company, logo),
   };
 }
 
@@ -196,7 +187,7 @@ export async function prefetchCompanies(): Promise<Company[]> {
 export function isPublishedSponsorCompany(company: Company): boolean {
   return !!(
     company.company_published &&
-    company.company_logo &&
+    resolveScrollerLogoSrc(company) &&
     company.company_is_sponsor &&
     company.sponsor_published !== false
   );
@@ -204,7 +195,7 @@ export function isPublishedSponsorCompany(company: Company): boolean {
 
 /** Partner section: companies flagged `company_is_partner` on the company record. */
 export function isMarkedPartnerCompany(company: Company): boolean {
-  return !!(company.company_published && company.company_logo && company.company_is_partner);
+  return !!(company.company_published && resolveGeneralLogoSrc(company) && company.company_is_partner);
 }
 
 export async function prefetchSponsors(): Promise<NormalizedSponsor[]> {
@@ -390,6 +381,65 @@ export async function prefetchNavigation(): Promise<NavigationAPIData | null> {
     console.log('[prefetch/nav] null response — nav fallback to siteConfig');
   }
   return nav;
+}
+
+export async function prefetchBlogPosts(): Promise<BlogPost[]> {
+  const data = await fetchFromAPI<BlogPost[]>('/blog', { cacheDuration: 30 });
+  if (!data || !Array.isArray(data)) return [];
+  return data
+    .filter(post => post.published && !post.deleted_at)
+    .sort((a, b) => new Date(b.published_at).getTime() - new Date(a.published_at).getTime());
+}
+
+export async function prefetchBlogPostBySlug(slug: string): Promise<BlogPost | null> {
+  return fetchFromAPI<BlogPost>(`/blog/slug/${slug}`, { cacheDuration: 30 });
+}
+
+export async function prefetchMemberById(idOrSlug: string): Promise<Member | null> {
+  const member = await fetchFromAPI<Member>(`/members/${idOrSlug}`, { cacheDuration: 0 });
+  if (member) return member;
+
+  const members = await fetchFromAPI<Member[]>('/members?limit=500', { cacheDuration: 0 });
+  if (!members || !Array.isArray(members)) return null;
+  return members.find(m => m.person_slug === idOrSlug) || null;
+}
+
+async function resolveBlogPublishers(post: { author_id?: string; editors?: string[] } | null): Promise<BlogPublisher[]> {
+  if (!post) return [];
+
+  const ids = new Set<string>();
+  if (post.author_id) ids.add(post.author_id);
+  if (post.editors?.length) post.editors.forEach(id => ids.add(id));
+  if (ids.size === 0) return [];
+
+  const results = await Promise.all(Array.from(ids).map(id => prefetchMemberById(id)));
+
+  return results
+    .filter((m): m is Member => m !== null)
+    .map(m => ({
+      id: m.id,
+      name: `${m.person_firstname || ''} ${m.person_surname || ''}`.trim(),
+      slug: m.person_slug,
+      isTeam: m.is_team_member === true,
+      isSpeaker: m.is_speaker === true && m.is_speaker_published !== false,
+      image: m.person_photo_nobg || m.person_photo || undefined,
+      role: (m.id === post.author_id ? 'author' : 'editor') as 'author' | 'editor',
+    }))
+    .filter(p => p.name.length > 0);
+}
+
+export async function prefetchBlogDetailPageData(slug: string) {
+  const post = await prefetchBlogPostBySlug(slug);
+  const publishers = await resolveBlogPublishers(post);
+  return { post, publishers };
+}
+
+export async function prefetchBlogPageData() {
+  const [posts, cmsPage] = await Promise.all([
+    prefetchBlogPosts(),
+    prefetchCMSPage('blog'),
+  ]);
+  return { posts, cmsPage };
 }
 
 export function mapNavigationData(apiNav: NavigationAPIData): NavigationConfig {

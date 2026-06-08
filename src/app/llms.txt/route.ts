@@ -1,5 +1,5 @@
 import { NextResponse } from 'next/server';
-import { prefetchSpeakers, prefetchSponsors, prefetchPartners, prefetchCompanies, prefetchVenues } from '@/lib/prefetch';
+import { prefetchSpeakers, prefetchSponsors, prefetchPartners, prefetchCompanies, prefetchVenues, prefetchBlogPosts } from '@/lib/prefetch';
 
 const BASE_URL = process.env.NEXT_PUBLIC_SITE_URL || 'https://deaisummit.org';
 
@@ -8,12 +8,13 @@ function stripHtml(text: string): string {
 }
 
 export async function GET() {
-  const [speakers, sponsors, partners, companies, venues] = await Promise.all([
+  const [speakers, sponsors, partners, companies, venues, blogPosts] = await Promise.all([
     prefetchSpeakers(),
     prefetchSponsors(),
     prefetchPartners(),
     prefetchCompanies(),
     prefetchVenues(),
+    prefetchBlogPosts(),
   ]);
 
   const lines: string[] = [];
@@ -31,6 +32,7 @@ export async function GET() {
   lines.push(`- [Speakers](${BASE_URL}/speakers): All confirmed speakers`);
   lines.push(`- [Partners](${BASE_URL}/partners): Sponsors and partners`);
   lines.push(`- [Agenda](${BASE_URL}/agenda): Event programme and formats`);
+  lines.push(`- [Blog](${BASE_URL}/blog): Insights and analysis on decentralised AI`);
   lines.push(`- [Terms](${BASE_URL}/terms): Terms and conditions`);
   lines.push(`- [Privacy](${BASE_URL}/privacy): Privacy policy`);
   lines.push('');
@@ -105,6 +107,20 @@ export async function GET() {
     for (const c of otherCompanies.slice(0, 20)) {
       const bio = c.company_bio ? `: ${stripHtml(c.company_bio).slice(0, 100)}` : '';
       lines.push(`- [${c.company_name}](${BASE_URL}/companies/${c.company_slug})${bio}`);
+    }
+    lines.push('');
+  }
+
+  // Blog articles
+  if (blogPosts.length > 0) {
+    lines.push('## Blog Articles');
+    lines.push('');
+    for (const post of blogPosts.slice(0, 15)) {
+      const desc = post.meta_description ? `: ${stripHtml(post.meta_description).slice(0, 120)}` : '';
+      lines.push(`- [${post.title}](${BASE_URL}/blog/${post.slug})${desc}`);
+    }
+    if (blogPosts.length > 15) {
+      lines.push(`- ... and ${blogPosts.length - 15} more articles at [${BASE_URL}/blog](${BASE_URL}/blog)`);
     }
     lines.push('');
   }

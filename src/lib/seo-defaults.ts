@@ -17,6 +17,7 @@ export const PAGE_TITLES: Record<string, string> = {
   companies: `Companies - ${SEO_DEFAULTS.siteName}`,
   sponsors: `Sponsors & Partners - ${SEO_DEFAULTS.siteName}`,
   agenda: `Agenda - ${SEO_DEFAULTS.siteName}`,
+  blog: `Insights - ${SEO_DEFAULTS.siteName}`,
   terms: `Terms & Conditions - ${SEO_DEFAULTS.siteName}`,
   privacy: `Privacy Policy - ${SEO_DEFAULTS.siteName}`,
 };
@@ -27,6 +28,7 @@ export const PAGE_DESCRIPTIONS: Record<string, string> = {
   companies: 'Companies participating in DeAI Summit 2026.',
   sponsors: 'Sponsors and partners of DeAI Summit 2026.',
   agenda: 'DeAI Summit 2026 agenda. High-stakes programming formats including Oxford debates, technical rebuttals, and alignment sessions.',
+  blog: 'Analysis, research, and perspectives on decentralised AI, governance, and the evidence shaping DeAI Summit 2026.',
 };
 
 export const PAGE_CANONICALS: Record<string, string> = {
@@ -35,6 +37,7 @@ export const PAGE_CANONICALS: Record<string, string> = {
   companies: '/companies',
   sponsors: '/partners',
   agenda: '/agenda',
+  blog: '/blog',
   terms: '/terms',
   privacy: '/privacy',
 };

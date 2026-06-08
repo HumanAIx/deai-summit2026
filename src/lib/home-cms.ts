@@ -10,6 +10,7 @@
 // when the CMS doesn't provide data for a section.
 
 import type { CMSBlock, CMSCompanyItem, CMSSpeakerItem } from './api-types';
+import { resolveScrollerLogoHasDarkBg, resolveScrollerLogoSrc } from './companyLogo';
 import type {
   HeroConfig,
   StatsConfig,
@@ -141,13 +142,16 @@ function extractMarquee(blocks: CMSBlock[]): MarqueeItemData[] | undefined {
   // Strict `=== true` so drafts whose published flags are undefined/null are
   // filtered out — the CMS API sometimes omits the field for unpublished rows.
   const mapped = items
-    .filter((c) => c.company_published !== false && c.sponsor_published !== false && c.company_logo)
-    .map((c) => ({
-      label: c.company_name,
-      slug: c.company_slug || '',
-      logo: c.company_logo || '',
-      logoHasDarkBg: c.logo_background_white === false,
-    }));
+    .filter((c) => c.company_published !== false && c.sponsor_published !== false && resolveScrollerLogoSrc(c))
+    .map((c) => {
+      const logo = resolveScrollerLogoSrc(c);
+      return {
+        label: c.company_name,
+        slug: c.company_slug || '',
+        logo,
+        logoHasDarkBg: resolveScrollerLogoHasDarkBg(c, logo),
+      };
+    });
   return mapped.length > 0 ? mapped : undefined;
 }
 

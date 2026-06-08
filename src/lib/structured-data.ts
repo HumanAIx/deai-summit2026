@@ -115,6 +115,67 @@ export function generateOrganizationSchema(
   };
 }
 
+interface BlogPostInput {
+  title?: string;
+  slug?: string;
+  meta_description?: string;
+  featured_image?: string | null;
+  published_at?: string;
+  last_updated?: string;
+  reading_time?: number;
+}
+
+interface PublisherInput {
+  name?: string;
+  id?: string;
+  slug?: string;
+  role?: string;
+  isSpeaker?: boolean;
+  isTeam?: boolean;
+}
+
+export function generateArticleSchema(
+  post: BlogPostInput | null | undefined,
+  publishers: PublisherInput[] | null | undefined,
+  baseUrl: string,
+) {
+  if (!post?.title) return null;
+
+  const image = absoluteUrl(post.featured_image, baseUrl);
+  const canonicalUrl = `${baseUrl}/blog/${post.slug}`;
+  const author = publishers?.find(p => p.role === 'author');
+
+  const authorSchema = author?.name ? {
+    '@type': 'Person',
+    name: author.name,
+    ...(author.slug && author.isSpeaker && { url: `${baseUrl}/speakers/${author.slug}` }),
+    ...(author.slug && author.isTeam && !author.isSpeaker && { url: `${baseUrl}/team/${author.slug}` }),
+  } : {
+    '@type': 'Organization',
+    name: 'HumanAIx Foundation',
+    url: 'https://humanaix.io',
+  };
+
+  return {
+    '@context': 'https://schema.org',
+    '@type': 'Article',
+    headline: post.title,
+    ...(post.meta_description && { description: post.meta_description }),
+    ...(image && { image }),
+    url: canonicalUrl,
+    mainEntityOfPage: { '@type': 'WebPage', '@id': canonicalUrl },
+    ...(post.published_at && { datePublished: post.published_at }),
+    ...(post.last_updated && { dateModified: post.last_updated }),
+    author: authorSchema,
+    publisher: {
+      '@type': 'Organization',
+      name: 'DeAI Summit',
+      logo: { '@type': 'ImageObject', url: `${baseUrl}/og-image.png` },
+    },
+    ...(post.reading_time && { wordCount: post.reading_time * 200 }),
+  };
+}
+
 export function generateEventSchema(baseUrl: string) {
   return {
     '@context': 'https://schema.org',

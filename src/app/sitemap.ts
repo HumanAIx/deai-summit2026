@@ -1,16 +1,17 @@
 import type { MetadataRoute } from 'next';
-import { prefetchSpeakers, prefetchSponsors, prefetchPartners, prefetchCompanies, prefetchVenues } from '@/lib/prefetch';
+import { prefetchSpeakers, prefetchSponsors, prefetchPartners, prefetchCompanies, prefetchVenues, prefetchBlogPosts } from '@/lib/prefetch';
 
 const BASE_URL = process.env.NEXT_PUBLIC_SITE_URL || 'https://deaisummit.org';
 
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   // Fetch all dynamic data in parallel
-  const [speakers, sponsors, partners, companies, venues] = await Promise.all([
+  const [speakers, sponsors, partners, companies, venues, blogPosts] = await Promise.all([
     prefetchSpeakers(),
     prefetchSponsors(),
     prefetchPartners(),
     prefetchCompanies(),
     prefetchVenues(),
+    prefetchBlogPosts(),
   ]);
 
   // Static pages
@@ -20,6 +21,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     { url: `${BASE_URL}/team`, changeFrequency: 'weekly', priority: 0.7 },
     { url: `${BASE_URL}/partners`, changeFrequency: 'weekly', priority: 0.9 },
     { url: `${BASE_URL}/agenda`, changeFrequency: 'weekly', priority: 0.8 },
+    { url: `${BASE_URL}/blog`, changeFrequency: 'weekly', priority: 0.8 },
     { url: `${BASE_URL}/terms`, changeFrequency: 'monthly', priority: 0.3 },
     { url: `${BASE_URL}/privacy`, changeFrequency: 'monthly', priority: 0.3 },
   ];
@@ -66,11 +68,19 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
       priority: 0.5,
     }));
 
+  const blogPages: MetadataRoute.Sitemap = blogPosts.map((post) => ({
+    url: post.seo?.canonical_url || `${BASE_URL}/blog/${post.slug}`,
+    lastModified: post.last_updated ? new Date(post.last_updated) : new Date(),
+    changeFrequency: 'weekly' as const,
+    priority: 0.7,
+  }));
+
   return [
     ...staticPages,
     ...speakerPages,
     ...partnerPages,
     ...venuePages,
     ...companyPages,
+    ...blogPages,
   ];
 }
