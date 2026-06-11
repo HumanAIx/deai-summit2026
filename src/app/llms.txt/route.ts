@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server';
-import { prefetchSpeakers, prefetchSponsors, prefetchPartners, prefetchCompanies, prefetchVenues, prefetchBlogPosts } from '@/lib/prefetch';
+import { formatPaginatedListingMarkdownLines } from '@/lib/paginationPaths';
+import { prefetchSpeakers, prefetchTeam, prefetchSponsors, prefetchPartners, prefetchCompanies, prefetchVenues, prefetchBlogPosts } from '@/lib/prefetch';
 
 const BASE_URL = process.env.NEXT_PUBLIC_SITE_URL || 'https://deaisummit.org';
 
@@ -8,8 +9,9 @@ function stripHtml(text: string): string {
 }
 
 export async function GET() {
-  const [speakers, sponsors, partners, companies, venues, blogPosts] = await Promise.all([
+  const [speakers, teamMembers, sponsors, partners, companies, venues, blogPosts] = await Promise.all([
     prefetchSpeakers(),
+    prefetchTeam(),
     prefetchSponsors(),
     prefetchPartners(),
     prefetchCompanies(),
@@ -30,6 +32,7 @@ export async function GET() {
   lines.push('');
   lines.push(`- [Home](${BASE_URL}): Main landing page`);
   lines.push(`- [Speakers](${BASE_URL}/speakers): All confirmed speakers`);
+  lines.push(`- [Team](${BASE_URL}/team): Organizers and operators behind DeAI Summit`);
   lines.push(`- [Partners](${BASE_URL}/partners): Sponsors and partners`);
   lines.push(`- [Agenda](${BASE_URL}/agenda): Event programme and formats`);
   lines.push(`- [Blog](${BASE_URL}/blog): Insights and analysis on decentralised AI`);
@@ -124,6 +127,13 @@ export async function GET() {
     }
     lines.push('');
   }
+
+  lines.push(
+    ...formatPaginatedListingMarkdownLines(BASE_URL, [
+      { path: '/speakers', label: 'Speakers', listing: 'speakers', itemCount: speakers.length },
+      { path: '/team', label: 'Team', listing: 'team', itemCount: teamMembers.length },
+    ]),
+  );
 
   // Contact
   lines.push('## Contact');

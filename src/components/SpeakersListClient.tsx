@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState } from 'react';
+import React from 'react';
 import { AnimatedCounter } from '@/components/AnimatedCounter';
 import Link from 'next/link';
 import { DetailPageLayout } from '@/components/DetailPageLayout';
@@ -13,6 +13,7 @@ import {
   withPhotoCacheBuster,
   type PersonPhotoSource,
 } from '@/lib/personPhoto';
+import { useUrlPagination } from '@/lib/useUrlPagination';
 
 /** Convert **text** markers or brand name to cyan-highlighted spans */
 function highlightTitle(text: string): string {
@@ -198,17 +199,11 @@ export function SpeakersListClient({
   defaultPrimaryStatLabel = 'Speakers',
   emptyMessage = 'No speakers available at the moment.',
 }: SpeakersListClientProps) {
-  const [currentPage, setCurrentPage] = useState(1);
-
   const totalPages = Math.ceil(speakers.length / SPEAKERS_PER_PAGE);
+  const { currentPage, goToPage } = useUrlPagination(totalPages, { scrollTargetId: gridId });
   const startIndex = (currentPage - 1) * SPEAKERS_PER_PAGE;
   const endIndex = startIndex + SPEAKERS_PER_PAGE;
   const paginatedSpeakers = speakers.slice(startIndex, endIndex);
-
-  const goToPage = (page: number) => {
-    setCurrentPage(page);
-    document.getElementById(gridId)?.scrollIntoView({ behavior: 'smooth' });
-  };
 
   const getPageNumbers = () => {
     const pages: (number | string)[] = [];

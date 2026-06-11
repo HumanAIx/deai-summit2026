@@ -1,12 +1,38 @@
 import type { MetadataRoute } from 'next';
-import { prefetchSpeakers, prefetchSponsors, prefetchPartners, prefetchCompanies, prefetchVenues, prefetchBlogPosts } from '@/lib/prefetch';
+import { buildPaginationPath, getListingPageCount } from '@/lib/paginationPaths';
+import { prefetchSpeakers, prefetchTeam, prefetchSponsors, prefetchPartners, prefetchCompanies, prefetchVenues, prefetchBlogPosts } from '@/lib/prefetch';
 
 const BASE_URL = process.env.NEXT_PUBLIC_SITE_URL || 'https://deaisummit.org';
 
+function buildListingPaginationPages(
+  listingPath: string,
+  itemCount: number,
+  listing: 'speakers' | 'team',
+  meta: {
+    changeFrequency: MetadataRoute.Sitemap[number]['changeFrequency'];
+    priority: number;
+  },
+): MetadataRoute.Sitemap {
+  const totalPages = getListingPageCount(itemCount, listing);
+  if (totalPages <= 1) return [];
+
+  const pages: MetadataRoute.Sitemap = [];
+  for (let page = 2; page <= totalPages; page++) {
+    pages.push({
+      url: `${BASE_URL}${buildPaginationPath(listingPath, page)}`,
+      lastModified: new Date(),
+      changeFrequency: meta.changeFrequency,
+      priority: meta.priority,
+    });
+  }
+  return pages;
+}
+
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   // Fetch all dynamic data in parallel
-  const [speakers, sponsors, partners, companies, venues, blogPosts] = await Promise.all([
+  const [speakers, teamMembers, sponsors, partners, companies, venues, blogPosts] = await Promise.all([
     prefetchSpeakers(),
+    prefetchTeam(),
     prefetchSponsors(),
     prefetchPartners(),
     prefetchCompanies(),
@@ -75,8 +101,20 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     priority: 0.7,
   }));
 
+  const paginatedListingPages: MetadataRoute.Sitemap = [
+    ...buildListingPaginationPages('/speakers', speakers.length, 'speakers', {
+      changeFrequency: 'weekly',
+      priority: 0.85,
+    }),
+    ...buildListingPaginationPages('/team', teamMembers.length, 'team', {
+      changeFrequency: 'weekly',
+      priority: 0.65,
+    }),
+  ];
+
   return [
     ...staticPages,
+    ...paginatedListingPages,
     ...speakerPages,
     ...partnerPages,
     ...venuePages,
