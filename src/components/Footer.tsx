@@ -192,16 +192,18 @@ export const Footer: React.FC<FooterProps> = ({ navData, navigationAPIData, onSh
     setIsSubmitting(true);
     setSubmitStatus({ type: null, message: '' });
     try {
-      const apiUrl = process.env.NEXT_PUBLIC_GCONF_API_URL || '';
-      const apiKey = process.env.NEXT_PUBLIC_GCONF_API_KEY || '';
-      const res = await fetch(`${apiUrl}/newsletter/subscribe`, {
+      const res = await fetch('/api/newsletter', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${apiKey}` },
+        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ email }),
       });
       const data = await res.json();
-      if (data.success) { setSubmitStatus({ type: 'success', message: 'Successfully subscribed!' }); setEmail(''); }
-      else { setSubmitStatus({ type: 'error', message: data.error || 'Failed to subscribe.' }); }
+      if (data.success) {
+        setSubmitStatus({ type: 'success', message: data.message || 'Successfully subscribed!' });
+        setEmail('');
+      } else {
+        setSubmitStatus({ type: 'error', message: data.error || 'Failed to subscribe.' });
+      }
     } catch { setSubmitStatus({ type: 'error', message: 'An error occurred.' }); }
     finally { setIsSubmitting(false); }
   };

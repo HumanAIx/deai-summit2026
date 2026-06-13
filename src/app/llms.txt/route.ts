@@ -24,7 +24,7 @@ export async function GET() {
   // Header
   lines.push('# DeAI Summit 2026');
   lines.push('');
-  lines.push('> The Global Inflection Point for AI Governance. Where frontier AI, decentralized systems, and global regulators confront the future of intelligence. Is-Siġġiewi, Malta — 28-30 October 2026.');
+  lines.push('> The Global Inflection Point for AI Governance. Where frontier AI, decentralized systems, and global regulators confront the future of intelligence. Malta, Europe — Q4 2026.');
   lines.push('');
 
   // Key Pages
@@ -44,8 +44,8 @@ export async function GET() {
   lines.push('## Event Details');
   lines.push('');
   lines.push('- **Name:** DeAI Summit 2026');
-  lines.push('- **Date:** 28-30 October 2026');
-  lines.push('- **Venue:** Monte Kristo Estate, Is-Siġġiewi, Malta');
+  lines.push('- **Date:** Q4 2026');
+  lines.push('- **Venue:** Malta, Europe');
   lines.push('- **Organizer:** HumanAIx Foundation');
   lines.push('- **Website:** https://deaisummit.org');
   lines.push('');

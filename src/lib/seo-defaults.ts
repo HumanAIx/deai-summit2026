@@ -4,7 +4,7 @@ import type { SEOSettings } from './api-types';
 export const SEO_DEFAULTS = {
   siteName: 'DeAI Summit 2026',
   defaultTitle: 'DeAI Summit 2026 - Malta',
-  defaultDescription: 'The Global Inflection Point for AI Governance. Where frontier AI, decentralized systems, and global regulators confront the future of intelligence. Malta, 28-30 October 2026.',
+  defaultDescription: 'The Global Inflection Point for AI Governance. Where frontier AI, decentralized systems, and global regulators confront the future of intelligence. Malta, Europe — Q4 2026.',
   defaultImage: '/og-image.png',
   twitterCard: 'summary_large_image' as const,
   ogType: 'website' as const,

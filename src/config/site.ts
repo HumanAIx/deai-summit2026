@@ -6,8 +6,8 @@ export const siteConfig: SiteConfig = {
         badge: "Malta Edition 2026",
         headline: "The Global Inflection Point for AI Governance",
         subheadline: "Where frontier AI, decentralized systems, and global regulators confront the future of intelligence.",
-        location: "Monte Kristo Estate",
-        date: "28-30 October, 2026",
+        location: "Malta, Europe",
+        date: "Q4 2026",
         ctaPrimary: {
             label: "Apply for the Start-up competition",
             link: "#"
