@@ -6,6 +6,7 @@ import Link from 'next/link';
 import { useSearchParams } from 'next/navigation';
 import { HeroConfig } from '@/config/types';
 import { AnimatedGrid } from '@/components/AnimatedGrid';
+import { cmsIconClass } from '@/lib/cmsIcon';
 
 const VIDEO_MAP: Record<string, string> = {
   globe: 'https://videocdn.cdnpk.net/videos/e3e04e12-b643-5f33-aba6-ed773d587c7f/horizontal/previews/watermarked/large.mp4',
@@ -87,14 +88,37 @@ export const Hero: React.FC<HeroProps> = ({ data, onOpenContact, onOpenSpeakerAp
 
         {/* Meta Data Grid */}
         <div className="flex flex-col sm:flex-row flex-wrap justify-center gap-3 md:gap-4 py-2 md:py-4 animate-fade-in-up [animation-delay:400ms] opacity-0 fill-mode-forwards font-sans w-full sm:w-auto">
-          <div className={`flex items-center justify-center gap-2 md:gap-3 px-4 py-2 md:px-6 md:py-3 rounded-full border backdrop-blur-sm hover:bg-white/80 transition-all duration-300 cursor-default min-w-fit w-full sm:w-auto ${videoSrc ? 'border-white/80 bg-white/90 hover:bg-white' : 'border-blue-200/40 bg-white/60'}`} style={{ boxShadow: '0 0 8px 1px rgba(14,111,235,0.10), 0 0 16px 2px rgba(14,111,235,0.05)' }}>
-            <i className="ri-map-pin-line text-brand-blue text-lg md:text-xl"></i>
-            <span className={`text-sm md:text-base font-medium whitespace-nowrap text-slate-800`}>{data.location}</span>
-          </div>
-          <div className={`flex items-center justify-center gap-2 md:gap-3 px-4 py-2 md:px-6 md:py-3 rounded-full border backdrop-blur-sm hover:bg-white/80 transition-all duration-300 cursor-default min-w-fit w-full sm:w-auto ${videoSrc ? 'border-white/80 bg-white/90 hover:bg-white' : 'border-blue-200/40 bg-white/60'}`} style={{ boxShadow: '0 0 8px 1px rgba(14,111,235,0.10), 0 0 16px 2px rgba(14,111,235,0.05)' }}>
-            <i className="ri-calendar-line text-brand-cyan text-lg md:text-xl"></i>
-            <span className={`text-sm md:text-base font-medium whitespace-nowrap text-slate-800`}>{data.date}</span>
-          </div>
+          {(data.textNodes ?? [
+            { icon: 'ri-map-pin-line', text: data.location },
+            { icon: 'ri-calendar-line', text: data.date },
+          ]).map((node, index) => {
+            const pillClass = `flex items-center justify-center gap-2 md:gap-3 px-4 py-2 md:px-6 md:py-3 rounded-full border backdrop-blur-sm hover:bg-white/80 transition-all duration-300 min-w-fit w-full sm:w-auto ${videoSrc ? 'border-white/80 bg-white/90 hover:bg-white' : 'border-blue-200/40 bg-white/60'} ${node.link ? 'cursor-pointer' : 'cursor-default'}`;
+            const pillStyle = { boxShadow: '0 0 8px 1px rgba(14,111,235,0.10), 0 0 16px 2px rgba(14,111,235,0.05)' };
+            const iconClass = `${cmsIconClass(node.icon, index === 0 ? 'ri-map-pin-line' : 'ri-calendar-line')} ${index % 2 === 0 ? 'text-brand-blue' : 'text-brand-cyan'} text-lg md:text-xl`;
+            const label = (
+              <>
+                <i className={iconClass} />
+                <span className="text-sm md:text-base font-medium whitespace-nowrap text-slate-800">{node.text}</span>
+              </>
+            );
+            if (node.link) {
+              const isExternal = node.link.startsWith('http');
+              return isExternal ? (
+                <a key={`${node.text}-${index}`} href={node.link} target="_blank" rel="noopener noreferrer" className={pillClass} style={pillStyle}>
+                  {label}
+                </a>
+              ) : (
+                <Link key={`${node.text}-${index}`} href={node.link} className={pillClass} style={pillStyle}>
+                  {label}
+                </Link>
+              );
+            }
+            return (
+              <div key={`${node.text}-${index}`} className={pillClass} style={pillStyle}>
+                {label}
+              </div>
+            );
+          })}
         </div>
 
         {/* CTA Buttons */}

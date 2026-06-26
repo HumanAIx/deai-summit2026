@@ -367,7 +367,7 @@ export async function prefetchSponsorDetailPageData(slug: string) {
 }
 
 export async function prefetchCMSPage(pageSlug: string): Promise<CMSPageData | null> {
-  return fetchFromAPI<CMSPageData>(`/cms/pages/${pageSlug}`, { cacheDuration: 60 });
+  return fetchFromAPI<CMSPageData>(`/cms/pages/${pageSlug}`, { cacheDuration: 0 });
 }
 
 export async function prefetchNavigation(): Promise<NavigationAPIData | null> {

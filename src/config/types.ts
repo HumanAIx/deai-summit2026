@@ -1,3 +1,9 @@
+export interface HeroTextNode {
+  text: string;
+  icon?: string;
+  link?: string;
+}
+
 export interface HeroConfig {
     backgroundImage: string;
     badge: string;
@@ -5,6 +11,7 @@ export interface HeroConfig {
     subheadline: string;
     location: string;
     date: string;
+    textNodes?: HeroTextNode[];
     ctaPrimary: {
         label: string;
         link: string;
