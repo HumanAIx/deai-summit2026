@@ -5,12 +5,13 @@ import {
   prefetchCMSPage,
   mapNavigationData,
   prefetchPublicAnalyticsTags,
+  prefetchVenues,
 } from '@/lib/prefetch';
 import { redditSpeakerLeadPixel } from '@/lib/analytics-tags';
 import type { SocialLink } from '@/lib/prefetch';
 import { siteConfig } from '@/config/site';
 import { generateEventSchema, jsonLdSafe } from '@/lib/structured-data';
-import { extractHomeSections } from '@/lib/home-cms';
+import { extractHomeSections, enrichHighlightsWithVenue } from '@/lib/home-cms';
 import type { CMSBlock } from '@/lib/api-types';
 
 const BASE_URL = process.env.NEXT_PUBLIC_SITE_URL || 'https://deaisummit.org';
@@ -28,6 +29,7 @@ export default async function Home() {
   const apiNav = await prefetchNavigation();
   const navigationData = apiNav ? mapNavigationData(apiNav) : undefined;
   const analyticsTags = await prefetchPublicAnalyticsTags();
+  const venues = await prefetchVenues();
 
   try {
     const data = await prefetchHomePageData();
@@ -145,9 +147,10 @@ export default async function Home() {
       }
     : siteConfig.stats;
   const aboutData = { ...siteConfig.about, ...(cmsSections.about ?? {}) };
-  const highlightsData = cmsSections.highlights
+  const highlightsBase = cmsSections.highlights
     ? { ...siteConfig.highlights, ...cmsSections.highlights }
     : siteConfig.highlights;
+  const highlightsData = enrichHighlightsWithVenue(highlightsBase, venues);
   const networkingData =
     cmsSections.networking && cmsSections.networking.length > 0
       ? cmsSections.networking

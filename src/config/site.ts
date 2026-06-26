@@ -210,7 +210,7 @@ export const siteConfig: SiteConfig = {
     about: {
         sectionTitle: "What is DeAI Summit?",
         coverImage: "/whatisdeaiSummit.jpg",
-        badge: "Live from Is-Siġġiewi 2026",
+        badge: "Malta, Europe 2026",
         overlayTitle: "Forging the next era of Intelligence",
         galleryLabel: "Summit Keynote Gallery",
         mainStatement: "As AI regulation accelerates globally and centralized models face mounting challenges around trust, compliance, and control, DeAI Summit convenes a forum where frontier AI labs, decentralized AI ecosystems, and policymakers confront these questions together.",
@@ -229,8 +229,8 @@ export const siteConfig: SiteConfig = {
         hotspots: [
             {
                 id: "venue",
-                title: "Monte Kristo <br/>Estate",
-                subtitle: "Is-Siġġiewi | Malta",
+                title: "Official<br/>Venue",
+                subtitle: "Malta, Europe",
                 position: { top: "35%", left: "5%", mdLeft: "8%", lgLeft: "12%" },
                 type: "left-aligned"
             },
@@ -313,7 +313,7 @@ export const siteConfig: SiteConfig = {
         statement: "AI has reached a global inflection point. Questions of transparency, accountability, safety, and governance are no longer theoretical. They are now shaping regulation, capital allocation, and the future of innovation itself.",
         description: "We find ourselves in the midst of the debate between the indiscriminate advance of AI in every aspect of life and the repercussions it will bring in the future. That inflection point will be the key point for the discussion in this summit. DeAI Summit is where those solutions are challenged, tested, and refined.",
         cta: "Join us in Malta",
-        location: "Is-Siġġiewi, Malta"
+        location: "Malta, Europe"
     },
     footer: {
         brandDescription: "The premier gathering for the decentralized AI ecosystem. Malta 2026.",

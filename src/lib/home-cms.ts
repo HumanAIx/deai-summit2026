@@ -235,6 +235,37 @@ function extractHighlights(blocks: CMSBlock[]): Partial<HighlightsConfig> | unde
   };
 }
 
+/** Wire the venue hotspot link (and optional label) from published venues — no hardcoded slugs. */
+export function enrichHighlightsWithVenue(
+  highlights: HighlightsConfig,
+  venues: Array<{ company_name: string; company_slug: string; company_city?: string; company_country?: string }>,
+): HighlightsConfig {
+  const primary = venues[0];
+  if (!primary) return highlights;
+
+  const location = [primary.company_city, primary.company_country === 'MT' ? 'Malta' : primary.company_country]
+    .filter(Boolean)
+    .join(', ');
+
+  const formatVenueTitle = (name: string) =>
+    name.includes(' ') ? name.replace(/ /g, '<br/>') : name;
+
+  return {
+    ...highlights,
+    hotspots: highlights.hotspots.map((spot) => {
+      if (spot.id !== 'venue') return spot;
+      // CMS may set href explicitly — in that case keep CMS title/subtitle as-is.
+      if (spot.href) return spot;
+      return {
+        ...spot,
+        href: `/venues/${primary.company_slug}`,
+        title: formatVenueTitle(primary.company_name),
+        subtitle: location || spot.subtitle || 'Malta, Europe',
+      };
+    }),
+  };
+}
+
 function extractLeadingVoices(blocks: CMSBlock[]): LeadingSpeakerData[] | undefined {
   const block =
     findBySlot(blocks, 'leading-voices') ??

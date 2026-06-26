@@ -24,7 +24,7 @@ export async function GET(request: Request) {
         'Content-Type': 'application/json',
         'Authorization': `Bearer ${API_KEY}`,
       },
-      next: { revalidate: 300 },
+      next: { revalidate: type === 'venues' ? 0 : 300 },
     });
 
     if (!response.ok) {
