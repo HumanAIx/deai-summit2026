@@ -110,27 +110,28 @@ export const SceneHighlights: React.FC<SceneHighlightsProps> = ({ data }) => {
 
 
                             {spot.type !== 'center' && (
-                                spot.id === 'venue' ? (
-                                    <Link href="/venues/monte-kristo" className="mt-4 block no-underline group/venue">
-                                        <h3
-                                            className="font-display font-bold text-2xl md:text-3xl text-white tracking-tighter leading-tight drop-shadow-2xl group-hover/venue:text-brand-cyan transition-colors"
-                                            dangerouslySetInnerHTML={{ __html: spot.title }}
-                                        />
-                                        <span className="text-brand-cyan text-xs md:text-sm tracking-widest uppercase font-mono mt-2 block font-medium">
-                                            {spot.subtitle}
-                                        </span>
-                                    </Link>
-                                ) : (
-                                    <div className="mt-4">
-                                        <h3
-                                            className="font-display font-bold text-2xl md:text-3xl text-white tracking-tighter leading-tight drop-shadow-2xl"
-                                            dangerouslySetInnerHTML={{ __html: spot.title }}
-                                        />
-                                        <span className="text-white/60 text-xs md:text-sm tracking-widest uppercase font-mono mt-2 block">
-                                            {spot.subtitle}
-                                        </span>
-                                    </div>
-                                )
+                                (() => {
+                                    const label = (
+                                        <>
+                                            <h3
+                                                className={`font-display font-bold text-2xl md:text-3xl text-white tracking-tighter leading-tight drop-shadow-2xl ${spot.href ? 'group-hover/spot:text-brand-cyan transition-colors' : ''}`}
+                                                dangerouslySetInnerHTML={{ __html: spot.title }}
+                                            />
+                                            {spot.subtitle ? (
+                                                <span className={`text-xs md:text-sm tracking-widest uppercase font-mono mt-2 block font-medium ${spot.href ? 'text-brand-cyan' : 'text-white/60'}`}>
+                                                    {spot.subtitle}
+                                                </span>
+                                            ) : null}
+                                        </>
+                                    );
+                                    return spot.href ? (
+                                        <Link href={spot.href} className="mt-4 block no-underline group/spot">
+                                            {label}
+                                        </Link>
+                                    ) : (
+                                        <div className="mt-4">{label}</div>
+                                    );
+                                })()
                             )}
 
                             {spot.type === 'center' && (

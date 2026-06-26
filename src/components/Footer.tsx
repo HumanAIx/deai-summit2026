@@ -54,6 +54,8 @@ interface VenueData {
   company_address?: string;
   company_logo?: string;
   company_slug: string;
+  company_published?: boolean;
+  venue_published?: boolean;
 }
 
 const ANIM_DURATION = 1200;
@@ -168,7 +170,13 @@ export const Footer: React.FC<FooterProps> = ({ navData, navigationAPIData, onSh
     if (!venueId) return;
     fetch('/api/companies?type=venues')
       .then(r => r.ok ? r.json() : null)
-      .then(d => { if (d?.data?.length) setAllVenues(d.data); })
+      .then(d => {
+        if (!d?.data?.length) return;
+        const published = d.data.filter(
+          (v: VenueData) => v.company_published !== false && v.venue_published !== false,
+        );
+        setAllVenues(published);
+      })
       .catch(() => {});
   }, [venueId]);
 

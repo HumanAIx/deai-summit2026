@@ -109,6 +109,8 @@ export interface HighlightsHotspot {
     id: string;
     title: string;
     subtitle: string;
+    /** Optional link — CMS hotspots may set this; venue hotspot gets API slug when omitted. */
+    href?: string;
     position: {
         top?: string;
         left?: string;
