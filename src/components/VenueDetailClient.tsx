@@ -6,6 +6,7 @@ import Link from 'next/link';
 import { DetailPageLayout } from '@/components/DetailPageLayout';
 import { AnimatedGrid } from '@/components/AnimatedGrid';
 import { markdownToHtml, youtubeToEmbed } from '@/lib/utils';
+import { getGoogleMapsViewUrl } from '@/lib/googleMaps';
 import type { Company, CompanySocials, NavigationAPIData } from '@/lib/api-types';
 import type { NavigationConfig } from '@/config/types';
 
@@ -73,6 +74,14 @@ export const VenueDetailClient: React.FC<VenueDetailClientProps> = ({ company, n
   const embedUrl = company.company_embedded_youtube
     ? youtubeToEmbed(company.company_embedded_youtube)
     : null;
+  const mapsViewUrl = company.company_google_maps
+    ? getGoogleMapsViewUrl(
+        company.company_google_maps,
+        [company.company_name, company.company_city, company.company_country === 'MT' ? 'Malta' : company.company_country]
+          .filter(Boolean)
+          .join(', '),
+      )
+    : '';
 
   return (
     <DetailPageLayout navigationData={navigationData} navigationAPIData={navigationAPIData} socials={socials}>
@@ -144,9 +153,9 @@ export const VenueDetailClient: React.FC<VenueDetailClientProps> = ({ company, n
             </div>
 
             {/* Google Maps link */}
-            {company.company_google_maps && (
+            {mapsViewUrl && (
               <a
-                href={company.company_google_maps}
+                href={mapsViewUrl}
                 target="_blank"
                 rel="noopener noreferrer"
                 className="mt-8 inline-flex items-center gap-2 px-6 py-3 rounded-full border border-white/20 bg-white/10 backdrop-blur-sm hover:bg-white/20 transition-all duration-300 text-sm font-semibold text-white"
