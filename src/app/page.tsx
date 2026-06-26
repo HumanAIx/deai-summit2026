@@ -128,7 +128,16 @@ export default async function Home() {
 
   // Merge CMS overrides onto the siteConfig defaults for the content-heavy
   // sections. Missing CMS fields fall through to siteConfig.
-  const heroData = { ...siteConfig.hero, ...(cmsSections.hero ?? {}) };
+  const heroData = {
+    ...siteConfig.hero,
+    ...(cmsSections.hero ?? {}),
+    textNodes:
+      cmsSections.hero?.textNodes ??
+      [
+        { icon: 'ri-map-pin-line', text: siteConfig.hero.location },
+        { icon: 'ri-calendar-line', text: siteConfig.hero.date },
+      ],
+  };
   const statsData = cmsSections.stats
     ? {
         quote: { ...siteConfig.stats.quote, ...(cmsSections.stats.quote ?? {}) },

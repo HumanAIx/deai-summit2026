@@ -207,6 +207,7 @@ export interface CMSBlock {
   listLimit?: number;
   items?: CMSSpeakerItem[];
   buttons?: CMSButton[];
+  textNodes?: Array<{ id?: string; text: string; icon?: string; link?: string }>;
   [key: string]: unknown;
 }
 

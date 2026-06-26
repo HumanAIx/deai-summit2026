@@ -110,6 +110,17 @@ function extractHero(blocks: CMSBlock[]): Partial<HeroConfig> | undefined {
   const location = (block.location as string) || '';
   const date = (block.date as string) || '';
 
+  const rawTextNodes = block.textNodes as Array<{ id?: string; text?: string; icon?: string; link?: string }> | undefined;
+  const textNodes = Array.isArray(rawTextNodes)
+    ? rawTextNodes
+        .map((node) => ({
+          text: (node.text || '').trim(),
+          icon: node.icon,
+          link: node.link?.trim() || undefined,
+        }))
+        .filter((node) => node.text)
+    : undefined;
+
   const out: Partial<HeroConfig> = {};
   if (image) out.backgroundImage = image as string;
   if (badge) out.badge = badge;
@@ -117,6 +128,7 @@ function extractHero(blocks: CMSBlock[]): Partial<HeroConfig> | undefined {
   if (subheadline) out.subheadline = subheadline;
   if (location) out.location = location;
   if (date) out.date = date;
+  if (textNodes && textNodes.length > 0) out.textNodes = textNodes;
   if (ctaPrimary) out.ctaPrimary = ctaPrimary;
   if (ctaSecondary) out.ctaSecondary = ctaSecondary;
   if (ctaTertiary) out.ctaTertiary = ctaTertiary;
