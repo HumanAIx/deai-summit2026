@@ -1,6 +1,7 @@
 import { notFound } from 'next/navigation';
 import type { Metadata } from 'next';
-import { prefetchVenueDetailPageData, prefetchNavigation, prefetchSocials, mapNavigationData } from '@/lib/prefetch';
+import { prefetchVenueDetailPageData, prefetchNavigation, prefetchSocials, prefetchCompanyBySlug, mapNavigationData } from '@/lib/prefetch';
+import { COLOCATED_VENUE_SLUG, enrichColocatedPartnerBanner } from '@/lib/colocatedPartner';
 import { generateOrganizationSchema, jsonLdSafe } from '@/lib/structured-data';
 import { SEO_DEFAULTS } from '@/lib/seo-defaults';
 import { VenueDetailClient } from '@/components/VenueDetailClient';
@@ -45,10 +46,11 @@ export async function generateMetadata({ params }: { params: Promise<{ slug: str
 
 export default async function VenueDetailPage({ params }: { params: Promise<{ slug: string }> }) {
   const { slug } = await params;
-  const [{ company, seo }, apiNav, socials] = await Promise.all([
+  const [{ company, seo }, apiNav, socials, techxpoCompany] = await Promise.all([
     prefetchVenueDetailPageData(slug),
     prefetchNavigation(),
     prefetchSocials(),
+    slug === COLOCATED_VENUE_SLUG ? prefetchCompanyBySlug('techxpo-eu') : Promise.resolve(null),
   ]);
 
   if (!company) {
@@ -56,6 +58,9 @@ export default async function VenueDetailPage({ params }: { params: Promise<{ sl
   }
 
   const navigationData = apiNav ? mapNavigationData(apiNav) : undefined;
+  const colocatedBanner = slug === COLOCATED_VENUE_SLUG
+    ? enrichColocatedPartnerBanner(techxpoCompany ?? undefined)
+    : undefined;
 
   const schema = generateOrganizationSchema(company, BASE_URL, 'venues');
   const seoOverrides = seo?.structured_data;
@@ -73,6 +78,7 @@ export default async function VenueDetailPage({ params }: { params: Promise<{ sl
       )}
       <VenueDetailClient
         company={company}
+        colocatedBanner={colocatedBanner}
         navigationData={navigationData}
         navigationAPIData={apiNav || undefined}
         socials={socials}

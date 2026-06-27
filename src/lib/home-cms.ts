@@ -13,10 +13,9 @@ import type { CMSBlock, CMSCompanyItem, CMSSpeakerItem } from './api-types';
 import {
   resolveScrollerLogoHasDarkBg,
   resolveScrollerLogoSrc,
+  type CompanyLogoFields,
 } from './companyLogo';
-import {
-  enrichColocatedPartnerBanner,
-} from '@/lib/colocatedPartner';
+import { enrichColocatedPartnerBanner } from '@/lib/colocatedPartner';
 import type {
   HeroConfig,
   StatsConfig,
@@ -246,7 +245,7 @@ function extractHighlights(blocks: CMSBlock[]): Partial<HighlightsConfig> | unde
 export function enrichHighlightsWithVenue(
   highlights: HighlightsConfig,
   venues: Array<{ company_name: string; company_slug: string; company_city?: string; company_country?: string }>,
-  bannerCompanies?: Record<string, { company_name?: string; logo_background_white?: boolean; company_logo?: string; logo_settings?: unknown }>,
+  bannerCompanies?: Record<string, CompanyLogoFields & { company_name?: string }>,
 ): HighlightsConfig {
   const primary = venues[0];
 

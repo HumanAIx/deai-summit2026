@@ -11,6 +11,7 @@ export const COLOCATED_PARTNER_BANNER: HighlightsHotspotBanner = {
   companySlug: 'techxpo-eu',
 };
 
+export const COLOCATED_VENUE_SLUG = 'mfcc-malta';
 /** Footer custom-link label that should show the co-located partner banner underneath. */
 export const VENUE_PROMO_LINK_LABEL = /beautiful venue/i;
 

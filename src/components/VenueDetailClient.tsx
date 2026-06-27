@@ -7,6 +7,8 @@ import { DetailPageLayout } from '@/components/DetailPageLayout';
 import { AnimatedGrid } from '@/components/AnimatedGrid';
 import { markdownToHtml, youtubeToEmbed } from '@/lib/utils';
 import { getGoogleMapsViewUrl } from '@/lib/googleMaps';
+import { ColocatedPartnerBanner } from '@/components/ColocatedPartnerBanner';
+import type { HighlightsHotspotBanner } from '@/config/types';
 import type { Company, CompanySocials, NavigationAPIData } from '@/lib/api-types';
 import type { NavigationConfig } from '@/config/types';
 
@@ -20,6 +22,7 @@ interface SocialLinkData {
 
 interface VenueDetailClientProps {
   company: Company;
+  colocatedBanner?: HighlightsHotspotBanner;
   navigationData?: NavigationConfig;
   navigationAPIData?: NavigationAPIData;
   socials?: SocialLinkData[];
@@ -70,7 +73,7 @@ function renderBio(bio: string): string {
   return markdownToHtml(bio);
 }
 
-export const VenueDetailClient: React.FC<VenueDetailClientProps> = ({ company, navigationData, navigationAPIData, socials }) => {
+export const VenueDetailClient: React.FC<VenueDetailClientProps> = ({ company, colocatedBanner, navigationData, navigationAPIData, socials }) => {
   const embedUrl = company.company_embedded_youtube
     ? youtubeToEmbed(company.company_embedded_youtube)
     : null;
@@ -165,6 +168,13 @@ export const VenueDetailClient: React.FC<VenueDetailClientProps> = ({ company, n
                 <i className="ri-external-link-line text-white/50"></i>
               </a>
             )}
+
+            {colocatedBanner ? (
+              <ColocatedPartnerBanner
+                banner={colocatedBanner}
+                className="mt-5 max-w-[220px] w-fit mx-auto"
+              />
+            ) : null}
           </div>
         </div>
       </section>
