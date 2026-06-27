@@ -34,6 +34,7 @@ export const DetailPageLayout: React.FC<DetailPageLayoutProps> = ({ children, na
         onShowToast={handleShowToast}
         onOpenContact={() => setIsContactOpen(true)}
         data={navData}
+        socials={socials}
       />
       <main className="w-full mx-auto pt-[140px]">
         {children}

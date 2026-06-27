@@ -15,13 +15,7 @@ import {
 } from '@/lib/colocatedPartner';
 import type { HighlightsHotspotBanner } from '@/config/types';
 
-interface SocialLinkData {
-  key: string;
-  label: string;
-  url: string;
-  icon?: string;
-  color?: string;
-}
+interface SocialLinkData extends PublicSocialLink {}
 
 interface FooterProps {
   navData: NavigationConfig;
@@ -36,24 +30,7 @@ const SLUG_TO_ROUTE: Record<string, string> = {
   'privacy-statement': '/privacy',
 };
 
-function getRemixIcon(key: string): string {
-  const map: Record<string, string> = {
-    linkedin: 'ri-linkedin-fill',
-    x: 'ri-twitter-x-fill',
-    twitter: 'ri-twitter-x-fill',
-    youtube: 'ri-youtube-fill',
-    github: 'ri-github-fill',
-    telegram: 'ri-telegram-fill',
-    discord: 'ri-discord-fill',
-    facebook: 'ri-facebook-circle-fill',
-    instagram: 'ri-instagram-fill',
-    tiktok: 'ri-tiktok-fill',
-    medium: 'ri-medium-fill',
-    meetup: 'ri-community-fill',
-    luma: 'ri-calendar-event-fill',
-  };
-  return map[key] || 'ri-link';
-}
+import { normalizePublicSocialLinks, type PublicSocialLink } from '@/lib/socialIcons';
 
 interface VenueData {
   id: string;
@@ -160,10 +137,7 @@ export const Footer: React.FC<FooterProps> = ({ navData, navigationAPIData, onSh
 
   // Build social links from props or fetched data
   const socialsSource = (socials && socials.length > 0) ? socials : fetchedSocials;
-  const socialLinks: { key: string; label: string; url: string; icon: string }[] = [];
-  for (const s of socialsSource) {
-    if (s.url) socialLinks.push({ key: s.key, label: s.label, url: s.url, icon: getRemixIcon(s.key) });
-  }
+  const socialLinks = normalizePublicSocialLinks(socialsSource);
 
   // Fetch socials if not passed as props
   useEffect(() => {

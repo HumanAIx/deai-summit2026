@@ -1,20 +1,36 @@
 'use client';
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
 import { useRouter, usePathname } from 'next/navigation';
 import { NavigationConfig } from '@/config/types';
+import { normalizePublicSocialLinks, type PublicSocialLink } from '@/lib/socialIcons';
 
 interface NavbarProps {
   onShowToast: (message: string) => void;
   onOpenContact?: () => void;
   data: NavigationConfig;
+  /** From dashboard Settings → Socials (`/settings/public/socials`). */
+  socials?: PublicSocialLink[];
 }
 
-export const Navbar: React.FC<NavbarProps> = ({ onShowToast, onOpenContact, data }) => {
+export const Navbar: React.FC<NavbarProps> = ({ onShowToast, onOpenContact, data, socials }) => {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
+  const [fetchedSocials, setFetchedSocials] = useState<PublicSocialLink[]>([]);
   const router = useRouter();
   const pathname = usePathname();
+
+  useEffect(() => {
+    if (socials && socials.length > 0) return;
+    fetch('/api/settings/socials')
+      .then(r => r.ok ? r.json() : null)
+      .then(d => { if (d?.data?.length) setFetchedSocials(d.data); })
+      .catch(() => {});
+  }, [socials]);
+
+  const socialLinks = normalizePublicSocialLinks(
+    socials && socials.length > 0 ? socials : fetchedSocials,
+  );
 
   const isActive = (href: string) => {
     if (!href.startsWith('/')) return false;
@@ -113,6 +129,7 @@ export const Navbar: React.FC<NavbarProps> = ({ onShowToast, onOpenContact, data
           <button
             onClick={() => setIsMenuOpen(!isMenuOpen)}
             className="lg:hidden p-2 text-white/70 hover:text-white transition-colors"
+            aria-label={isMenuOpen ? 'Close menu' : 'Open menu'}
           >
             <i className={isMenuOpen ? "ri-close-line text-2xl" : "ri-menu-line text-2xl"}></i>
           </button>
@@ -152,17 +169,24 @@ export const Navbar: React.FC<NavbarProps> = ({ onShowToast, onOpenContact, data
               );
             })()}
 
-            <div className="flex items-center justify-center gap-6">
-              <a
-                href={data.socials.linkedin}
-                target="_blank"
-                rel="noreferrer"
-                className="text-white/60 hover:text-white transition-colors"
-                onClick={() => setIsMenuOpen(false)}
-              >
-                <i className="ri-linkedin-fill text-2xl"></i>
-              </a>
-            </div>
+            {socialLinks.length > 0 ? (
+              <div className="flex flex-wrap items-center justify-center gap-6 pt-2">
+                {socialLinks.map((s) => (
+                  <a
+                    key={s.key}
+                    href={s.url}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="text-white/60 hover:text-brand-cyan transition-colors"
+                    title={s.label}
+                    aria-label={s.label}
+                    onClick={() => setIsMenuOpen(false)}
+                  >
+                    <i className={`${s.icon} text-2xl`}></i>
+                  </a>
+                ))}
+              </div>
+            ) : null}
 
             <a
               href={data.actionButton.link}

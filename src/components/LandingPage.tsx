@@ -129,6 +129,7 @@ export const LandingPage: React.FC<LandingPageProps> = ({
                 onShowToast={showToast}
                 onOpenContact={handleOpenContact}
                 data={navigationData || siteConfig.navigation}
+                socials={socials}
             />
 
             <main className="w-full mx-auto">
