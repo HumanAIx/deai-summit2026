@@ -4,6 +4,11 @@ export interface HeroTextNode {
   link?: string;
 }
 
+export interface HeroButton {
+    label: string;
+    link: string;
+}
+
 export interface HeroConfig {
     backgroundImage: string;
     badge: string;
@@ -12,6 +17,8 @@ export interface HeroConfig {
     location: string;
     date: string;
     textNodes?: HeroTextNode[];
+    /** Ordered hero CTAs from CMS home → hero block buttons. */
+    buttons?: HeroButton[];
     ctaPrimary: {
         label: string;
         link: string;

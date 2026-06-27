@@ -12,6 +12,37 @@ const VIDEO_MAP: Record<string, string> = {
   globe: 'https://videocdn.cdnpk.net/videos/e3e04e12-b643-5f33-aba6-ed773d587c7f/horizontal/previews/watermarked/large.mp4',
 };
 
+type HeroButton = NonNullable<HeroConfig['buttons']>[number];
+
+function isWaitlistButton(btn: HeroButton): boolean {
+  if (/^#waitlist$/i.test(btn.link)) return true;
+  return /waitlist/i.test(btn.label) && (!btn.link || btn.link === '#' || btn.link === '#waitlist');
+}
+
+function heroButtonIcon(btn: HeroButton, index: number): string {
+  if (isWaitlistButton(btn)) return 'ri-calendar-check-line';
+  if (/speaker/i.test(btn.label) || /speak/i.test(btn.link)) return 'ri-download-line';
+  if (/sponsor/i.test(btn.label) || /sponsor/i.test(btn.link)) return 'ri-hand-heart-line';
+  const defaults = ['ri-download-line', 'ri-hand-heart-line', 'ri-calendar-check-line'];
+  return defaults[index] ?? 'ri-arrow-right-line';
+}
+
+function resolveHeroButtons(data: HeroConfig): HeroButton[] {
+  if (data.buttons && data.buttons.length > 0) {
+    return data.buttons;
+  }
+
+  const legacy = [data.ctaSecondary, data.ctaTertiary].filter(
+    (btn): btn is HeroButton => Boolean(btn?.label),
+  );
+
+  if (!legacy.some(isWaitlistButton)) {
+    legacy.push({ label: 'Waitlist to Attend', link: '#waitlist' });
+  }
+
+  return legacy;
+}
+
 interface HeroProps {
   data: HeroConfig;
   onOpenContact?: () => void;
@@ -134,20 +165,61 @@ export const Hero: React.FC<HeroProps> = ({ data, onOpenContact, onOpenSpeakerAp
             : '0 0 25px 6px rgba(14,111,235,0.20), 0 0 50px 12px rgba(14,111,235,0.10)';
           return (
         <div className="flex flex-col sm:flex-row gap-4 md:gap-4 pt-4 md:pt-6 pb-10 md:pb-16 items-center w-full sm:w-auto animate-fade-in-up [animation-delay:600ms] opacity-0 fill-mode-forwards flex-wrap justify-center">
-          <Link href="/contact?inquiry=Speaker+Application" className={btnClass} style={{ boxShadow: glowDefault }} onMouseEnter={(e) => { e.currentTarget.style.boxShadow = glowHover; }} onMouseLeave={(e) => { e.currentTarget.style.boxShadow = glowDefault; }}>
-            {data.ctaSecondary.label}
-            <i className="ri-download-line text-lg md:text-xl"></i>
-          </Link>
-          {data.ctaTertiary && (
-            <Link href="/contact?inquiry=Sponsorship+Opportunities" className={btnClass} style={{ boxShadow: glowDefault }} onMouseEnter={(e) => { e.currentTarget.style.boxShadow = glowHover; }} onMouseLeave={(e) => { e.currentTarget.style.boxShadow = glowDefault; }}>
-              {data.ctaTertiary.label}
-              <i className="ri-hand-heart-line text-lg md:text-xl"></i>
-            </Link>
-          )}
-          <button onClick={onOpenWaitlist} className={btnClass} style={{ boxShadow: glowDefault }} onMouseEnter={(e) => { e.currentTarget.style.boxShadow = glowHover; }} onMouseLeave={(e) => { e.currentTarget.style.boxShadow = glowDefault; }}>
-            Waitlist to Attend
-            <i className="ri-calendar-check-line text-lg md:text-xl"></i>
-          </button>
+          {resolveHeroButtons(data).map((btn, index) => {
+            const iconClass = `${heroButtonIcon(btn, index)} text-lg md:text-xl`;
+
+            if (isWaitlistButton(btn)) {
+              return (
+                <button
+                  key={`${btn.label}-${index}`}
+                  type="button"
+                  onClick={onOpenWaitlist}
+                  className={btnClass}
+                  style={{ boxShadow: glowDefault }}
+                  onMouseEnter={(e) => { e.currentTarget.style.boxShadow = glowHover; }}
+                  onMouseLeave={(e) => { e.currentTarget.style.boxShadow = glowDefault; }}
+                >
+                  {btn.label}
+                  <i className={iconClass}></i>
+                </button>
+              );
+            }
+
+            const href = btn.link?.trim() || '/contact';
+            const isExternal = href.startsWith('http');
+
+            if (isExternal) {
+              return (
+                <a
+                  key={`${btn.label}-${index}`}
+                  href={href}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className={btnClass}
+                  style={{ boxShadow: glowDefault }}
+                  onMouseEnter={(e) => { e.currentTarget.style.boxShadow = glowHover; }}
+                  onMouseLeave={(e) => { e.currentTarget.style.boxShadow = glowDefault; }}
+                >
+                  {btn.label}
+                  <i className={iconClass}></i>
+                </a>
+              );
+            }
+
+            return (
+              <Link
+                key={`${btn.label}-${index}`}
+                href={href}
+                className={btnClass}
+                style={{ boxShadow: glowDefault }}
+                onMouseEnter={(e) => { e.currentTarget.style.boxShadow = glowHover; }}
+                onMouseLeave={(e) => { e.currentTarget.style.boxShadow = glowDefault; }}
+              >
+                {btn.label}
+                <i className={iconClass}></i>
+              </Link>
+            );
+          })}
         </div>
           );
         })()}

@@ -135,6 +135,7 @@ function extractHero(blocks: CMSBlock[]): Partial<HeroConfig> | undefined {
   if (location) out.location = location;
   if (date) out.date = date;
   if (textNodes && textNodes.length > 0) out.textNodes = textNodes;
+  if (buttons.length > 0) out.buttons = buttons;
   if (ctaPrimary) out.ctaPrimary = ctaPrimary;
   if (ctaSecondary) out.ctaSecondary = ctaSecondary;
   if (ctaTertiary) out.ctaTertiary = ctaTertiary;
