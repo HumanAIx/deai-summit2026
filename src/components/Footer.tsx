@@ -264,9 +264,6 @@ export const Footer: React.FC<FooterProps> = ({ navData, navigationAPIData, onSh
     return (
       <div key={w.id}>
         {renderCustomLink(w)}
-        {isVenuePromoCustomLink(w) ? (
-          <ColocatedPartnerBanner banner={colocatedBanner} className="mt-4 max-w-[220px] w-fit" />
-        ) : null}
       </div>
     );
   }
@@ -316,6 +313,9 @@ export const Footer: React.FC<FooterProps> = ({ navData, navigationAPIData, onSh
             ))}
           </div>
         )}
+        {hasVenuePromoLink ? (
+          <ColocatedPartnerBanner banner={colocatedBanner} className="mt-4 max-w-[220px] w-fit" />
+        ) : null}
       </div>
     );
   }
