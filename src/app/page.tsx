@@ -6,6 +6,7 @@ import {
   mapNavigationData,
   prefetchPublicAnalyticsTags,
   prefetchVenues,
+  prefetchCompanyBySlug,
 } from '@/lib/prefetch';
 import { redditSpeakerLeadPixel } from '@/lib/analytics-tags';
 import type { SocialLink } from '@/lib/prefetch';
@@ -29,7 +30,10 @@ export default async function Home() {
   const apiNav = await prefetchNavigation();
   const navigationData = apiNav ? mapNavigationData(apiNav) : undefined;
   const analyticsTags = await prefetchPublicAnalyticsTags();
-  const venues = await prefetchVenues();
+  const [venues, techxpoCompany] = await Promise.all([
+    prefetchVenues(),
+    prefetchCompanyBySlug('techxpo-eu'),
+  ]);
 
   try {
     const data = await prefetchHomePageData();
@@ -150,7 +154,11 @@ export default async function Home() {
   const highlightsBase = cmsSections.highlights
     ? { ...siteConfig.highlights, ...cmsSections.highlights }
     : siteConfig.highlights;
-  const highlightsData = enrichHighlightsWithVenue(highlightsBase, venues);
+  const highlightsData = enrichHighlightsWithVenue(
+    highlightsBase,
+    venues,
+    techxpoCompany ? { 'techxpo-eu': techxpoCompany } : undefined,
+  );
   const networkingData =
     cmsSections.networking && cmsSections.networking.length > 0
       ? cmsSections.networking

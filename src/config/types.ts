@@ -105,12 +105,25 @@ export interface AboutConfig {
     ctaSecondary: string;
 }
 
+export interface HighlightsHotspotBanner {
+    /** e.g. "Co-located by TechXpo EU" */
+    label: string;
+    href: string;
+    /** When set, homepage enrichment fills logo from the companies API. */
+    companySlug?: string;
+    logo?: string;
+    logoHasDarkBg?: boolean;
+    logoBackgroundWhite?: boolean;
+}
+
 export interface HighlightsHotspot {
     id: string;
     title: string;
     subtitle: string;
     /** Optional link — CMS hotspots may set this; venue hotspot gets API slug when omitted. */
     href?: string;
+    /** Small promo chip shown under the hotspot label (e.g. partner company on the venue pin). */
+    bannerLink?: HighlightsHotspotBanner;
     position: {
         top?: string;
         left?: string;

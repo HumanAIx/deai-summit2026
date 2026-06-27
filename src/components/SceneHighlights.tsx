@@ -2,6 +2,7 @@ import React from 'react';
 import Image from 'next/image';
 import Link from 'next/link';
 import { HighlightsConfig } from '@/config/types';
+import { ColocatedPartnerBanner } from '@/components/ColocatedPartnerBanner';
 
 interface SceneHighlightsProps {
     data: HighlightsConfig;
@@ -133,6 +134,10 @@ export const SceneHighlights: React.FC<SceneHighlightsProps> = ({ data }) => {
                                     );
                                 })()
                             )}
+
+                            {spot.type === 'left-aligned' && spot.bannerLink ? (
+                                <ColocatedPartnerBanner banner={spot.bannerLink} />
+                            ) : null}
 
                             {spot.type === 'center' && (
                                 <>

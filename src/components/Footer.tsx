@@ -7,6 +7,13 @@ import { GlitchText } from '@/components/GlitchText';
 import type { GlitchTextHandle } from '@/components/GlitchText';
 import type { NavigationConfig } from '@/config/types';
 import type { NavigationAPIData } from '@/lib/api-types';
+import { ColocatedPartnerBanner } from '@/components/ColocatedPartnerBanner';
+import {
+  COLOCATED_PARTNER_BANNER,
+  enrichColocatedPartnerBanner,
+  isVenuePromoCustomLink,
+} from '@/lib/colocatedPartner';
+import type { HighlightsHotspotBanner } from '@/config/types';
 
 interface SocialLinkData {
   key: string;
@@ -116,6 +123,7 @@ function PoweredByGconf() {
 export const Footer: React.FC<FooterProps> = ({ navData, navigationAPIData, onShowToast, onOpenContact, socials }) => {
   const [fetchedSocials, setFetchedSocials] = useState<SocialLinkData[]>([]);
   const [allVenues, setAllVenues] = useState<VenueData[]>([]);
+  const [colocatedBanner, setColocatedBanner] = useState<HighlightsHotspotBanner>(COLOCATED_PARTNER_BANNER);
   const [activeVenueIndex, setActiveVenueIndex] = useState(0);
   const [email, setEmail] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -128,6 +136,7 @@ export const Footer: React.FC<FooterProps> = ({ navData, navigationAPIData, onSh
   const footerColLabels: Record<string, string> = fb.footerColLabels || {};
   const bottomBarLinks: any[] = fb.bottomBarLinks || [];
   const venueId: string = fb.venueId || '';
+  const hasVenuePromoLink = widgets.some(isVenuePromoCustomLink);
 
   // Widget helpers
   const topWidgets = (tc: number) => widgets.filter((w: any) => !w.column && w.topCol === tc);
@@ -179,6 +188,17 @@ export const Footer: React.FC<FooterProps> = ({ navData, navigationAPIData, onSh
       })
       .catch(() => {});
   }, [venueId]);
+
+  // TechXpo EU co-located partner banner (under "View our beautiful Venue" custom link)
+  useEffect(() => {
+    if (!hasVenuePromoLink) return;
+    fetch(`/api/companies?id=${COLOCATED_PARTNER_BANNER.companySlug}`)
+      .then(r => r.ok ? r.json() : null)
+      .then(d => {
+        if (d?.data) setColocatedBanner(enrichColocatedPartnerBanner(d.data));
+      })
+      .catch(() => {});
+  }, [hasVenuePromoLink]);
 
   // Auto-rotate venues
   useEffect(() => {
@@ -237,6 +257,17 @@ export const Footer: React.FC<FooterProps> = ({ navData, navigationAPIData, onSh
       <Link href={href} target={target} rel={rel} className={cls}>
         {w.linkLabel || 'Link'}
       </Link>
+    );
+  }
+
+  function renderCustomLinkWidget(w: any) {
+    return (
+      <div key={w.id}>
+        {renderCustomLink(w)}
+        {isVenuePromoCustomLink(w) ? (
+          <ColocatedPartnerBanner banner={colocatedBanner} className="mt-4 max-w-[220px] w-fit" />
+        ) : null}
+      </div>
     );
   }
 
@@ -419,7 +450,7 @@ export const Footer: React.FC<FooterProps> = ({ navData, navigationAPIData, onSh
                 </div>
               ) : null;
               if (w.type === 'venue') return renderVenueWidget(w);
-              if (w.type === 'custom-link') return <div key={w.id}>{renderCustomLink(w)}</div>;
+              if (w.type === 'custom-link') return renderCustomLinkWidget(w);
               return null;
             }))}
           </div>
@@ -490,7 +521,7 @@ export const Footer: React.FC<FooterProps> = ({ navData, navigationAPIData, onSh
                 </div>
               ) : null;
               if (w.type === 'venue') return renderVenueWidget(w);
-              if (w.type === 'custom-link') return <div key={w.id}>{renderCustomLink(w)}</div>;
+              if (w.type === 'custom-link') return renderCustomLinkWidget(w);
               return null;
             })}
           </div>
@@ -537,9 +568,7 @@ export const Footer: React.FC<FooterProps> = ({ navData, navigationAPIData, onSh
                 <div className={publishedItems.length > 0 ? 'mt-4 flex flex-col gap-3' : 'flex flex-col gap-3'}>
                   {columnWidgets.map((w: any) => {
                     if (w.type === 'venue') return renderVenueWidget(w);
-                    if (w.type === 'custom-link') return (
-                      <div key={w.id}>{renderCustomLink(w)}</div>
-                    );
+                    if (w.type === 'custom-link') return renderCustomLinkWidget(w);
                     if (w.type === 'socials') return socialLinks.length > 0 ? (
                       <ul key={w.id} className="flex flex-col gap-3">
                         {socialLinks.map((s) => (

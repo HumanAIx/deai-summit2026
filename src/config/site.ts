@@ -1,4 +1,5 @@
 import { SiteConfig } from './types';
+import { COLOCATED_PARTNER_BANNER } from '@/lib/colocatedPartner';
 
 export const siteConfig: SiteConfig = {
     hero: {
@@ -232,7 +233,8 @@ export const siteConfig: SiteConfig = {
                 title: "Official<br/>Venue",
                 subtitle: "Malta, Europe",
                 position: { top: "35%", left: "5%", mdLeft: "8%", lgLeft: "12%" },
-                type: "left-aligned"
+                type: "left-aligned",
+                bannerLink: COLOCATED_PARTNER_BANNER,
             },
             {
                 id: "stage",
