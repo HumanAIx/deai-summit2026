@@ -2,10 +2,16 @@ import { NextResponse } from 'next/server';
 
 const TENANT_SLUG = process.env.TENANT_SLUG || 'deaisummit';
 const STORAGE_BUCKET = 'tenants';
-const STORAGE_HOST =
+// Strip an accidental scheme/trailing slash (e.g. if the env var was set to
+// "https://host.supabase.co/") so we don't build a malformed "https://https://..." URL.
+const STORAGE_HOST = (
   process.env.NEXT_PUBLIC_SUPABASE_STORAGE_HOST ||
   process.env.SUPABASE_STORAGE_HOST ||
-  '';
+  ''
+)
+  .trim()
+  .replace(/^https?:\/\//i, '')
+  .replace(/\/+$/, '');
 
 function isSafeSegment(segment: string): boolean {
   if (!segment) return false;
@@ -35,7 +41,13 @@ export async function GET(
   const storagePath = `${TENANT_SLUG}/${decoded.join('/')}`;
   const supabaseUrl = `https://${STORAGE_HOST}/storage/v1/object/public/${STORAGE_BUCKET}/${storagePath.split('/').map(encodeURIComponent).join('/')}`;
 
-  const upstream = await fetch(supabaseUrl, { next: { revalidate: 3600 } });
+  let upstream: Response;
+  try {
+    upstream = await fetch(supabaseUrl, { next: { revalidate: 3600 } });
+  } catch (err) {
+    console.error(`[files proxy] fetch failed for ${supabaseUrl}:`, err);
+    return NextResponse.json({ error: 'Upstream storage request failed' }, { status: 502 });
+  }
 
   if (!upstream.ok) {
     return new NextResponse('File not found', { status: upstream.status === 404 ? 404 : 502 });
