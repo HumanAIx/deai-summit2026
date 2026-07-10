@@ -10,7 +10,7 @@ import {
 const EXTERNAL_API_URL = process.env.NEXT_PUBLIC_GCONF_API_URL || 'http://localhost:3000/api';
 // SECURITY: prefer server-only GCONF_API_KEY. NEXT_PUBLIC_* is inlined into the
 // client bundle and must be rotated upstream. Fallback retained for migration.
-const API_KEY = process.env.GCONF_API_KEY || process.env.NEXT_PUBLIC_GCONF_API_KEY || '';
+const API_KEY = process.env.SITE_API_KEY || process.env.GCONF_API_KEY || process.env.NEXT_PUBLIC_GCONF_API_KEY || '';
 
 const CACHE_DURATION = 60; // 1 minute
 
