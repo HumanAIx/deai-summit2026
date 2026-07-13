@@ -1,9 +1,9 @@
-import type { Metadata } from 'next';
-import { prefetchCMSPage, prefetchSpeakers, prefetchNavigation, mapNavigationData, prefetchSocials } from '@/lib/prefetch';
-import { siteConfig } from '@/config/site';
-import { SEO_DEFAULTS } from '@/lib/seo-defaults';
 import { SpeakersListClient } from '@/components/SpeakersListClient';
-import type { NormalizedSpeaker, CMSBlock, CMSSpeakerItem } from '@/lib/api-types';
+import { siteConfig } from '@/config/site';
+import type { CMSBlock, CMSSpeakerItem, NormalizedSpeaker } from '@/lib/api-types';
+import { mapNavigationData, prefetchCMSPage, prefetchNavigation, prefetchSocials, prefetchSpeakers } from '@/lib/prefetch';
+import { SEO_DEFAULTS } from '@/lib/seo-defaults';
+import type { Metadata } from 'next';
 
 const BASE_URL = process.env.NEXT_PUBLIC_SITE_URL || 'https://deaisummit.org';
 
@@ -157,13 +157,14 @@ function extractCtaFromBlocks(blocks: CMSBlock[]): {
   return {};
 }
 
-function extractStatsFromBlocks(blocks: CMSBlock[]): { label: string; value: string }[] {
+function extractStatsFromBlocks(blocks: CMSBlock[]): { label: string; value: string; counterType?: string }[] {
   for (const block of blocks) {
     const items = (block as Record<string, unknown>).collectionItems as CollectionItem[] | undefined;
     if (items && Array.isArray(items) && items.length > 0) {
       return items.map(item => ({
         label: item.description,
         value: item.rawCount != null ? String(item.rawCount) : item.title,
+        counterType: item.counterType,
       }));
     }
   }
@@ -252,7 +253,17 @@ export default async function SpeakersPage() {
         });
       }
       heroData = extractHeroFromBlocks(blocks);
-      stats = extractStatsFromBlocks(blocks);
+      stats = extractStatsFromBlocks(blocks).map(stat => {
+        // If we are showing a dynamic live list, the stat counter should
+        // reflect the live count, not the frozen CMS snapshot count.
+        if (
+          blocksRequestDynamicSpeakers(blocks) &&
+          (stat.counterType === 'speakers' || stat.counterType === 'team-members')
+        ) {
+          return { ...stat, value: String(speakers.length) };
+        }
+        return stat;
+      });
       ctaData = extractCtaFromBlocks(blocks);
     }
   } catch (error) {

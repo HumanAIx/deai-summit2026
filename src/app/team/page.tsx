@@ -1,8 +1,8 @@
-import type { Metadata } from 'next';
-import { prefetchCMSPage, prefetchNavigation, mapNavigationData, prefetchSocials, prefetchTeam } from '@/lib/prefetch';
-import { SEO_DEFAULTS } from '@/lib/seo-defaults';
 import { SpeakersListClient } from '@/components/SpeakersListClient';
-import type { NormalizedSpeaker, CMSBlock, CMSSpeakerItem } from '@/lib/api-types';
+import type { CMSBlock, CMSSpeakerItem, NormalizedSpeaker } from '@/lib/api-types';
+import { mapNavigationData, prefetchCMSPage, prefetchNavigation, prefetchSocials, prefetchTeam } from '@/lib/prefetch';
+import { SEO_DEFAULTS } from '@/lib/seo-defaults';
+import type { Metadata } from 'next';
 
 const BASE_URL = process.env.NEXT_PUBLIC_SITE_URL || 'https://deaisummit.org';
 
@@ -217,6 +217,20 @@ export default async function TeamPage() {
           photo_settings: fromApi.photo_settings ?? m.photo_settings,
         };
       });
+
+      // Sort the CMS snapshot members using the live CRM database sort order
+      if (apiTeam.status === 'fulfilled') {
+        const orderMap = new Map<string, number>();
+        apiTeam.value.forEach((m, index) => {
+          if (m.slug) orderMap.set(m.slug, index);
+        });
+        members.sort((a, b) => {
+          const orderA = a.slug ? orderMap.get(a.slug) ?? 9999 : 9999;
+          const orderB = b.slug ? orderMap.get(b.slug) ?? 9999 : 9999;
+          return orderA - orderB;
+        });
+      }
+
       heroData = extractHeroFromBlocks(blocks);
       stats = extractStatsFromBlocks(blocks);
       ctaData = extractCtaFromBlocks(blocks);
