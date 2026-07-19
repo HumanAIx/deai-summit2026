@@ -219,12 +219,16 @@ export async function prefetchVenues(): Promise<Company[]> {
 }
 
 export async function prefetchCompanyBySlug(slug: string): Promise<Company | null> {
-  return fetchFromAPI<Company>(`/companies/${slug}`);
+  // Must bypass Next fetch cache — publish toggles in the dashboard need to
+  // reflect immediately on detail pages and co-located partner banners.
+  return fetchFromAPI<Company>(`/companies/${slug}`, { cacheDuration: 0 });
 }
 
 export async function prefetchVenueDetailPageData(slug: string) {
   const company = await prefetchCompanyBySlug(slug);
-  if (!company) return { company: null, seo: null };
+  if (!company || company.company_published !== true || company.venue_published !== true) {
+    return { company: null, seo: null };
+  }
   const seo = await prefetchCompanySEO(company.id);
   return { company, seo };
 }
@@ -356,14 +360,38 @@ export async function prefetchSpeakerDetailPageData(slug: string) {
 
 export async function prefetchCompanyDetailPageData(slug: string) {
   const company = await prefetchCompanyBySlug(slug);
-  if (!company) return { company: null };
+  if (!company || company.company_published !== true) return { company: null, seo: null };
 
   const seo = await prefetchCompanySEO(company.id);
   return { company, seo };
 }
 
 export async function prefetchSponsorDetailPageData(slug: string) {
-  return prefetchCompanyDetailPageData(slug);
+  const company = await prefetchCompanyBySlug(slug);
+  if (
+    !company ||
+    company.company_published !== true ||
+    company.sponsor_published !== true ||
+    !company.company_is_sponsor
+  ) {
+    return { company: null, seo: null };
+  }
+  const seo = await prefetchCompanySEO(company.id);
+  return { company, seo };
+}
+
+export async function prefetchPartnerDetailPageData(slug: string) {
+  const company = await prefetchCompanyBySlug(slug);
+  if (
+    !company ||
+    company.company_published !== true ||
+    company.partner_published !== true ||
+    !company.company_is_partner
+  ) {
+    return { company: null, seo: null };
+  }
+  const seo = await prefetchCompanySEO(company.id);
+  return { company, seo };
 }
 
 export async function prefetchCMSPage(pageSlug: string): Promise<CMSPageData | null> {

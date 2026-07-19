@@ -1,15 +1,17 @@
 import { notFound } from 'next/navigation';
 import type { Metadata } from 'next';
-import { prefetchSponsorDetailPageData, prefetchNavigation, prefetchSocials, mapNavigationData } from '@/lib/prefetch';
+import { prefetchPartnerDetailPageData, prefetchNavigation, prefetchSocials, mapNavigationData } from '@/lib/prefetch';
 import { generateOrganizationSchema, jsonLdSafe } from '@/lib/structured-data';
 import { SEO_DEFAULTS } from '@/lib/seo-defaults';
 import { CompanyDetailClient } from '@/components/CompanyDetailClient';
 
 const BASE_URL = process.env.NEXT_PUBLIC_SITE_URL || 'https://deaisummit.org';
 
+export const dynamic = 'force-dynamic';
+
 export async function generateMetadata({ params }: { params: Promise<{ slug: string }> }): Promise<Metadata> {
   const { slug } = await params;
-  const { company, seo } = await prefetchSponsorDetailPageData(slug);
+  const { company, seo } = await prefetchPartnerDetailPageData(slug);
 
   if (!company) {
     return { title: 'Partner Not Found' };
@@ -46,7 +48,7 @@ export async function generateMetadata({ params }: { params: Promise<{ slug: str
 export default async function PartnerDetailPage({ params }: { params: Promise<{ slug: string }> }) {
   const { slug } = await params;
   const [{ company, seo }, apiNav, socials] = await Promise.all([
-    prefetchSponsorDetailPageData(slug),
+    prefetchPartnerDetailPageData(slug),
     prefetchNavigation(),
     prefetchSocials(),
   ]);

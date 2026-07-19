@@ -24,7 +24,8 @@ export async function GET(request: Request) {
         'Content-Type': 'application/json',
         'Authorization': `Bearer ${API_KEY}`,
       },
-      next: { revalidate: type === 'venues' ? 0 : 300 },
+      // Single-company lookups must reflect publish toggles immediately.
+      ...(id ? { cache: 'no-store' as const } : { next: { revalidate: type === 'venues' ? 0 : 300 } }),
     });
 
     if (!response.ok) {

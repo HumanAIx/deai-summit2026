@@ -7,6 +7,8 @@ import { CompanyDetailClient } from '@/components/CompanyDetailClient';
 
 const BASE_URL = process.env.NEXT_PUBLIC_SITE_URL || 'https://deaisummit.org';
 
+export const dynamic = 'force-dynamic';
+
 export async function generateMetadata({ params }: { params: Promise<{ slug: string }> }): Promise<Metadata> {
   const { slug } = await params;
   const { company, seo } = await prefetchCompanyDetailPageData(slug);
