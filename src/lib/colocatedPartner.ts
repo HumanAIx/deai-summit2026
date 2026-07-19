@@ -19,10 +19,22 @@ export function isVenuePromoCustomLink(widget: { type?: string; linkLabel?: stri
   return widget.type === 'custom-link' && VENUE_PROMO_LINK_LABEL.test(widget.linkLabel || '');
 }
 
+type ColocatedCompany = CompanyLogoFields & {
+  company_name?: string;
+  company_published?: boolean;
+};
+
+/** Co-located partner link is only public when the company row is explicitly published. */
+export function isColocatedPartnerPublished(
+  company?: ColocatedCompany | null,
+): company is ColocatedCompany {
+  return company?.company_published === true;
+}
+
 export function enrichColocatedPartnerBanner(
-  company?: CompanyLogoFields & { company_name?: string },
-): HighlightsHotspotBanner {
-  if (!company) return COLOCATED_PARTNER_BANNER;
+  company?: ColocatedCompany,
+): HighlightsHotspotBanner | undefined {
+  if (!isColocatedPartnerPublished(company)) return undefined;
 
   const logo = resolveGeneralLogoSrc(company);
   const name = company.company_name?.trim();

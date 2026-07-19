@@ -100,7 +100,7 @@ function PoweredByGconf() {
 export const Footer: React.FC<FooterProps> = ({ navData, navigationAPIData, onShowToast, onOpenContact, socials }) => {
   const [fetchedSocials, setFetchedSocials] = useState<SocialLinkData[]>([]);
   const [allVenues, setAllVenues] = useState<VenueData[]>([]);
-  const [colocatedBanner, setColocatedBanner] = useState<HighlightsHotspotBanner>(COLOCATED_PARTNER_BANNER);
+  const [colocatedBanner, setColocatedBanner] = useState<HighlightsHotspotBanner | undefined>(undefined);
   const [activeVenueIndex, setActiveVenueIndex] = useState(0);
   const [email, setEmail] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -169,7 +169,8 @@ export const Footer: React.FC<FooterProps> = ({ navData, navigationAPIData, onSh
     fetch(`/api/companies?id=${COLOCATED_PARTNER_BANNER.companySlug}`)
       .then(r => r.ok ? r.json() : null)
       .then(d => {
-        if (d?.data) setColocatedBanner(enrichColocatedPartnerBanner(d.data));
+        const banner = d?.data ? enrichColocatedPartnerBanner(d.data) : undefined;
+        if (banner) setColocatedBanner(banner);
       })
       .catch(() => {});
   }, [hasVenuePromoLink]);
@@ -287,7 +288,7 @@ export const Footer: React.FC<FooterProps> = ({ navData, navigationAPIData, onSh
             ))}
           </div>
         )}
-        {hasVenuePromoLink ? (
+        {hasVenuePromoLink && colocatedBanner ? (
           <ColocatedPartnerBanner banner={colocatedBanner} className="mt-4 max-w-[220px] w-fit" />
         ) : null}
       </div>

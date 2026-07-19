@@ -273,7 +273,9 @@ export function enrichHighlightsWithVenue(
 
       const withBanner = {
         ...spot,
-        bannerLink: baseBanner ? enrichColocatedPartnerBanner(bannerCompany) : undefined,
+        bannerLink: baseBanner
+          ? enrichColocatedPartnerBanner(bannerCompany)
+          : undefined,
       };
 
       if (!primary) return withBanner;
