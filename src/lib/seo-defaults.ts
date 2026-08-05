@@ -75,6 +75,9 @@ const STORAGE_BUCKET = 'tenants';
  * Direct supabase.co URLs send `x-robots-tag: none`, which causes Facebook /
  * LinkedIn / Telegram crawlers to refuse the image for link previews.
  * `/files/[...path]` re-serves the same bytes without that header.
+ *
+ * Appends `?format=jpeg` so the proxy re-encodes WebP/AVIF — Telegram link
+ * previews historically fail on WebP og:image.
  */
 export function toBrandedFilesUrl(imageUrl: string, baseUrl: string): string {
   if (!baseUrl || !imageUrl.startsWith('http')) return imageUrl;
@@ -89,7 +92,9 @@ export function toBrandedFilesUrl(imageUrl: string, baseUrl: string): string {
       .filter(Boolean)
       .map((seg) => encodeURIComponent(decodeURIComponent(seg)))
       .join('/');
-    return `${baseUrl.replace(/\/+$/, '')}/files/${encoded}`;
+    const branded = `${baseUrl.replace(/\/+$/, '')}/files/${encoded}`;
+    // Always request JPEG for social crawlers (safe for already-JPEG sources too).
+    return `${branded}?format=jpeg`;
   } catch {
     return imageUrl;
   }
@@ -108,7 +113,13 @@ export function resolveSocialImage(
     getAbsoluteImageUrl(seoOgImage, baseUrl) ||
     getAbsoluteImageUrl(fallbackImage, baseUrl) ||
     getAbsoluteImageUrl(SEO_DEFAULTS.defaultImage, baseUrl)!;
-  return toBrandedFilesUrl(absolute, baseUrl);
+  const branded = toBrandedFilesUrl(absolute, baseUrl);
+  // Local public assets that are already JPEG/PNG stay as-is; WebP locals get
+  // no converter — prefer the site JPEG default in that rare case.
+  if (branded === absolute && /\.webp(\?|$)/i.test(absolute)) {
+    return getAbsoluteImageUrl(SEO_DEFAULTS.defaultImage, baseUrl)!;
+  }
+  return branded;
 }
 
 function toAbsoluteUrl(pathOrUrl: string, baseUrl: string): string {
@@ -169,12 +180,17 @@ export function buildSocialMetadata(options: {
   const ogDescription = seo?.og_description || description;
   const ogImage = resolveSocialImage(seo?.og_image, imageFallback, baseUrl);
   const type = getValidOgType(seo?.og_type || options.ogType);
+  const isJpegSocial = /format=jpeg/i.test(ogImage) || /\.jpe?g(\?|$)/i.test(ogImage);
 
   return {
     openGraph: {
       title: ogTitle,
       description: ogDescription,
-      images: [{ url: ogImage, alt: imageAlt || String(ogTitle) }],
+      images: [{
+        url: ogImage,
+        alt: imageAlt || String(ogTitle),
+        ...(isJpegSocial ? { type: 'image/jpeg', width: 1200, height: 630 } : {}),
+      }],
       type,
       siteName: SEO_DEFAULTS.siteName,
       ...(url ? { url } : {}),
