@@ -66,6 +66,35 @@ export function getAbsoluteImageUrl(image: string | undefined | null, baseUrl: s
   return `${baseUrl}${image.startsWith('/') ? '' : '/'}${image}`;
 }
 
+const TENANT_SLUG = process.env.TENANT_SLUG || 'deaisummit';
+const STORAGE_BUCKET = 'tenants';
+
+/**
+ * Rewrite tenant Supabase public storage URLs through the branded `/files/` proxy.
+ *
+ * Direct supabase.co URLs send `x-robots-tag: none`, which causes Facebook /
+ * LinkedIn / Telegram crawlers to refuse the image for link previews.
+ * `/files/[...path]` re-serves the same bytes without that header.
+ */
+export function toBrandedFilesUrl(imageUrl: string, baseUrl: string): string {
+  if (!baseUrl || !imageUrl.startsWith('http')) return imageUrl;
+  try {
+    const u = new URL(imageUrl);
+    const prefix = `/storage/v1/object/public/${STORAGE_BUCKET}/${TENANT_SLUG}/`;
+    if (!u.pathname.startsWith(prefix)) return imageUrl;
+    const rest = u.pathname.slice(prefix.length);
+    if (!rest) return imageUrl;
+    const encoded = rest
+      .split('/')
+      .filter(Boolean)
+      .map((seg) => encodeURIComponent(decodeURIComponent(seg)))
+      .join('/');
+    return `${baseUrl.replace(/\/+$/, '')}/files/${encoded}`;
+  } catch {
+    return imageUrl;
+  }
+}
+
 /**
  * Prefer CMS og_image, then an entity/page fallback, then the site default.
  * Always returns an absolute URL suitable for og:image / twitter:image.
@@ -75,11 +104,11 @@ export function resolveSocialImage(
   fallbackImage: string | null | undefined,
   baseUrl: string,
 ): string {
-  return (
+  const absolute =
     getAbsoluteImageUrl(seoOgImage, baseUrl) ||
     getAbsoluteImageUrl(fallbackImage, baseUrl) ||
-    getAbsoluteImageUrl(SEO_DEFAULTS.defaultImage, baseUrl)!
-  );
+    getAbsoluteImageUrl(SEO_DEFAULTS.defaultImage, baseUrl)!;
+  return toBrandedFilesUrl(absolute, baseUrl);
 }
 
 function toAbsoluteUrl(pathOrUrl: string, baseUrl: string): string {
