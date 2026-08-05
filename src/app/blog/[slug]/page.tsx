@@ -6,13 +6,12 @@ import {
   prefetchSocials,
   mapNavigationData,
 } from '@/lib/prefetch';
-import { getAbsoluteImageUrl, resolveBlogOgImage, SEO_DEFAULTS } from '@/lib/seo-defaults';
+import { buildSocialMetadata, resolveBlogOgImage, SEO_DEFAULTS } from '@/lib/seo-defaults';
 import { generateArticleSchema, jsonLdSafe } from '@/lib/structured-data';
 import { BlogDetailClient } from '@/components/BlogDetailClient';
 import type { BlogPost } from '@/lib/api-types';
 
 const BASE_URL = process.env.NEXT_PUBLIC_SITE_URL || 'https://deaisummit.org';
-const DEFAULT_OG_IMAGE = `${BASE_URL}/og-image.png`;
 
 interface BlogDetailPageProps {
   params: Promise<{ slug: string }>;
@@ -33,11 +32,9 @@ export async function generateMetadata({ params }: BlogDetailPageProps): Promise
     (blogPost.title ? `${blogPost.title} | ${SEO_DEFAULTS.siteName}` : `Blog | ${SEO_DEFAULTS.siteName}`);
 
   const description = seo?.meta_description || blogPost.meta_description || SEO_DEFAULTS.defaultDescription;
-  const ogTitle = seo?.og_title || title;
-  const ogDescription = seo?.og_description || description;
-  const ogImageSource = resolveBlogOgImage(blogPost.featured_image, seo?.og_image, blogPost.slug || slug);
-  const ogImage = getAbsoluteImageUrl(ogImageSource, BASE_URL) || DEFAULT_OG_IMAGE;
   const canonicalUrl = seo?.canonical_url || `${BASE_URL}/blog/${blogPost.slug || slug}`;
+  // Prefer featured_image when CMS og_image still points at a renamed storage folder.
+  const resolvedOg = resolveBlogOgImage(blogPost.featured_image, seo?.og_image, blogPost.slug || slug);
 
   return {
     title,
@@ -45,21 +42,17 @@ export async function generateMetadata({ params }: BlogDetailPageProps): Promise
     keywords: seo?.meta_keywords || undefined,
     robots: seo?.robots_tag?.toLowerCase() || SEO_DEFAULTS.defaultRobots,
     alternates: { canonical: canonicalUrl },
-    openGraph: {
-      title: ogTitle,
-      description: ogDescription,
+    ...buildSocialMetadata({
+      title,
+      description,
+      seo: { ...seo, og_image: resolvedOg || undefined },
+      imageFallback: blogPost.featured_image,
+      baseUrl: BASE_URL,
+      ogType: 'article',
+      imageAlt: blogPost.title || 'Blog Post',
       url: canonicalUrl,
-      images: [{ url: ogImage, alt: blogPost.title || 'Blog Post' }],
-      type: 'article',
-      siteName: SEO_DEFAULTS.siteName,
-      ...(blogPost.published_at && { publishedTime: blogPost.published_at }),
-    },
-    twitter: {
-      card: SEO_DEFAULTS.twitterCard,
-      title: ogTitle,
-      description: ogDescription,
-      images: [ogImage],
-    },
+      publishedTime: blogPost.published_at || undefined,
+    }),
   };
 }
 

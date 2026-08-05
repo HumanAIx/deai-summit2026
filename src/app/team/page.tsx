@@ -1,7 +1,7 @@
 import { SpeakersListClient } from '@/components/SpeakersListClient';
 import type { CMSBlock, CMSSpeakerItem, NormalizedSpeaker } from '@/lib/api-types';
 import { mapNavigationData, prefetchCMSPage, prefetchNavigation, prefetchSocials, prefetchTeam } from '@/lib/prefetch';
-import { SEO_DEFAULTS } from '@/lib/seo-defaults';
+import { generatePageMetadata } from '@/lib/seo-defaults';
 import type { Metadata } from 'next';
 
 const BASE_URL = process.env.NEXT_PUBLIC_SITE_URL || 'https://deaisummit.org';
@@ -147,31 +147,7 @@ function extractStatsFromBlocks(blocks: CMSBlock[]): { label: string; value: str
 
 export async function generateMetadata(): Promise<Metadata> {
   const cmsPage = await prefetchCMSPage('team');
-  const seo = cmsPage?.seo;
-
-  const title = seo?.meta_title || `Team - ${SEO_DEFAULTS.siteName}`;
-  const description = seo?.meta_description || 'Meet the team behind DeAI Summit 2026.';
-
-  return {
-    title,
-    description,
-    openGraph: {
-      title: seo?.og_title || title,
-      description: seo?.og_description || description,
-      type: 'website',
-      siteName: SEO_DEFAULTS.siteName,
-      ...(seo?.og_image ? { images: [{ url: seo.og_image }] } : {}),
-    },
-    twitter: {
-      card: SEO_DEFAULTS.twitterCard,
-      title: seo?.og_title || title,
-      description: seo?.og_description || description,
-    },
-    alternates: {
-      canonical: seo?.canonical_url || `${BASE_URL}/team`,
-    },
-    ...(seo?.robots_tag ? { robots: seo.robots_tag } : {}),
-  };
+  return generatePageMetadata(cmsPage?.seo || null, 'team', BASE_URL);
 }
 
 export default async function TeamPage() {

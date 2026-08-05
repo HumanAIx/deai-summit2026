@@ -170,7 +170,7 @@ export function generateArticleSchema(
     publisher: {
       '@type': 'Organization',
       name: 'DeAI Summit',
-      logo: { '@type': 'ImageObject', url: `${baseUrl}/og-image.png` },
+      logo: { '@type': 'ImageObject', url: `${baseUrl}/whatisdeaiSummit.jpg` },
     },
     ...(post.reading_time && { wordCount: post.reading_time * 200 }),
   };

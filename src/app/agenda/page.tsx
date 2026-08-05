@@ -1,6 +1,6 @@
 import type { Metadata } from 'next';
 import { prefetchCMSPage, prefetchNavigation, mapNavigationData, prefetchSocials } from '@/lib/prefetch';
-import { SEO_DEFAULTS } from '@/lib/seo-defaults';
+import { generatePageMetadata } from '@/lib/seo-defaults';
 import { AgendaClient } from '@/components/AgendaClient';
 import type { CMSBlock } from '@/lib/api-types';
 
@@ -35,31 +35,7 @@ function extractSectionsFromBlocks(blocks: CMSBlock[]): AgendaSection[] {
 
 export async function generateMetadata(): Promise<Metadata> {
   const cmsPage = await prefetchCMSPage('agenda');
-  const seo = cmsPage?.seo;
-
-  const title = seo?.meta_title || `Agenda - ${SEO_DEFAULTS.siteName}`;
-  const description = seo?.meta_description || 'Explore the agenda for DeAI Summit 2026. Keynotes, panels, and discussions on decentralized AI.';
-
-  return {
-    title,
-    description,
-    openGraph: {
-      title: seo?.og_title || title,
-      description: seo?.og_description || description,
-      type: 'website',
-      siteName: SEO_DEFAULTS.siteName,
-      ...(seo?.og_image ? { images: [{ url: seo.og_image }] } : {}),
-    },
-    twitter: {
-      card: SEO_DEFAULTS.twitterCard,
-      title: seo?.og_title || title,
-      description: seo?.og_description || description,
-    },
-    alternates: {
-      canonical: seo?.canonical_url || `${BASE_URL}/agenda`,
-    },
-    ...(seo?.robots_tag ? { robots: seo.robots_tag } : {}),
-  };
+  return generatePageMetadata(cmsPage?.seo || null, 'agenda', BASE_URL);
 }
 
 export default async function AgendaPage() {

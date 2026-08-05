@@ -2,7 +2,7 @@ import { notFound } from 'next/navigation';
 import type { Metadata } from 'next';
 import { prefetchCompanyDetailPageData, prefetchNavigation, prefetchSocials, mapNavigationData } from '@/lib/prefetch';
 import { generateOrganizationSchema, jsonLdSafe } from '@/lib/structured-data';
-import { SEO_DEFAULTS } from '@/lib/seo-defaults';
+import { SEO_DEFAULTS, buildSocialMetadata } from '@/lib/seo-defaults';
 import { CompanyDetailClient } from '@/components/CompanyDetailClient';
 
 const BASE_URL = process.env.NEXT_PUBLIC_SITE_URL || 'https://deaisummit.org';
@@ -19,28 +19,22 @@ export async function generateMetadata({ params }: { params: Promise<{ slug: str
 
   const title = seo?.meta_title || `${company.company_name} | ${SEO_DEFAULTS.siteName}`;
   const description = seo?.meta_description || company.company_bio?.replace(/<[^>]*>/g, '').slice(0, 160) || `${company.company_name} at DeAI Summit 2026`;
-  const logo = company.company_logo;
-  const ogImage = logo?.startsWith('http') ? logo : logo ? `${BASE_URL}${logo}` : undefined;
+  const canonical = seo?.canonical_url || `${BASE_URL}/companies/${company.company_slug}`;
 
   return {
     title,
     description,
     robots: seo?.robots_tag?.toLowerCase() || SEO_DEFAULTS.defaultRobots,
-    openGraph: {
-      title: seo?.og_title || title,
-      description: seo?.og_description || description,
-      ...(ogImage && { images: [{ url: ogImage, alt: company.company_name }] }),
-      type: 'website',
-      siteName: SEO_DEFAULTS.siteName,
-    },
-    twitter: {
-      card: SEO_DEFAULTS.twitterCard,
-      title: seo?.og_title || title,
-      description: seo?.og_description || description,
-      ...(ogImage && { images: [ogImage] }),
-    },
+    ...buildSocialMetadata({
+      title,
+      description,
+      seo,
+      imageFallback: company.company_logo,
+      baseUrl: BASE_URL,
+      imageAlt: company.company_name,
+    }),
     alternates: {
-      canonical: seo?.canonical_url || `${BASE_URL}/companies/${company.company_slug}`,
+      canonical,
     },
   };
 }
