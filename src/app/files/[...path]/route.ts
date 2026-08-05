@@ -1,4 +1,5 @@
 import { NextResponse } from 'next/server';
+import sharp from 'sharp';
 
 const TENANT_SLUG = process.env.TENANT_SLUG || 'deaisummit';
 const STORAGE_BUCKET = 'tenants';
@@ -23,8 +24,13 @@ function isSafeSegment(segment: string): boolean {
   }
 }
 
+function wantsJpeg(request: Request): boolean {
+  const format = new URL(request.url).searchParams.get('format')?.toLowerCase();
+  return format === 'jpeg' || format === 'jpg';
+}
+
 export async function GET(
-  _request: Request,
+  request: Request,
   { params }: { params: Promise<{ path: string[] }> },
 ) {
   const { path: segments } = await params;
@@ -53,13 +59,39 @@ export async function GET(
     return new NextResponse('File not found', { status: upstream.status === 404 ? 404 : 502 });
   }
 
-  const contentType = upstream.headers.get('content-type') || 'application/octet-stream';
-  const buffer = await upstream.arrayBuffer();
+  const upstreamType = upstream.headers.get('content-type') || 'application/octet-stream';
+  const upstreamBuffer = Buffer.from(await upstream.arrayBuffer());
 
-  return new NextResponse(buffer, {
+  // Telegram (and some other crawlers) fail to render WebP og:image previews.
+  // Social metadata appends ?format=jpeg so we re-encode here.
+  if (wantsJpeg(request)) {
+    try {
+      const jpeg = await sharp(upstreamBuffer)
+        .rotate()
+        .resize({ width: 1200, height: 630, fit: 'inside', withoutEnlargement: true })
+        .jpeg({ quality: 85, mozjpeg: true })
+        .toBuffer();
+
+      return new NextResponse(new Uint8Array(jpeg), {
+        status: 200,
+        headers: {
+          'Content-Type': 'image/jpeg',
+          'Content-Length': String(jpeg.byteLength),
+          'Cache-Control': 'public, max-age=31536000, immutable',
+          'X-Content-Type-Options': 'nosniff',
+        },
+      });
+    } catch (err) {
+      console.error('[files proxy] JPEG conversion failed:', err);
+      // Fall through to original bytes rather than 500 the preview.
+    }
+  }
+
+  return new NextResponse(new Uint8Array(upstreamBuffer), {
     status: 200,
     headers: {
-      'Content-Type': contentType,
+      'Content-Type': upstreamType,
+      'Content-Length': String(upstreamBuffer.byteLength),
       'Cache-Control': 'public, max-age=31536000, immutable',
       'X-Content-Type-Options': 'nosniff',
     },
