@@ -5,7 +5,8 @@ export const SEO_DEFAULTS = {
   siteName: 'DeAI Summit 2026',
   defaultTitle: 'DeAI Summit 2026 - Malta',
   defaultDescription: 'The Global Inflection Point for AI Governance. Where frontier AI, decentralized systems, and global regulators confront the future of intelligence. Malta, Europe — Q4 2026.',
-  defaultImage: '/og-image.png',
+  /** Must exist under `public/` — used when CMS/entity has no og_image. */
+  defaultImage: '/whatisdeaiSummit.jpg',
   twitterCard: 'summary_large_image' as const,
   ogType: 'website' as const,
   defaultRobots: 'all',
@@ -14,38 +15,78 @@ export const SEO_DEFAULTS = {
 export const PAGE_TITLES: Record<string, string> = {
   home: SEO_DEFAULTS.defaultTitle,
   speakers: `Speakers - ${SEO_DEFAULTS.siteName}`,
+  team: `Team - ${SEO_DEFAULTS.siteName}`,
   companies: `Companies - ${SEO_DEFAULTS.siteName}`,
   sponsors: `Sponsors & Partners - ${SEO_DEFAULTS.siteName}`,
+  partners: `Sponsors & Partners - ${SEO_DEFAULTS.siteName}`,
   agenda: `Agenda - ${SEO_DEFAULTS.siteName}`,
+  schedule: `Schedule - ${SEO_DEFAULTS.siteName}`,
+  contact: `Contact - ${SEO_DEFAULTS.siteName}`,
   blog: `Insights - ${SEO_DEFAULTS.siteName}`,
   terms: `Terms & Conditions - ${SEO_DEFAULTS.siteName}`,
   privacy: `Privacy Policy - ${SEO_DEFAULTS.siteName}`,
+  'coming-soon': `Coming Soon - ${SEO_DEFAULTS.siteName}`,
 };
 
 export const PAGE_DESCRIPTIONS: Record<string, string> = {
   home: SEO_DEFAULTS.defaultDescription,
   speakers: 'Meet the leading voices at DeAI Summit 2026. Speakers from frontier AI, decentralized systems, policy, and academia.',
+  team: 'Meet the team behind DeAI Summit 2026.',
   companies: 'Companies participating in DeAI Summit 2026.',
   sponsors: 'Sponsors and partners of DeAI Summit 2026.',
+  partners: 'Meet the sponsors and partners powering DeAI Summit 2026. Join leading organizations shaping the future of decentralized AI.',
   agenda: 'DeAI Summit 2026 agenda. High-stakes programming formats including Oxford debates, technical rebuttals, and alignment sessions.',
+  schedule: 'Full conference schedule — keynotes, sessions, and speakers at DeAI Malta.',
+  contact: 'Get in touch with the DeAI Summit 2026 team for partnerships, sponsorships, speaker applications, and general inquiries.',
   blog: 'Analysis, research, and perspectives on decentralised AI, governance, and the evidence shaping DeAI Summit 2026.',
+  terms: 'General terms and conditions for DeAI Summit 2026.',
+  privacy: 'Privacy statement for DeAI Summit 2026.',
+  'coming-soon': SEO_DEFAULTS.defaultDescription,
 };
 
 export const PAGE_CANONICALS: Record<string, string> = {
   home: '/',
   speakers: '/speakers',
+  team: '/team',
   companies: '/companies',
   sponsors: '/partners',
+  partners: '/partners',
   agenda: '/agenda',
+  schedule: '/schedule',
+  contact: '/contact',
   blog: '/blog',
   terms: '/terms',
   privacy: '/privacy',
+  'coming-soon': '/coming-soon',
 };
 
 export function getAbsoluteImageUrl(image: string | undefined | null, baseUrl: string): string | undefined {
   if (!image) return undefined;
   if (image.startsWith('http')) return image;
   return `${baseUrl}${image.startsWith('/') ? '' : '/'}${image}`;
+}
+
+/**
+ * Prefer CMS og_image, then an entity/page fallback, then the site default.
+ * Always returns an absolute URL suitable for og:image / twitter:image.
+ */
+export function resolveSocialImage(
+  seoOgImage: string | null | undefined,
+  fallbackImage: string | null | undefined,
+  baseUrl: string,
+): string {
+  return (
+    getAbsoluteImageUrl(seoOgImage, baseUrl) ||
+    getAbsoluteImageUrl(fallbackImage, baseUrl) ||
+    getAbsoluteImageUrl(SEO_DEFAULTS.defaultImage, baseUrl)!
+  );
+}
+
+function toAbsoluteUrl(pathOrUrl: string, baseUrl: string): string {
+  if (pathOrUrl.startsWith('http')) return pathOrUrl;
+  if (!baseUrl) return pathOrUrl;
+  if (pathOrUrl === '/') return `${baseUrl}/`;
+  return `${baseUrl}${pathOrUrl.startsWith('/') ? '' : '/'}${pathOrUrl}`;
 }
 
 /** Blog storage folder name derived from slug (matches ep-api upload paths). */
@@ -81,6 +122,44 @@ function getValidOgType(ogType?: string): ValidOgType {
   return SEO_DEFAULTS.ogType;
 }
 
+export function buildSocialMetadata(options: {
+  title: string;
+  description: string;
+  seo?: SEOSettings | null;
+  /** Entity photo/logo or other page-specific fallback when CMS has no og_image. */
+  imageFallback?: string | null;
+  baseUrl: string;
+  ogType?: string;
+  imageAlt?: string;
+  /** Optional absolute or path URL for og:url */
+  url?: string;
+  publishedTime?: string;
+}): Pick<Metadata, 'openGraph' | 'twitter'> {
+  const { title, description, seo, imageFallback, baseUrl, imageAlt, url, publishedTime } = options;
+  const ogTitle = seo?.og_title || title;
+  const ogDescription = seo?.og_description || description;
+  const ogImage = resolveSocialImage(seo?.og_image, imageFallback, baseUrl);
+  const type = getValidOgType(seo?.og_type || options.ogType);
+
+  return {
+    openGraph: {
+      title: ogTitle,
+      description: ogDescription,
+      images: [{ url: ogImage, alt: imageAlt || String(ogTitle) }],
+      type,
+      siteName: SEO_DEFAULTS.siteName,
+      ...(url ? { url } : {}),
+      ...(publishedTime ? { publishedTime } : {}),
+    },
+    twitter: {
+      card: SEO_DEFAULTS.twitterCard,
+      title: ogTitle,
+      description: ogDescription,
+      images: [ogImage],
+    },
+  };
+}
+
 export function generatePageMetadata(
   seo: SEOSettings | null,
   pageSlug: string,
@@ -88,29 +167,15 @@ export function generatePageMetadata(
 ): Metadata {
   const title = seo?.meta_title || PAGE_TITLES[pageSlug] || SEO_DEFAULTS.defaultTitle;
   const description = seo?.meta_description || PAGE_DESCRIPTIONS[pageSlug] || SEO_DEFAULTS.defaultDescription;
-  const ogTitle = seo?.og_title || title;
-  const ogDescription = seo?.og_description || description;
-  const ogImage = getAbsoluteImageUrl(seo?.og_image, baseUrl) || getAbsoluteImageUrl(SEO_DEFAULTS.defaultImage, baseUrl);
-  const canonical = seo?.canonical_url || PAGE_CANONICALS[pageSlug] || '/';
+  const canonicalPath = seo?.canonical_url || PAGE_CANONICALS[pageSlug] || '/';
+  const canonical = toAbsoluteUrl(canonicalPath, baseUrl);
 
   return {
     title,
     description,
     keywords: seo?.meta_keywords || undefined,
     robots: seo?.robots_tag?.toLowerCase() || SEO_DEFAULTS.defaultRobots,
-    openGraph: {
-      title: ogTitle,
-      description: ogDescription,
-      ...(ogImage && { images: [{ url: ogImage, alt: String(title) }] }),
-      type: getValidOgType(seo?.og_type),
-      siteName: SEO_DEFAULTS.siteName,
-    },
-    twitter: {
-      card: SEO_DEFAULTS.twitterCard,
-      title: ogTitle,
-      description: ogDescription,
-      ...(ogImage && { images: [ogImage] }),
-    },
+    ...buildSocialMetadata({ title, description, seo, baseUrl }),
     alternates: {
       canonical,
     },

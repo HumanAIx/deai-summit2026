@@ -6,6 +6,7 @@ import "./globals.css";
 import "remixicon/fonts/remixicon.css";
 import { prefetchPublicAnalyticsTags } from "@/lib/prefetch";
 import { resolveRedditBootstrapId } from "@/lib/analytics-tags";
+import { SEO_DEFAULTS, buildSocialMetadata } from "@/lib/seo-defaults";
 
 const inter = Inter({
   variable: "--font-inter",
@@ -25,9 +26,13 @@ export async function generateMetadata(): Promise<Metadata> {
   const tags = await prefetchPublicAnalyticsTags();
   const meta: Metadata = {
     metadataBase: new URL(SITE_URL),
-    title: "DeAI Summit 2026 - Malta",
-    description:
-      "Join the Decentralized AI Summit 2026 in Malta. The premier event for the future of AI.",
+    title: SEO_DEFAULTS.defaultTitle,
+    description: SEO_DEFAULTS.defaultDescription,
+    ...buildSocialMetadata({
+      title: SEO_DEFAULTS.defaultTitle,
+      description: SEO_DEFAULTS.defaultDescription,
+      baseUrl: SITE_URL,
+    }),
   };
   if (tags.googleSiteVerification) {
     meta.verification = { google: tags.googleSiteVerification };

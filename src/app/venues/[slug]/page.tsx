@@ -3,7 +3,7 @@ import type { Metadata } from 'next';
 import { prefetchVenueDetailPageData, prefetchNavigation, prefetchSocials, prefetchCompanyBySlug, mapNavigationData } from '@/lib/prefetch';
 import { COLOCATED_VENUE_SLUG, enrichColocatedPartnerBanner } from '@/lib/colocatedPartner';
 import { generateOrganizationSchema, jsonLdSafe } from '@/lib/structured-data';
-import { SEO_DEFAULTS } from '@/lib/seo-defaults';
+import { SEO_DEFAULTS, buildSocialMetadata } from '@/lib/seo-defaults';
 import { VenueDetailClient } from '@/components/VenueDetailClient';
 
 const BASE_URL = process.env.NEXT_PUBLIC_SITE_URL || 'https://deaisummit.org';
@@ -20,28 +20,22 @@ export async function generateMetadata({ params }: { params: Promise<{ slug: str
 
   const title = seo?.meta_title || `${company.company_name} | Venue - ${SEO_DEFAULTS.siteName}`;
   const description = seo?.meta_description || company.company_bio?.replace(/<[^>]*>/g, '').slice(0, 160) || `${company.company_name} - Venue for DeAI Summit 2026`;
-  const image = company.venue_photo || company.company_logo;
-  const ogImage = image?.startsWith('http') ? image : image ? `${BASE_URL}${image}` : undefined;
+  const canonical = seo?.canonical_url || `${BASE_URL}/venues/${company.company_slug}`;
 
   return {
     title,
     description,
     robots: seo?.robots_tag?.toLowerCase() || SEO_DEFAULTS.defaultRobots,
-    openGraph: {
-      title: seo?.og_title || title,
-      description: seo?.og_description || description,
-      ...(ogImage && { images: [{ url: ogImage, alt: company.company_name }] }),
-      type: 'website',
-      siteName: SEO_DEFAULTS.siteName,
-    },
-    twitter: {
-      card: SEO_DEFAULTS.twitterCard,
-      title: seo?.og_title || title,
-      description: seo?.og_description || description,
-      ...(ogImage && { images: [ogImage] }),
-    },
+    ...buildSocialMetadata({
+      title,
+      description,
+      seo,
+      imageFallback: company.venue_photo || company.company_logo,
+      baseUrl: BASE_URL,
+      imageAlt: company.company_name,
+    }),
     alternates: {
-      canonical: seo?.canonical_url || `${BASE_URL}/venues/${company.company_slug}`,
+      canonical,
     },
   };
 }

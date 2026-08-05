@@ -1,3 +1,4 @@
+import type { Metadata } from 'next';
 import { LandingPage } from '@/components/LandingPage';
 import {
   prefetchHomePageData,
@@ -13,6 +14,7 @@ import type { SocialLink } from '@/lib/prefetch';
 import { siteConfig } from '@/config/site';
 import { generateEventSchema, jsonLdSafe } from '@/lib/structured-data';
 import { extractHomeSections, enrichHighlightsWithVenue } from '@/lib/home-cms';
+import { generatePageMetadata } from '@/lib/seo-defaults';
 import type { CMSBlock } from '@/lib/api-types';
 
 const BASE_URL = process.env.NEXT_PUBLIC_SITE_URL || 'https://deaisummit.org';
@@ -20,6 +22,11 @@ const BASE_URL = process.env.NEXT_PUBLIC_SITE_URL || 'https://deaisummit.org';
 // Render on every request so unpublished companies drop out of the sponsor
 // scroller immediately (no waiting for ISR / CDN HTML cache to expire).
 export const dynamic = 'force-dynamic';
+
+export async function generateMetadata(): Promise<Metadata> {
+  const cmsPage = await prefetchCMSPage('home');
+  return generatePageMetadata(cmsPage?.seo || null, 'home', BASE_URL);
+}
 
 export default async function Home() {
   let speakers: Awaited<ReturnType<typeof prefetchHomePageData>>['speakers'] = [];

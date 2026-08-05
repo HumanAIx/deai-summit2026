@@ -1,6 +1,6 @@
 import type { Metadata } from 'next';
 import { prefetchCMSPage, prefetchSponsors, prefetchPartners, prefetchNavigation, mapNavigationData, prefetchSocials } from '@/lib/prefetch';
-import { SEO_DEFAULTS } from '@/lib/seo-defaults';
+import { generatePageMetadata } from '@/lib/seo-defaults';
 import { PartnersListClient } from '@/components/PartnersListClient';
 import type { NormalizedSponsor, CMSBlock, CMSCompanyItem } from '@/lib/api-types';
 
@@ -149,31 +149,7 @@ function extractCtaFromBlocks(blocks: CMSBlock[]): {
 
 export async function generateMetadata(): Promise<Metadata> {
   const cmsPage = await prefetchCMSPage('partners');
-  const seo = cmsPage?.seo;
-
-  const title = seo?.meta_title || `Sponsors & Partners - ${SEO_DEFAULTS.siteName}`;
-  const description = seo?.meta_description || 'Meet the sponsors and partners powering DeAI Summit 2026. Join leading organizations shaping the future of decentralized AI.';
-
-  return {
-    title,
-    description,
-    openGraph: {
-      title: seo?.og_title || title,
-      description: seo?.og_description || description,
-      type: 'website',
-      siteName: SEO_DEFAULTS.siteName,
-      ...(seo?.og_image ? { images: [{ url: seo.og_image }] } : {}),
-    },
-    twitter: {
-      card: SEO_DEFAULTS.twitterCard,
-      title: seo?.og_title || title,
-      description: seo?.og_description || description,
-    },
-    alternates: {
-      canonical: seo?.canonical_url || `${BASE_URL}/partners`,
-    },
-    ...(seo?.robots_tag ? { robots: seo.robots_tag } : {}),
-  };
+  return generatePageMetadata(cmsPage?.seo || null, 'partners', BASE_URL);
 }
 
 export default async function PartnersPage() {
