@@ -70,7 +70,7 @@ export async function GET() {
     lines.push('');
     for (const s of sponsors.slice(0, 20)) {
       const bio = s.bio ? `: ${stripHtml(s.bio).slice(0, 100)}` : '';
-      lines.push(`- [${s.name}](${BASE_URL}/partners/${s.slug})${bio}`);
+      lines.push(`- [${s.name}](${BASE_URL}/sponsors/${s.slug})${bio}`);
     }
     lines.push('');
   }

@@ -10,6 +10,7 @@ import { markdownToHtml, formatPersonName } from '@/lib/utils';
 import { resolvePersonPhotoSrc, withPhotoCacheBuster } from '@/lib/personPhoto';
 import type { Member, Company, PersonSocials, NavigationAPIData } from '@/lib/api-types';
 import type { NavigationConfig } from '@/config/types';
+import { getCompanyPublicPath } from '@/lib/company-public-path';
 
 interface SocialLinkData {
   key: string;
@@ -161,7 +162,18 @@ export const SpeakerDetailClient: React.FC<SpeakerDetailClientProps> = ({ member
                   {firstCompany.company_name && (
                     <p className="text-brand-cyan text-lg font-semibold">
                       {firstCompany.company_slug ? (
-                        <Link href={`/companies/${firstCompany.company_slug}`} className="hover:underline">
+                        <Link
+                          href={(() => {
+                            const matched = companies.find(
+                              (c) =>
+                                c.company_slug === firstCompany.company_slug ||
+                                c.id === firstCompany.company_id,
+                            );
+                            if (matched) return getCompanyPublicPath(matched);
+                            return `/companies/${firstCompany.company_slug}`;
+                          })()}
+                          className="hover:underline"
+                        >
                           {firstCompany.company_name}
                         </Link>
                       ) : (
@@ -206,7 +218,7 @@ export const SpeakerDetailClient: React.FC<SpeakerDetailClientProps> = ({ member
               {companies.map((company, index) => {
                 const colors = ['#00B0C2', '#0E6FEB', '#050A1F', '#00B0C2', '#0E6FEB', '#050A1F', '#00B0C2', '#0E6FEB'];
                 const bgColor = colors[index % colors.length];
-                const href = company.company_is_sponsor ? `/partners/${company.company_slug}` : `/companies/${company.company_slug}`;
+                const href = getCompanyPublicPath(company);
 
                 return (
                   <Link

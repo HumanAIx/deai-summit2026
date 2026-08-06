@@ -63,7 +63,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   const sponsorIds = new Set(sponsors.map(s => s.id));
   const partnerPages: MetadataRoute.Sitemap = [
     ...sponsors.map((sponsor) => ({
-      url: `${BASE_URL}/partners/${sponsor.slug}`,
+      url: `${BASE_URL}/sponsors/${sponsor.slug}`,
       changeFrequency: 'monthly' as const,
       priority: 0.7,
     })),
