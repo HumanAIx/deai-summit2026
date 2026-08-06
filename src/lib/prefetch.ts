@@ -382,14 +382,21 @@ export async function prefetchSponsorDetailPageData(slug: string) {
 
 export async function prefetchPartnerDetailPageData(slug: string) {
   const company = await prefetchCompanyBySlug(slug);
-  if (
-    !company ||
-    company.company_published !== true ||
-    company.partner_published !== true ||
-    !company.company_is_partner
-  ) {
+  if (!company || company.company_published !== true) {
     return { company: null, seo: null };
   }
+
+  // This route powers both Sponsors and Partners on the site (marquee, partners
+  // list, sitemap all link to /partners/[slug]). Accept either published role.
+  const isPublishedSponsor =
+    company.company_is_sponsor === true && company.sponsor_published === true;
+  const isPublishedPartner =
+    company.company_is_partner === true && company.partner_published === true;
+
+  if (!isPublishedSponsor && !isPublishedPartner) {
+    return { company: null, seo: null };
+  }
+
   const seo = await prefetchCompanySEO(company.id);
   return { company, seo };
 }
