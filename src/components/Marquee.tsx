@@ -64,7 +64,7 @@ const MarqueeItem: React.FC<{
 
   if (item.slug) {
     return (
-      <Link href={`/partners/${item.slug}`} className="flex-shrink-0 no-underline">
+      <Link href={`/sponsors/${item.slug}`} className="flex-shrink-0 no-underline">
         {logoContent}
       </Link>
     );

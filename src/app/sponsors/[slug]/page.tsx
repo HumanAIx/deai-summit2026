@@ -1,12 +1,6 @@
-import { notFound, permanentRedirect } from 'next/navigation';
+import { notFound } from 'next/navigation';
 import type { Metadata } from 'next';
-import {
-  prefetchPartnerDetailPageData,
-  prefetchSponsorDetailPageData,
-  prefetchNavigation,
-  prefetchSocials,
-  mapNavigationData,
-} from '@/lib/prefetch';
+import { prefetchSponsorDetailPageData, prefetchNavigation, prefetchSocials, mapNavigationData } from '@/lib/prefetch';
 import { generateOrganizationSchema, jsonLdSafe } from '@/lib/structured-data';
 import { SEO_DEFAULTS, buildSocialMetadata } from '@/lib/seo-defaults';
 import { CompanyDetailClient } from '@/components/CompanyDetailClient';
@@ -17,23 +11,18 @@ export const dynamic = 'force-dynamic';
 
 export async function generateMetadata({ params }: { params: Promise<{ slug: string }> }): Promise<Metadata> {
   const { slug } = await params;
-  const { company, seo } = await prefetchPartnerDetailPageData(slug);
+  const { company, seo } = await prefetchSponsorDetailPageData(slug);
 
   if (!company) {
-    // Sponsors mistakenly linked under /partners/ — match the page redirect.
-    const sponsor = await prefetchSponsorDetailPageData(slug);
-    if (sponsor.company) {
-      return {
-        title: `${sponsor.company.company_name} | Sponsors - ${SEO_DEFAULTS.siteName}`,
-        alternates: { canonical: `${BASE_URL}/sponsors/${sponsor.company.company_slug}` },
-      };
-    }
-    return { title: 'Partner Not Found' };
+    return { title: 'Sponsor Not Found' };
   }
 
-  const title = seo?.meta_title || `${company.company_name} | Partners - ${SEO_DEFAULTS.siteName}`;
-  const description = seo?.meta_description || company.company_bio?.replace(/<[^>]*>/g, '').slice(0, 160) || `${company.company_name} - Partner of DeAI Summit 2026`;
-  const canonical = seo?.canonical_url || `${BASE_URL}/partners/${company.company_slug}`;
+  const title = seo?.meta_title || `${company.company_name} | Sponsors - ${SEO_DEFAULTS.siteName}`;
+  const description =
+    seo?.meta_description ||
+    company.company_bio?.replace(/<[^>]*>/g, '').slice(0, 160) ||
+    `${company.company_name} - Sponsor of DeAI Summit 2026`;
+  const canonical = seo?.canonical_url || `${BASE_URL}/sponsors/${company.company_slug}`;
 
   return {
     title,
@@ -53,30 +42,26 @@ export async function generateMetadata({ params }: { params: Promise<{ slug: str
   };
 }
 
-export default async function PartnerDetailPage({ params }: { params: Promise<{ slug: string }> }) {
+export default async function SponsorDetailPage({ params }: { params: Promise<{ slug: string }> }) {
   const { slug } = await params;
   const [{ company, seo }, apiNav, socials] = await Promise.all([
-    prefetchPartnerDetailPageData(slug),
+    prefetchSponsorDetailPageData(slug),
     prefetchNavigation(),
     prefetchSocials(),
   ]);
 
   if (!company) {
-    // Legacy / incorrect sponsor links under /partners/ → canonical sponsor URL.
-    const sponsor = await prefetchSponsorDetailPageData(slug);
-    if (sponsor.company) {
-      permanentRedirect(`/sponsors/${slug}`);
-    }
     notFound();
   }
 
   const navigationData = apiNav ? mapNavigationData(apiNav) : undefined;
 
-  const schema = generateOrganizationSchema(company, BASE_URL, 'partners');
+  const schema = generateOrganizationSchema(company, BASE_URL, 'sponsors');
   const seoOverrides = seo?.structured_data;
-  const finalSchema = schema && seoOverrides && Object.keys(seoOverrides).length > 0
-    ? { ...schema, ...seoOverrides }
-    : schema;
+  const finalSchema =
+    schema && seoOverrides && Object.keys(seoOverrides).length > 0
+      ? { ...schema, ...seoOverrides }
+      : schema;
 
   return (
     <>

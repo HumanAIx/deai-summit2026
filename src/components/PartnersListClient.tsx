@@ -47,7 +47,7 @@ const cardColors = [
 ];
 
 function CompanyCard({ company, type, index }: { company: NormalizedSponsor; type: 'sponsor' | 'partner'; index: number }) {
-  const href = type === 'sponsor' ? `/partners/${company.slug}` : `/companies/${company.slug}`;
+  const href = type === 'sponsor' ? `/sponsors/${company.slug}` : `/partners/${company.slug}`;
   const bgColor = cardColors[index % cardColors.length];
 
   return (

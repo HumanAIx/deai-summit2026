@@ -206,7 +206,7 @@ export const SpeakerDetailClient: React.FC<SpeakerDetailClientProps> = ({ member
               {companies.map((company, index) => {
                 const colors = ['#00B0C2', '#0E6FEB', '#050A1F', '#00B0C2', '#0E6FEB', '#050A1F', '#00B0C2', '#0E6FEB'];
                 const bgColor = colors[index % colors.length];
-                const href = company.company_is_sponsor ? `/partners/${company.company_slug}` : `/companies/${company.company_slug}`;
+                const href = company.company_is_sponsor ? `/sponsors/${company.company_slug}` : company.company_is_partner ? `/partners/${company.company_slug}` : `/companies/${company.company_slug}`;
 
                 return (
                   <Link

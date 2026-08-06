@@ -149,7 +149,7 @@ const tileColors = ['#00B0C2', '#0E6FEB', '#050A1F', '#00B0C2', '#0E6FEB', '#050
 
 function SponsorCard({ item, index = 0 }: { item: PartnerItemData; index?: number }) {
   const href = item.isSponsor
-    ? `/partners/${item.slug}`
+    ? `/sponsors/${item.slug}`
     : `/companies/${item.slug}`;
   const accent = tileColors[index % tileColors.length];
 
