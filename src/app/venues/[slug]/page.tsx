@@ -1,6 +1,7 @@
-import { notFound } from 'next/navigation';
+import { notFound, permanentRedirect } from 'next/navigation';
 import type { Metadata } from 'next';
 import { prefetchVenueDetailPageData, prefetchNavigation, prefetchSocials, prefetchCompanyBySlug, mapNavigationData } from '@/lib/prefetch';
+import { getCompanyCanonicalUrl, getCompanyPublicPath } from '@/lib/company-public-path';
 import { COLOCATED_VENUE_SLUG, enrichColocatedPartnerBanner } from '@/lib/colocatedPartner';
 import { generateOrganizationSchema, jsonLdSafe } from '@/lib/structured-data';
 import { SEO_DEFAULTS, buildSocialMetadata } from '@/lib/seo-defaults';
@@ -18,9 +19,14 @@ export async function generateMetadata({ params }: { params: Promise<{ slug: str
     return { title: 'Venue Not Found' };
   }
 
+  const preferredPath = getCompanyPublicPath(company);
+  if (preferredPath !== `/venues/${company.company_slug}`) {
+    permanentRedirect(preferredPath);
+  }
+
   const title = seo?.meta_title || `${company.company_name} | Venue - ${SEO_DEFAULTS.siteName}`;
   const description = seo?.meta_description || company.company_bio?.replace(/<[^>]*>/g, '').slice(0, 160) || `${company.company_name} - Venue for DeAI Summit 2026`;
-  const canonical = seo?.canonical_url || `${BASE_URL}/venues/${company.company_slug}`;
+  const canonical = getCompanyCanonicalUrl(company, BASE_URL);
 
   return {
     title,
@@ -51,6 +57,11 @@ export default async function VenueDetailPage({ params }: { params: Promise<{ sl
 
   if (!company) {
     notFound();
+  }
+
+  const preferredPath = getCompanyPublicPath(company);
+  if (preferredPath !== `/venues/${company.company_slug}`) {
+    permanentRedirect(preferredPath);
   }
 
   const navigationData = apiNav ? mapNavigationData(apiNav) : undefined;

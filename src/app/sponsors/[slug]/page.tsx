@@ -1,6 +1,7 @@
 import { notFound } from 'next/navigation';
 import type { Metadata } from 'next';
 import { prefetchSponsorDetailPageData, prefetchNavigation, prefetchSocials, mapNavigationData } from '@/lib/prefetch';
+import { getCompanyCanonicalUrl } from '@/lib/company-public-path';
 import { generateOrganizationSchema, jsonLdSafe } from '@/lib/structured-data';
 import { SEO_DEFAULTS, buildSocialMetadata } from '@/lib/seo-defaults';
 import { CompanyDetailClient } from '@/components/CompanyDetailClient';
@@ -22,7 +23,7 @@ export async function generateMetadata({ params }: { params: Promise<{ slug: str
     seo?.meta_description ||
     company.company_bio?.replace(/<[^>]*>/g, '').slice(0, 160) ||
     `${company.company_name} - Sponsor of DeAI Summit 2026`;
-  const canonical = seo?.canonical_url || `${BASE_URL}/sponsors/${company.company_slug}`;
+  const canonical = getCompanyCanonicalUrl(company, BASE_URL);
 
   return {
     title,
