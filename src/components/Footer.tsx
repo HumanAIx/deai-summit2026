@@ -9,7 +9,7 @@ import type { NavigationConfig } from '@/config/types';
 import type { NavigationAPIData } from '@/lib/api-types';
 import { ColocatedPartnerBanner } from '@/components/ColocatedPartnerBanner';
 import {
-  COLOCATED_PARTNER_BANNER,
+  fetchColocatedPartnerCompany,
   enrichColocatedPartnerBanner,
   isVenuePromoCustomLink,
 } from '@/lib/colocatedPartner';
@@ -166,13 +166,17 @@ export const Footer: React.FC<FooterProps> = ({ navData, navigationAPIData, onSh
   // TechXpo EU co-located partner banner (under "View our beautiful Venue" custom link)
   useEffect(() => {
     if (!hasVenuePromoLink) return;
-    fetch(`/api/companies?id=${COLOCATED_PARTNER_BANNER.companySlug}`)
-      .then(r => r.ok ? r.json() : null)
-      .then(d => {
-        const banner = d?.data ? enrichColocatedPartnerBanner(d.data) : undefined;
+    let cancelled = false;
+    fetchColocatedPartnerCompany()
+      .then((company) => {
+        if (cancelled || !company) return;
+        const banner = enrichColocatedPartnerBanner(company);
         if (banner) setColocatedBanner(banner);
       })
       .catch(() => {});
+    return () => {
+      cancelled = true;
+    };
   }, [hasVenuePromoLink]);
 
   // Auto-rotate venues

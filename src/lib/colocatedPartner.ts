@@ -5,10 +5,12 @@ import {
   type CompanyLogoFields,
 } from './companyLogo';
 
+export const COLOCATED_PARTNER_SLUG = 'techxpo-eu';
+
 export const COLOCATED_PARTNER_BANNER: HighlightsHotspotBanner = {
   label: 'Co-located by TechXpo EU',
-  href: '/companies/techxpo-eu',
-  companySlug: 'techxpo-eu',
+  href: `/companies/${COLOCATED_PARTNER_SLUG}`,
+  companySlug: COLOCATED_PARTNER_SLUG,
 };
 
 export const COLOCATED_VENUE_SLUG = 'mfcc-malta';
@@ -19,7 +21,8 @@ export function isVenuePromoCustomLink(widget: { type?: string; linkLabel?: stri
   return widget.type === 'custom-link' && VENUE_PROMO_LINK_LABEL.test(widget.linkLabel || '');
 }
 
-type ColocatedCompany = CompanyLogoFields & {
+export type ColocatedCompany = CompanyLogoFields & {
+  company_slug?: string;
   company_name?: string;
   company_published?: boolean;
 };
@@ -29,6 +32,40 @@ export function isColocatedPartnerPublished(
   company?: ColocatedCompany | null,
 ): company is ColocatedCompany {
   return company?.company_published === true;
+}
+
+/** Find the hardcoded co-located partner in a companies list only when published. */
+export function findPublishedColocatedPartner(
+  companies: ColocatedCompany[] | null | undefined,
+): ColocatedCompany | null {
+  const match = companies?.find((c) => c.company_slug === COLOCATED_PARTNER_SLUG);
+  return isColocatedPartnerPublished(match) ? match : null;
+}
+
+/**
+ * Browser helper: probe publish state via the companies list (drafts do not 404),
+ * then fetch detail only when published.
+ */
+export async function fetchColocatedPartnerCompany(): Promise<ColocatedCompany | null> {
+  const listRes = await fetch(
+    `/api/companies?search=${encodeURIComponent(COLOCATED_PARTNER_SLUG)}&limit=25`,
+    { cache: 'no-store' },
+  );
+  if (!listRes.ok) return null;
+
+  const listJson = await listRes.json().catch(() => null);
+  const listed = Array.isArray(listJson?.data) ? listJson.data : null;
+  if (!findPublishedColocatedPartner(listed)) return null;
+
+  const detailRes = await fetch(
+    `/api/companies?id=${encodeURIComponent(COLOCATED_PARTNER_SLUG)}`,
+    { cache: 'no-store' },
+  );
+  if (!detailRes.ok) return null;
+
+  const detailJson = await detailRes.json().catch(() => null);
+  const company = detailJson?.data as ColocatedCompany | undefined;
+  return isColocatedPartnerPublished(company) ? company : null;
 }
 
 export function enrichColocatedPartnerBanner(
