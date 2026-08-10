@@ -1,5 +1,5 @@
 'use client';
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useMemo, useRef } from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
 import { AnimatedCounter } from '@/components/AnimatedCounter';
@@ -13,6 +13,12 @@ import {
   enrichColocatedPartnerBanner,
   isVenuePromoCustomLink,
 } from '@/lib/colocatedPartner';
+import {
+  filterPublicFooterWidgets,
+  isPublishedVenueCompany,
+  parsePublicEntityPath,
+  type FooterCompanyPublishFields,
+} from '@/lib/footerNavPublish';
 import type { HighlightsHotspotBanner } from '@/config/types';
 
 interface SocialLinkData extends PublicSocialLink {}
@@ -100,6 +106,7 @@ function PoweredByGconf() {
 export const Footer: React.FC<FooterProps> = ({ navData, navigationAPIData, onShowToast, onOpenContact, socials }) => {
   const [fetchedSocials, setFetchedSocials] = useState<SocialLinkData[]>([]);
   const [allVenues, setAllVenues] = useState<VenueData[]>([]);
+  const [companyCatalog, setCompanyCatalog] = useState<FooterCompanyPublishFields[] | null>(null);
   const [colocatedBanner, setColocatedBanner] = useState<HighlightsHotspotBanner | undefined>(undefined);
   const [activeVenueIndex, setActiveVenueIndex] = useState(0);
   const [email, setEmail] = useState('');
@@ -107,12 +114,27 @@ export const Footer: React.FC<FooterProps> = ({ navData, navigationAPIData, onSh
   const [submitStatus, setSubmitStatus] = useState<{ type: 'success' | 'error' | null; message: string }>({ type: null, message: '' });
 
   const fb = (navigationAPIData?.footerBuilder || {}) as Record<string, any>;
-  const widgets: any[] = fb.widgets || [];
+  const rawWidgets: any[] = fb.widgets || [];
   const description: string = fb.description || '';
   const collectionItems: any[] = fb.collectionItems || [];
   const footerColLabels: Record<string, string> = fb.footerColLabels || {};
   const bottomBarLinks: any[] = fb.bottomBarLinks || [];
   const venueId: string = fb.venueId || '';
+
+  const needsCompanyCatalog = useMemo(
+    () =>
+      rawWidgets.some(
+        (w: any) =>
+          w.type === 'venue' ||
+          (w.type === 'custom-link' && !!parsePublicEntityPath(w.linkUrl || '')),
+      ),
+    [rawWidgets],
+  );
+
+  const widgets = useMemo(
+    () => filterPublicFooterWidgets(rawWidgets, companyCatalog, venueId),
+    [rawWidgets, companyCatalog, venueId],
+  );
   const hasVenuePromoLink = widgets.some(isVenuePromoCustomLink);
 
   // Widget helpers
@@ -148,15 +170,39 @@ export const Footer: React.FC<FooterProps> = ({ navData, navigationAPIData, onSh
       .catch(() => {});
   }, [socials]);
 
-  // Fetch venues
+  // Company catalog for publish-gating footer entity links / venue widgets.
+  useEffect(() => {
+    if (!needsCompanyCatalog) {
+      setCompanyCatalog([]);
+      return;
+    }
+    let cancelled = false;
+    fetch('/api/companies?limit=500', { cache: 'no-store' })
+      .then((r) => (r.ok ? r.json() : null))
+      .then((d) => {
+        if (cancelled) return;
+        setCompanyCatalog(Array.isArray(d?.data) ? d.data : []);
+      })
+      .catch(() => {
+        if (!cancelled) setCompanyCatalog([]);
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, [needsCompanyCatalog]);
+
+  // Fetch venues for carousel (strict published only).
   useEffect(() => {
     if (!venueId) return;
-    fetch('/api/companies?type=venues')
+    fetch('/api/companies?type=venues', { cache: 'no-store' })
       .then(r => r.ok ? r.json() : null)
       .then(d => {
         if (!d?.data?.length) return;
-        const published = d.data.filter(
-          (v: VenueData) => v.company_published !== false && v.venue_published !== false,
+        const published = d.data.filter((v: VenueData) =>
+          isPublishedVenueCompany({
+            ...v,
+            company_is_venue: true,
+          }),
         );
         setAllVenues(published);
       })
@@ -165,7 +211,10 @@ export const Footer: React.FC<FooterProps> = ({ navData, navigationAPIData, onSh
 
   // TechXpo EU co-located partner banner (under "View our beautiful Venue" custom link)
   useEffect(() => {
-    if (!hasVenuePromoLink) return;
+    if (!hasVenuePromoLink) {
+      setColocatedBanner(undefined);
+      return;
+    }
     let cancelled = false;
     fetchColocatedPartnerCompany()
       .then((company) => {
