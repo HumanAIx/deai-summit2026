@@ -1,6 +1,6 @@
 import { notFound, permanentRedirect } from 'next/navigation';
 import type { Metadata } from 'next';
-import { prefetchVenueDetailPageData, prefetchNavigation, prefetchSocials, prefetchCompanyBySlug, mapNavigationData } from '@/lib/prefetch';
+import { prefetchVenueDetailPageData, prefetchNavigation, prefetchSocials, prefetchColocatedPartnerCompany, mapNavigationData } from '@/lib/prefetch';
 import { getCompanyCanonicalUrl, getCompanyPublicPath } from '@/lib/company-public-path';
 import { COLOCATED_VENUE_SLUG, enrichColocatedPartnerBanner } from '@/lib/colocatedPartner';
 import { generateOrganizationSchema, jsonLdSafe } from '@/lib/structured-data';
@@ -52,7 +52,7 @@ export default async function VenueDetailPage({ params }: { params: Promise<{ sl
     prefetchVenueDetailPageData(slug),
     prefetchNavigation(),
     prefetchSocials(),
-    slug === COLOCATED_VENUE_SLUG ? prefetchCompanyBySlug('techxpo-eu') : Promise.resolve(null),
+    slug === COLOCATED_VENUE_SLUG ? prefetchColocatedPartnerCompany() : Promise.resolve(null),
   ]);
 
   if (!company) {

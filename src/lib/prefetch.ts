@@ -6,11 +6,16 @@ import {
   type AnalyticsTagsPartial,
   type PublicAnalyticsTagsResolved,
 } from './analytics-tags';
+import {
+  COLOCATED_PARTNER_SLUG,
+  findPublishedColocatedPartner,
+  isColocatedPartnerPublished,
+} from './colocatedPartner';
 
 const EXTERNAL_API_URL = process.env.NEXT_PUBLIC_GCONF_API_URL || 'http://localhost:3000/api';
 // SECURITY: prefer server-only GCONF_API_KEY. NEXT_PUBLIC_* is inlined into the
 // client bundle and must be rotated upstream. Fallback retained for migration.
-const API_KEY = process.env.GCONF_API_KEY || process.env.NEXT_PUBLIC_GCONF_API_KEY || '';
+const API_KEY =  process.env.GCONF_SITE_KEY || process.env.GCONF_API_KEY || process.env.NEXT_PUBLIC_GCONF_API_KEY || '';
 
 const CACHE_DURATION = 60; // 1 minute
 
@@ -222,6 +227,21 @@ export async function prefetchCompanyBySlug(slug: string): Promise<Company | nul
   // Must bypass Next fetch cache — publish toggles in the dashboard need to
   // reflect immediately on detail pages and co-located partner banners.
   return fetchFromAPI<Company>(`/companies/${slug}`, { cacheDuration: 0 });
+}
+
+/**
+ * Co-located partner (TechXpo EU): probe publish state via the companies list
+ * (drafts are returned there without 404), then fetch detail only when published.
+ */
+export async function prefetchColocatedPartnerCompany(): Promise<Company | null> {
+  const listed = await fetchFromAPI<Company[]>(
+    `/companies?search=${encodeURIComponent(COLOCATED_PARTNER_SLUG)}&limit=25`,
+    { cacheDuration: 0 },
+  );
+  if (!findPublishedColocatedPartner(listed)) return null;
+
+  const company = await prefetchCompanyBySlug(COLOCATED_PARTNER_SLUG);
+  return isColocatedPartnerPublished(company) ? company : null;
 }
 
 export async function prefetchVenueDetailPageData(slug: string) {
