@@ -183,7 +183,13 @@ function extractStats(blocks: CMSBlock[]): Partial<StatsConfig> | undefined {
   const items = (block as Record<string, unknown>).collectionItems as Array<{ title: string; description: string }> | undefined;
   if (!items || items.length === 0) return undefined;
 
-  const quoteText = (block.content as string) || (block.description as string) || '';
+  // Dashboard content blocks store the quote in `title` (primary field).
+  // Keep content/description as secondary fallbacks for older block shapes.
+  const quoteText =
+    (block.title as string) ||
+    (block.content as string) ||
+    (block.description as string) ||
+    '';
   const quoteAuthor = (block.quoteAuthor as string) || '';
   const quoteRole = (block.quoteRole as string) || '';
   const quoteImage = (block.quoteImage as string) || '';
