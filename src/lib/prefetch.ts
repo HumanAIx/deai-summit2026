@@ -217,6 +217,25 @@ export async function prefetchPartners(): Promise<NormalizedSponsor[]> {
   return companies.filter(isMarkedPartnerCompany).map(normalizeSponsor);
 }
 
+/** Published organizer companies (Hosted-by tiles). Prefer typed filter; fall back to full list. */
+export async function prefetchOrganizers(): Promise<Company[]> {
+  const typed = await fetchFromAPI<Company[]>(
+    '/companies?type=organizer&visibility=published&limit=50',
+    { cacheDuration: 0 },
+  );
+  const source =
+    typed && typed.length > 0
+      ? typed
+      : (await fetchFromAPI<Company[]>('/companies?limit=500', { cacheDuration: 0 })) || [];
+  // Always re-filter: older APIs ignore `type=organizer` and return every company.
+  return source.filter(
+    (c) =>
+      c.company_published === true &&
+      c.company_is_organizer === true &&
+      c.organizer_published === true,
+  );
+}
+
 export async function prefetchVenues(): Promise<Company[]> {
   const companies = await fetchFromAPI<Company[]>('/companies/venues', { cacheDuration: 0 });
   if (!companies) return [];

@@ -85,11 +85,13 @@ export interface Company {
   company_is_venue: boolean;
   company_is_supporter: boolean;
   company_is_partner: boolean;
+  company_is_organizer?: boolean;
   company_published: boolean;
   sponsor_published: boolean;
   venue_published: boolean;
   supporter_published: boolean;
   partner_published: boolean;
+  organizer_published?: boolean;
   company_embedded_youtube?: string;
   company_youtube_videos?: unknown[];
   venue_photo?: string;
@@ -253,6 +255,9 @@ export interface CMSCompanyItem {
   sponsor_published?: boolean;
   company_is_partner?: boolean;
   partner_published?: boolean;
+  company_is_organizer?: boolean;
+  organizer_published?: boolean;
+  company_website?: string;
 }
 
 export interface CMSFormFieldChoice {

@@ -8,6 +8,7 @@ import {
   prefetchPublicAnalyticsTags,
   prefetchVenues,
   prefetchColocatedPartnerCompany,
+  prefetchOrganizers,
 } from '@/lib/prefetch';
 import { redditSpeakerLeadPixel } from '@/lib/analytics-tags';
 import type { SocialLink } from '@/lib/prefetch';
@@ -16,6 +17,8 @@ import { generateEventSchema, jsonLdSafe } from '@/lib/structured-data';
 import { extractHomeSections, enrichHighlightsWithVenue } from '@/lib/home-cms';
 import { generatePageMetadata } from '@/lib/seo-defaults';
 import type { CMSBlock } from '@/lib/api-types';
+import type { OrganizerConfig } from '@/config/types';
+import { resolveGeneralLogoSrc, resolveScrollerLogoSrc } from '@/lib/companyLogo';
 
 const BASE_URL = process.env.NEXT_PUBLIC_SITE_URL || 'https://deaisummit.org';
 
@@ -37,9 +40,10 @@ export default async function Home() {
   const apiNav = await prefetchNavigation();
   const navigationData = apiNav ? mapNavigationData(apiNav) : undefined;
   const analyticsTags = await prefetchPublicAnalyticsTags();
-  const [venues, techxpoCompany] = await Promise.all([
+  const [venues, techxpoCompany, organizerCompanies] = await Promise.all([
     prefetchVenues(),
     prefetchColocatedPartnerCompany(),
+    prefetchOrganizers(),
   ]);
 
   try {
@@ -151,12 +155,68 @@ export default async function Home() {
         { icon: 'ri-calendar-line', text: siteConfig.hero.date },
       ],
   };
-  const statsData = cmsSections.stats
-    ? {
-        quote: { ...siteConfig.stats.quote, ...(cmsSections.stats.quote ?? {}) },
-        items: cmsSections.stats.items ?? siteConfig.stats.items,
+  const organizerBySlug = new Map(organizerCompanies.map((c) => [c.company_slug, c]));
+  const enrichOrganizers = (list: OrganizerConfig[]): OrganizerConfig[] =>
+    list.map((o) => {
+      const fromApi = o.slug ? organizerBySlug.get(o.slug) : undefined;
+      if (!fromApi) return o;
+      const logo =
+        resolveGeneralLogoSrc(fromApi) ||
+        resolveScrollerLogoSrc(fromApi) ||
+        fromApi.company_logo ||
+        o.image;
+      let websiteLabel = o.websiteLabel;
+      if (!websiteLabel && fromApi.company_website) {
+        try {
+          websiteLabel = new URL(fromApi.company_website).hostname.replace(/^www\./i, '');
+        } catch {
+          /* keep undefined */
+        }
       }
-    : siteConfig.stats;
+      return {
+        ...o,
+        image: logo || o.image,
+        websiteLabel,
+        href: o.slug ? `/companies/${o.slug}` : o.href,
+      };
+    });
+
+  const resolvedOrganizers: OrganizerConfig[] | undefined = (() => {
+    const fromCms = cmsSections.stats?.organizers;
+    let list: OrganizerConfig[] | undefined;
+    if (fromCms && fromCms.length > 0) list = enrichOrganizers(fromCms);
+    else if (organizerCompanies.length > 0) {
+      list = enrichOrganizers(
+        organizerCompanies.map((c) => ({
+          name: c.company_name,
+          slug: c.company_slug,
+          role: 'Host',
+          image:
+            resolveGeneralLogoSrc(c) ||
+            resolveScrollerLogoSrc(c) ||
+            c.company_logo ||
+            '',
+          href: `/companies/${c.company_slug}`,
+        })),
+      );
+    }
+    if (!list || list.length === 0) return undefined;
+    // HumanAIx leads the Hosted-by row.
+    return [...list].sort((a, b) => {
+      const rank = (o: OrganizerConfig) =>
+        o.slug === 'humanaix-foundation' || /humanaix/i.test(o.name) ? 0 : 1;
+      return rank(a) - rank(b);
+    });
+  })();
+
+  const statsData = {
+    quote: {
+      ...siteConfig.stats.quote,
+      ...(cmsSections.stats?.quote ?? {}),
+    },
+    items: cmsSections.stats?.items ?? siteConfig.stats.items,
+    ...(resolvedOrganizers ? { organizers: resolvedOrganizers } : {}),
+  };
   const aboutData = { ...siteConfig.about, ...(cmsSections.about ?? {}) };
   const highlightsBase = cmsSections.highlights
     ? { ...siteConfig.highlights, ...cmsSections.highlights }

@@ -11,6 +11,7 @@
 
 import type { CMSBlock, CMSCompanyItem, CMSSpeakerItem } from './api-types';
 import {
+  resolveGeneralLogoSrc,
   resolveScrollerLogoHasDarkBg,
   resolveScrollerLogoSrc,
   type CompanyLogoFields,
@@ -22,6 +23,7 @@ import type {
   AboutConfig,
   HighlightsConfig,
   NetworkingItem,
+  OrganizerConfig,
 } from '@/config/types';
 import type {
   LeadingSpeakerData,
@@ -174,6 +176,16 @@ function extractMarquee(blocks: CMSBlock[]): MarqueeItemData[] | undefined {
   return mapped.length > 0 ? mapped : undefined;
 }
 
+function websiteHostname(url?: string | null): string | undefined {
+  if (!url || typeof url !== 'string') return undefined;
+  try {
+    const host = new URL(url).hostname.replace(/^www\./i, '');
+    return host || undefined;
+  } catch {
+    return undefined;
+  }
+}
+
 function extractStats(blocks: CMSBlock[]): Partial<StatsConfig> | undefined {
   const block =
     findBySlot(blocks, 'stats') ??
@@ -202,8 +214,42 @@ function extractStats(blocks: CMSBlock[]): Partial<StatsConfig> | undefined {
   if (quoteImage) quote.image = quoteImage;
   if (quoteUrl) quote.url = quoteUrl;
 
+  const listType =
+    ((block as Record<string, unknown>).companiesListType as string | undefined) ||
+    ((block as Record<string, unknown>).listType as string | undefined);
+  // Stats block with companiesListType === 'all-organizers' carries host companies
+  // in `items`. Older API hydration may dump every company into `items` when it
+  // doesn't understand that list type — require the organizer flag explicitly.
+  const companyItems = (block.items as unknown as CMSCompanyItem[] | undefined) ?? [];
+  const organizers =
+    listType === 'all-organizers'
+      ? companyItems
+          .filter(
+            (c) =>
+              c.company_is_organizer === true &&
+              c.organizer_published === true &&
+              c.company_published !== false &&
+              !!(c.company_slug || c.company_name),
+          )
+          .map((c) => {
+            const logo = resolveGeneralLogoSrc(c) || resolveScrollerLogoSrc(c) || c.company_logo || '';
+            const slug = c.company_slug || '';
+            const organizer: OrganizerConfig = {
+              name: c.company_name,
+              slug,
+              role: 'Host',
+              image: logo,
+              href: slug ? `/companies/${slug}` : '#',
+              websiteLabel: websiteHostname(c.company_website),
+            };
+            return organizer;
+          })
+          .filter((o) => o.name)
+      : undefined;
+
   return {
     quote: quote as unknown as Partial<StatsConfig>['quote'],
+    ...(organizers && organizers.length > 0 ? { organizers } : {}),
     items: items.map((i) => ({ number: i.title, label: i.description })),
   } as Partial<StatsConfig>;
 }
