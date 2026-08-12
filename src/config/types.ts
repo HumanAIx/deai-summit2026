@@ -88,8 +88,21 @@ export interface QuoteConfig {
   url?: string;  // Add this optional field
 }
 
+export interface OrganizerConfig {
+  name: string;
+  slug: string;
+  role?: string;
+  image: string;
+  /** Public detail path, e.g. `/companies/humanaix-foundation` */
+  href: string;
+  /** Short hostname label shown in the tile footer (e.g. `humanaix.io`) */
+  websiteLabel?: string;
+}
+
 export interface StatsConfig {
     quote: QuoteConfig;
+    /** CMS `all-organizers` companies for the Hosted-by tiles */
+    organizers?: OrganizerConfig[];
     items: StatItem[];
 }
 
