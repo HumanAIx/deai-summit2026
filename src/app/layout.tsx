@@ -152,7 +152,8 @@ window.rdt('track','PageVisit');`
         ) : null}
 
         {children}
-        <script src="https://api.bitpull.ai/embed/cmt2vdx1z00m40vmjcl2v42ny.js?name=Sab&firstMessage=Hello%2C%0AAre+you+interested+in+attending%2C+speaking%2C+or+sponsoring+the+DEAI+Summit+25-27+November+in+Malta%3F&color=7B61FF" async></script>
+        {/* Bitpull voice widget — logic lives in /public/bitpull-widget.js (do not paste inline JS here) */}
+        <Script src="/bitpull-widget.js" strategy="afterInteractive" />
       </body>
     </html>
   );
