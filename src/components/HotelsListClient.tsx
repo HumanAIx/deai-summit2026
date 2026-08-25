@@ -6,7 +6,8 @@ import Image from 'next/image';
 import Link from 'next/link';
 import { DetailPageLayout } from '@/components/DetailPageLayout';
 import { AnimatedGrid } from '@/components/AnimatedGrid';
-import type { NormalizedSponsor, NavigationAPIData } from '@/lib/api-types';
+import { youtubeThumbnail } from '@/lib/utils';
+import type { CompanySocials, NormalizedSponsor, NavigationAPIData } from '@/lib/api-types';
 import type { NavigationConfig } from '@/config/types';
 
 interface HotelsListClientProps {
@@ -22,7 +23,6 @@ interface HotelsListClientProps {
   socials?: { key: string; label: string; url: string; icon?: string; color?: string }[];
 }
 
-/** Convert **text** markers or brand name to cyan-highlighted spans */
 function highlightTitle(text: string): string {
   if (text.includes('**')) {
     return text.replace(/\*\*(.+?)\*\*/g, '<span class="text-brand-cyan">$1</span>');
@@ -32,67 +32,126 @@ function highlightTitle(text: string): string {
     .replace(/(Hotels?)/gi, '<span class="text-brand-cyan">$1</span>');
 }
 
-const cardColors = [
-  '#00B0C2',
-  '#0E6FEB',
-  '#050A1F',
-  '#00B0C2',
-  '#0E6FEB',
-  '#050A1F',
-  '#00B0C2',
-  '#0E6FEB',
-];
+function socialIcon(key: string): string {
+  const icons: Record<string, string> = {
+    linkedin: 'ri-linkedin-box-fill',
+    x: 'ri-twitter-x-fill',
+    twitter: 'ri-twitter-x-fill',
+    facebook: 'ri-facebook-circle-fill',
+    instagram: 'ri-instagram-fill',
+    youtube: 'ri-youtube-fill',
+    telegram: 'ri-telegram-fill',
+    website: 'ri-global-line',
+  };
+  return icons[key] || 'ri-link';
+}
 
-function HotelCard({ hotel, index }: { hotel: NormalizedSponsor; index: number }) {
+function collectSocials(socials?: CompanySocials, website?: string) {
+  const links: { key: string; url: string }[] = [];
+  if (website?.startsWith('http')) links.push({ key: 'website', url: website });
+  if (socials) {
+    for (const [key, url] of Object.entries(socials)) {
+      if (typeof url === 'string' && url.startsWith('http')) links.push({ key, url });
+    }
+  }
+  return links.slice(0, 5);
+}
+
+function HotelCard({ hotel }: { hotel: NormalizedSponsor }) {
   const href = hotel.slug ? `/partner-hotels/${hotel.slug}` : '#';
-  const bgColor = cardColors[index % cardColors.length];
+  const cover = hotel.coverImage || hotel.logo;
+  const location = [hotel.city, hotel.country].filter(Boolean).join(', ');
+  const videoUrl = hotel.youtubeUrl || hotel.youtubeVideos?.[0];
+  const thumb = videoUrl ? youtubeThumbnail(videoUrl) : null;
+  const socials = collectSocials(hotel.socials, hotel.website);
 
   return (
-    <Link
-      href={href}
-      className="group block overflow-hidden rounded-2xl transition-all duration-300 hover:scale-[1.02] hover:shadow-xl no-underline bg-white border border-gray-200 hover:border-gray-300"
-    >
-      <div
-        className={`relative h-[160px] flex items-center justify-center p-8 ${
-          hotel.logoHasDarkBg ? 'bg-[#050A1F]' : 'bg-white'
-        }`}
-      >
-        {hotel.logo ? (
-          <div className="relative w-full h-full">
-            <Image
-              src={hotel.logo}
-              alt={hotel.name}
-              fill
-              sizes="280px"
-              className="object-contain"
-            />
-          </div>
+    <article className="group flex flex-col overflow-hidden rounded-3xl bg-[#0a1028] border border-white/10 shadow-[0_24px_60px_-28px_rgba(0,0,0,0.65)] transition-all duration-500 hover:-translate-y-1 hover:border-brand-cyan/40 hover:shadow-[0_30px_80px_-24px_rgba(0,176,194,0.35)]">
+      <Link href={href} className="relative block aspect-[4/3] overflow-hidden no-underline">
+        {cover ? (
+          <Image
+            src={cover}
+            alt={hotel.name}
+            fill
+            sizes="(max-width:768px) 100vw, 33vw"
+            className="object-cover transition-transform duration-700 group-hover:scale-105"
+          />
         ) : (
-          <div className="w-full h-full flex items-center justify-center">
-            <span className="text-gray-300 text-lg font-display font-bold">{hotel.name}</span>
+          <div className="absolute inset-0 bg-[#050A1F] flex items-center justify-center text-white/30 font-display text-2xl font-bold">
+            {hotel.name}
           </div>
         )}
-      </div>
+        <div className="absolute inset-0 bg-gradient-to-t from-[#050A1F] via-[#050A1F]/20 to-transparent" />
+        {thumb ? (
+          <div className="absolute top-4 right-4 flex items-center gap-2 rounded-full bg-black/55 backdrop-blur-md border border-white/15 px-3 py-1.5 text-white text-[10px] font-mono uppercase tracking-[0.18em]">
+            <span className="relative w-5 h-5 rounded-full overflow-hidden border border-white/30">
+              <Image src={thumb} alt="" fill sizes="20px" className="object-cover" />
+            </span>
+            Video
+          </div>
+        ) : null}
+        {location ? (
+          <div className="absolute bottom-4 left-4 inline-flex items-center gap-1.5 rounded-full bg-black/45 backdrop-blur-md border border-white/10 px-3 py-1 text-white/85 text-xs">
+            <i className="ri-map-pin-line text-brand-cyan" />
+            {location}
+          </div>
+        ) : null}
+      </Link>
 
-      <div className="p-5 h-[130px] flex flex-col justify-between" style={{ backgroundColor: bgColor }}>
+      <div className="flex flex-1 flex-col gap-4 p-6">
         <div>
-          <h3 className="text-white text-base font-display font-extrabold group-hover:underline transition-colors leading-tight">
-            {hotel.name}
-          </h3>
-          {hotel.bio && (
-            <p className="text-white/70 text-xs font-semibold mt-2 line-clamp-2 leading-relaxed">
-              {hotel.bio.replace(/<[^>]*>/g, '').replace(/[#*_`>\[\]()]/g, '').replace(/\s+/g, ' ').trim().slice(0, 120)}
+          <Link href={href} className="no-underline">
+            <h3 className="text-white text-xl font-display font-bold leading-tight group-hover:text-brand-cyan transition-colors">
+              {hotel.name}
+            </h3>
+          </Link>
+          {hotel.bio ? (
+            <p className="text-white/55 text-sm mt-3 leading-relaxed line-clamp-3">
+              {hotel.bio.replace(/<[^>]*>/g, '').replace(/[#*_`>\[\]()]/g, '').replace(/\s+/g, ' ').trim()}
             </p>
-          )}
+          ) : null}
         </div>
-        <div className="flex items-center gap-1 mt-3 text-white/60 text-xs font-bold font-mono uppercase tracking-widest group-hover:text-white transition-colors">
-          View Details
-          <svg className="w-3 h-3 group-hover:translate-x-1 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
-          </svg>
+
+        {socials.length > 0 ? (
+          <div className="flex flex-wrap gap-2">
+            {socials.map((link) => (
+              <a
+                key={`${hotel.id}-${link.key}`}
+                href={link.url}
+                target="_blank"
+                rel="noopener noreferrer"
+                onClick={(e) => e.stopPropagation()}
+                className="w-9 h-9 rounded-full border border-white/15 bg-white/5 hover:bg-brand-cyan/20 hover:border-brand-cyan/50 flex items-center justify-center transition-colors"
+                title={link.key}
+                aria-label={link.key}
+              >
+                <i className={`${socialIcon(link.key)} text-base text-white/75`} />
+              </a>
+            ))}
+          </div>
+        ) : null}
+
+        <div className="mt-auto flex items-center gap-3 pt-2">
+          <Link
+            href={href}
+            className="flex-1 text-center px-4 py-2.5 rounded-full border border-white/20 text-white text-xs font-bold font-mono uppercase tracking-widest hover:bg-white hover:text-[#050A1F] transition-colors no-underline"
+          >
+            View details
+          </Link>
+          {hotel.bookingsUrl ? (
+            <a
+              href={hotel.bookingsUrl}
+              target="_blank"
+              rel="noopener noreferrer"
+              onClick={(e) => e.stopPropagation()}
+              className="flex-1 text-center px-4 py-2.5 rounded-full bg-brand-cyan text-[#050A1F] text-xs font-bold font-mono uppercase tracking-widest hover:bg-white transition-colors no-underline"
+            >
+              Book
+            </a>
+          ) : null}
         </div>
       </div>
-    </Link>
+    </article>
   );
 }
 
@@ -116,7 +175,7 @@ export function HotelsListClient({
         </div>
 
         <div className="relative z-10 max-w-[1440px] mx-auto px-6 text-center">
-          <p className="text-brand-cyan text-sm font-mono uppercase tracking-widest mb-4">
+          <p className="text-brand-cyan text-sm font-mono uppercase tracking-[0.28em] mb-4">
             {heroBadge || 'Stay with us'}
           </p>
           <h1
@@ -129,15 +188,15 @@ export function HotelsListClient({
           />
           <p className="text-white/60 text-lg max-w-2xl mx-auto mb-12">
             {heroSubtitle ||
-              'Official partner hotels for DeAI Summit 2026 — book your stay close to the action in Malta.'}
+              'Curated stays for DeAI Summit 2026 — refined rooms, harbour views, and easy access to the programme.'}
           </p>
         </div>
 
         {hotels.length > 0 && (
-          <div className="relative z-10 max-w-[1440px] mx-auto px-6 pt-12 pb-12">
-            <div className="flex items-center justify-center gap-20 md:gap-28 mb-16">
+          <div className="relative z-10 max-w-[1440px] mx-auto px-6 pt-8 pb-12">
+            <div className="flex items-center justify-center mb-12">
               <div className="text-center relative">
-                <div className="absolute inset-0 blur-3xl opacity-15 rounded-full scale-150 bg-brand-cyan" />
+                <div className="absolute inset-0 blur-3xl opacity-20 rounded-full scale-150 bg-brand-cyan" />
                 <p className="text-brand-cyan text-6xl md:text-7xl font-display font-bold mb-3 relative">
                   <AnimatedCounter value={String(hotels.length)} duration={2200} />
                 </p>
@@ -151,35 +210,28 @@ export function HotelsListClient({
       </section>
 
       {hotels.length > 0 ? (
-        <section className="bg-[#F0F0EF] pt-16 pb-[100px]">
+        <section className="bg-[#070c22] pt-16 pb-[100px]">
           <div className="max-w-[1440px] mx-auto px-6">
             <div className="flex items-center gap-4 mb-10">
               <div className="w-1 h-8 bg-brand-cyan rounded-full" />
-              <h2 className="text-2xl md:text-3xl font-display font-bold text-[#050A1F]">
-                Partner Hotels
-              </h2>
+              <h2 className="text-2xl md:text-3xl font-display font-bold text-white">Partner Hotels</h2>
             </div>
-            <div className="flex flex-wrap justify-center gap-6">
-              {hotels.map((hotel, index) => (
-                <div
-                  key={hotel.id}
-                  className="w-full sm:w-[calc(50%-12px)] lg:w-[calc(33.333%-16px)] xl:w-[calc(25%-18px)]"
-                >
-                  <HotelCard hotel={hotel} index={index} />
-                </div>
+            <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-7">
+              {hotels.map((hotel) => (
+                <HotelCard key={hotel.id} hotel={hotel} />
               ))}
             </div>
           </div>
         </section>
       ) : (
-        <section className="bg-[#F0F0EF] py-24">
+        <section className="bg-[#070c22] py-24">
           <div className="max-w-[1440px] mx-auto px-6 text-center">
-            <p className="text-gray-500 text-lg">No partner hotels available at the moment.</p>
+            <p className="text-white/50 text-lg">No partner hotels available at the moment.</p>
           </div>
         </section>
       )}
 
-      <section className="bg-[#050A1F] py-16">
+      <section className="bg-[#050A1F] py-16 border-t border-white/5">
         <div className="max-w-3xl mx-auto px-6 text-center">
           <h2 className="text-2xl md:text-3xl font-display font-bold text-white mb-4">
             {ctaTitle || 'Need a room recommendation?'}

@@ -103,3 +103,23 @@ export function youtubeToEmbed(url: string): string | null {
 
   return `https://www.youtube.com/embed/${videoId}`;
 }
+
+/** Extract an 11-char YouTube video id from common URL shapes. */
+export function youtubeVideoId(url: string): string | null {
+  if (!url) return null;
+  const patterns = [
+    /(?:youtube\.com\/watch\?v=)([a-zA-Z0-9_-]{11})/,
+    /(?:youtu\.be\/)([a-zA-Z0-9_-]{11})/,
+    /(?:youtube\.com\/embed\/)([a-zA-Z0-9_-]{11})/,
+  ];
+  for (const pattern of patterns) {
+    const match = url.match(pattern);
+    if (match) return match[1];
+  }
+  return null;
+}
+
+export function youtubeThumbnail(url: string): string | null {
+  const id = youtubeVideoId(url);
+  return id ? `https://i.ytimg.com/vi/${id}/hqdefault.jpg` : null;
+}

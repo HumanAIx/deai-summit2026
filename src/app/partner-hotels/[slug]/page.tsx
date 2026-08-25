@@ -103,6 +103,7 @@ export default async function PartnerHotelDetailPage({
         navigationData={navigationData}
         navigationAPIData={apiNav || undefined}
         socials={socials}
+        variant="hotel"
       />
     </>
   );
