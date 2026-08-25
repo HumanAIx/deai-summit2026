@@ -1,5 +1,4 @@
 import { NextResponse } from 'next/server';
-import sharp from 'sharp';
 
 const TENANT_SLUG = process.env.TENANT_SLUG || 'deaisummit';
 const STORAGE_BUCKET = 'tenants';
@@ -85,6 +84,12 @@ export async function GET(
   // Social metadata appends ?format=jpeg so we re-encode here.
   if (wantsJpeg(request)) {
     try {
+      // Lazy import: sharp is a native-binary package. Loading it only when a
+      // JPEG conversion is actually requested means a failure to load it
+      // (e.g. a platform/runtime mismatch) is caught right here and falls
+      // through to the original bytes below, instead of crashing every
+      // request to this route before this branch is ever reached.
+      const { default: sharp } = await import('sharp');
       const jpeg = await sharp(upstreamBuffer)
         .rotate()
         .resize({ width: 1200, height: 630, fit: 'inside', withoutEnlargement: true })
