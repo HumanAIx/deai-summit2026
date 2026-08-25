@@ -86,12 +86,15 @@ export interface Company {
   company_is_supporter: boolean;
   company_is_partner: boolean;
   company_is_organizer?: boolean;
+  company_is_affiliated_hotel?: boolean;
   company_published: boolean;
   sponsor_published: boolean;
   venue_published: boolean;
   supporter_published: boolean;
   partner_published: boolean;
   organizer_published?: boolean;
+  affiliated_hotel_published?: boolean;
+  company_affiliated_hotel_bookings_url?: string | null;
   company_embedded_youtube?: string;
   company_youtube_videos?: unknown[];
   venue_photo?: string;
@@ -156,6 +159,7 @@ export interface NormalizedSponsor {
   socials?: CompanySocials;
   isSponsor: boolean;
   isPartner: boolean;
+  isHotel?: boolean;
   logoHasDarkBg?: boolean;
 }
 
@@ -234,6 +238,7 @@ export interface CMSSpeakerItem {
   is_published?: boolean;
   is_speaker?: boolean;
   is_speaker_featured?: boolean;
+  is_team_member?: boolean;
   avatar_seed?: string | null;
 }
 
@@ -257,6 +262,9 @@ export interface CMSCompanyItem {
   partner_published?: boolean;
   company_is_organizer?: boolean;
   organizer_published?: boolean;
+  company_is_affiliated_hotel?: boolean;
+  affiliated_hotel_published?: boolean;
+  company_affiliated_hotel_bookings_url?: string | null;
   company_website?: string;
 }
 

@@ -1,9 +1,9 @@
 import type { Metadata } from 'next';
 import { notFound } from 'next/navigation';
-import ReactMarkdown from 'react-markdown';
-import remarkGfm from 'remark-gfm';
-import { LegalPageShell } from '@/components/LegalPageShell';
+import { CmsPageRenderer } from '@/components/cms/CmsPageRenderer';
+import { DetailPageLayout } from '@/components/DetailPageLayout';
 import { siteConfig } from '@/config/site';
+import { parseCmsBlocks } from '@/lib/cmsBlocks';
 import {
   prefetchCMSPage,
   prefetchNavigation,
@@ -11,51 +11,12 @@ import {
   mapNavigationData,
 } from '@/lib/prefetch';
 import { generatePageMetadata, SEO_DEFAULTS } from '@/lib/seo-defaults';
-import type { CMSBlock, CMSPageData } from '@/lib/api-types';
 
 const BASE_URL = process.env.NEXT_PUBLIC_SITE_URL || 'https://deaisummit.org';
 
 type PageProps = {
   params: Promise<{ slug: string }>;
 };
-
-function parseBlocks(cmsPage: CMSPageData): CMSBlock[] {
-  const rawBlocks = cmsPage.content?.blocks;
-  let blocks: CMSBlock[] = Array.isArray(rawBlocks)
-    ? (rawBlocks as CMSBlock[])
-    : rawBlocks
-      ? (Object.values(rawBlocks) as CMSBlock[])
-      : [];
-
-  const blockOrder = cmsPage.content?.blockOrder;
-  if (blockOrder?.length) {
-    const map = new Map(blocks.map((b) => [b.id, b]));
-    const ordered: CMSBlock[] = [];
-    for (const id of blockOrder) {
-      const block = map.get(id);
-      if (block) ordered.push(block);
-    }
-    for (const block of blocks) {
-      if (!ordered.includes(block)) ordered.push(block);
-    }
-    blocks = ordered;
-  }
-
-  return blocks.filter((b) => (b as { published?: boolean }).published !== false);
-}
-
-function blockBody(block: CMSBlock): string {
-  const content = typeof block.content === 'string' ? block.content.trim() : '';
-  if (content) return content;
-  const nodes = block.textNodes;
-  if (Array.isArray(nodes) && nodes.length > 0) {
-    return nodes
-      .map((n) => (typeof n?.text === 'string' ? n.text : ''))
-      .filter(Boolean)
-      .join('\n\n');
-  }
-  return '';
-}
 
 export async function generateMetadata({ params }: PageProps): Promise<Metadata> {
   const { slug } = await params;
@@ -71,8 +32,10 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
 }
 
 /**
- * Catch-all for CMS content pages that don't have a dedicated App Router folder
- * (e.g. Partner Hotels → /partner-hotels). Static routes like /speakers win first.
+ * Catch-all for CMS pages without a dedicated App Router folder.
+ * Renders every published content/simple box and known addons (companies-list,
+ * members-list, youtube, schedule link-outs, etc.) via CmsPageRenderer.
+ * Static routes (/partners, /partner-hotels, /speakers, …) still take priority.
  */
 export default async function CmsContentPage({ params }: PageProps) {
   const { slug } = await params;
@@ -88,43 +51,15 @@ export default async function CmsContentPage({ params }: PageProps) {
   }
 
   const navigationData = apiNav ? mapNavigationData(apiNav) : siteConfig.navigation;
-  const blocks = parseBlocks(cmsPage);
-  const title =
-    blocks.find((b) => typeof b.title === 'string' && b.title.trim())?.title?.trim() ||
-    cmsPage.page_title ||
-    slug;
-
-  const sections = blocks
-    .map((block) => ({
-      id: block.id,
-      heading: typeof block.title === 'string' ? block.title.trim() : '',
-      body: blockBody(block),
-    }))
-    .filter((s) => s.body || (s.heading && s.heading !== title));
+  const blocks = parseCmsBlocks(cmsPage);
 
   return (
-    <LegalPageShell
-      title={title}
+    <DetailPageLayout
       navigationData={navigationData}
       navigationAPIData={apiNav || undefined}
       socials={socials}
     >
-      {sections.length > 0 ? (
-        <div className="space-y-10">
-          {sections.map((section) => (
-            <section key={section.id}>
-              {section.heading && section.heading !== title ? (
-                <h2 className="text-2xl font-semibold mb-4">{section.heading}</h2>
-              ) : null}
-              {section.body ? (
-                <ReactMarkdown remarkPlugins={[remarkGfm]}>{section.body}</ReactMarkdown>
-              ) : null}
-            </section>
-          ))}
-        </div>
-      ) : (
-        <p className="text-slate-500">This page hasn&apos;t been published yet.</p>
-      )}
-    </LegalPageShell>
+      <CmsPageRenderer blocks={blocks} pageTitle={cmsPage.page_title} />
+    </DetailPageLayout>
   );
 }

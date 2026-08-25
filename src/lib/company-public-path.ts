@@ -1,6 +1,11 @@
 import type { Company } from '@/lib/api-types';
 
-export type CompanyPublicPrefix = 'sponsors' | 'partners' | 'venues' | 'companies';
+export type CompanyPublicPrefix =
+  | 'sponsors'
+  | 'partners'
+  | 'partner-hotels'
+  | 'venues'
+  | 'companies';
 
 type CompanyRoleFields = Pick<
   Company,
@@ -9,12 +14,15 @@ type CompanyRoleFields = Pick<
   | 'sponsor_published'
   | 'company_is_partner'
   | 'partner_published'
+  | 'company_is_affiliated_hotel'
+  | 'affiliated_hotel_published'
   | 'company_is_venue'
   | 'venue_published'
 >;
 
 /**
- * One public URL per company. Priority: sponsor → partner → venue → companies.
+ * One public URL per company.
+ * Priority: sponsor → partner → affiliated hotel → venue → companies.
  * Role detail routes and /companies/[slug] must all agree on this path for SEO.
  */
 export function getCompanyPublicPrefix(company: CompanyRoleFields): CompanyPublicPrefix {
@@ -23,6 +31,12 @@ export function getCompanyPublicPrefix(company: CompanyRoleFields): CompanyPubli
   }
   if (company.company_is_partner === true && company.partner_published === true) {
     return 'partners';
+  }
+  if (
+    company.company_is_affiliated_hotel === true &&
+    company.affiliated_hotel_published === true
+  ) {
+    return 'partner-hotels';
   }
   if (company.company_is_venue === true && company.venue_published === true) {
     return 'venues';

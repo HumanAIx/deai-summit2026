@@ -217,6 +217,33 @@ export async function prefetchPartners(): Promise<NormalizedSponsor[]> {
   return companies.filter(isMarkedPartnerCompany).map(normalizeSponsor);
 }
 
+export function isPublishedHotelCompany(company: Company): boolean {
+  return !!(
+    company.company_published &&
+    resolveGeneralLogoSrc(company) &&
+    company.company_is_affiliated_hotel === true &&
+    company.affiliated_hotel_published === true
+  );
+}
+
+export function normalizeHotel(company: Company): NormalizedSponsor {
+  const base = normalizeSponsor(company);
+  return { ...base, logo: resolveGeneralLogoSrc(company) || base.logo, isHotel: true };
+}
+
+/** Affiliated hotels for Partner Hotels grid. Prefer typed filter; fall back to full list. */
+export async function prefetchHotels(): Promise<NormalizedSponsor[]> {
+  const typed = await fetchFromAPI<Company[]>(
+    '/companies?filter=affiliated_hotel&limit=500',
+    { cacheDuration: 0 },
+  );
+  const source =
+    typed && typed.length > 0
+      ? typed
+      : (await fetchFromAPI<Company[]>('/companies?limit=500', { cacheDuration: 0 })) || [];
+  return source.filter(isPublishedHotelCompany).map(normalizeHotel);
+}
+
 /** Published organizer companies (Hosted-by tiles). Prefer typed filter; fall back to full list. */
 export async function prefetchOrganizers(): Promise<Company[]> {
   const typed = await fetchFromAPI<Company[]>(
@@ -426,6 +453,20 @@ export async function prefetchPartnerDetailPageData(slug: string) {
     company.company_published !== true ||
     company.partner_published !== true ||
     !company.company_is_partner
+  ) {
+    return { company: null, seo: null };
+  }
+  const seo = await prefetchCompanySEO(company.id);
+  return { company, seo };
+}
+
+export async function prefetchHotelDetailPageData(slug: string) {
+  const company = await prefetchCompanyBySlug(slug);
+  if (
+    !company ||
+    company.company_published !== true ||
+    company.affiliated_hotel_published !== true ||
+    company.company_is_affiliated_hotel !== true
   ) {
     return { company: null, seo: null };
   }

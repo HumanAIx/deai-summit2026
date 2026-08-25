@@ -154,6 +154,17 @@ export const CompanyDetailClient: React.FC<CompanyDetailClientProps> = ({ compan
               )}
 
               <SocialLinks socials={company.company_socials} website={company.company_website} />
+              {company.company_affiliated_hotel_bookings_url ? (
+                <a
+                  href={company.company_affiliated_hotel_bookings_url}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="mt-8 inline-flex items-center gap-2 px-6 py-3 rounded-full bg-brand-cyan text-[#050A1F] text-sm font-bold hover:bg-white transition-colors"
+                >
+                  <i className="ri-calendar-check-line" />
+                  Book a stay
+                </a>
+              ) : null}
             </div>
           </div>
         </div>
