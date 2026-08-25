@@ -218,17 +218,42 @@ export async function prefetchPartners(): Promise<NormalizedSponsor[]> {
 }
 
 export function isPublishedHotelCompany(company: Company): boolean {
+  const cover =
+    company.venue_photo ||
+    company.company_thumbnail ||
+    resolveGeneralLogoSrc(company) ||
+    company.company_logo;
   return !!(
     company.company_published &&
-    resolveGeneralLogoSrc(company) &&
+    cover &&
     company.company_is_affiliated_hotel === true &&
     company.affiliated_hotel_published === true
   );
 }
 
 export function normalizeHotel(company: Company): NormalizedSponsor {
-  const base = normalizeSponsor(company);
-  return { ...base, logo: resolveGeneralLogoSrc(company) || base.logo, isHotel: true };
+  const logo = resolveGeneralLogoSrc(company) || company.company_logo || '';
+  const coverImage =
+    company.venue_photo || company.company_thumbnail || logo;
+  const youtubeVideos = Array.isArray(company.company_youtube_videos)
+    ? company.company_youtube_videos.filter((u): u is string => typeof u === 'string' && u.length > 0)
+    : [];
+  return {
+    ...normalizeSponsor(company),
+    logo,
+    coverImage,
+    isHotel: true,
+    city: company.company_city,
+    country: company.company_country,
+    email: company.company_email,
+    phone: company.company_phone,
+    address: company.company_address,
+    googleMaps: company.company_google_maps,
+    bookingsUrl: company.company_affiliated_hotel_bookings_url,
+    youtubeUrl: company.company_embedded_youtube,
+    youtubeVideos,
+    brochureUrl: company.brochure_url,
+  };
 }
 
 /** Affiliated hotels for Partner Hotels grid. Prefer typed filter; fall back to full list. */

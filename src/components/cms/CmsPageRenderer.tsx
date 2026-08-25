@@ -240,25 +240,23 @@ function CompaniesGridSection({ block }: { block: CMSBlock }) {
                   href={href}
                   className="group block w-full sm:w-[calc(50%-12px)] lg:w-[calc(33.333%-16px)] xl:w-[calc(25%-18px)] overflow-hidden rounded-2xl transition-all duration-300 hover:scale-[1.02] hover:shadow-xl no-underline bg-white border border-gray-200"
                 >
-                  <div
-                    className={`relative h-[160px] flex items-center justify-center p-8 ${
-                      item.company_logo_has_dark_bg || item.logo_background_white === false
-                        ? 'bg-[#050A1F]'
-                        : 'bg-white'
-                    }`}
-                  >
-                    {item.company_logo ? (
-                      <div className="relative w-full h-full">
-                        <Image
-                          src={item.company_logo}
-                          alt={item.company_name}
-                          fill
-                          sizes="280px"
-                          className="object-contain"
-                        />
-                      </div>
+                  <div className="relative h-[200px] overflow-hidden bg-[#050A1F]">
+                    {item.company_logo || item.venue_photo || item.company_thumbnail ? (
+                      <Image
+                        src={item.venue_photo || item.company_thumbnail || item.company_logo || ''}
+                        alt={item.company_name}
+                        fill
+                        sizes="280px"
+                        className={
+                          listType === 'all-affiliated-hotels' || listType === 'all-venues'
+                            ? 'object-cover'
+                            : 'object-contain p-8 bg-white'
+                        }
+                      />
                     ) : (
-                      <span className="text-gray-300 font-display font-bold">{item.company_name}</span>
+                      <span className="absolute inset-0 flex items-center justify-center text-gray-300 font-display font-bold">
+                        {item.company_name}
+                      </span>
                     )}
                   </div>
                   <div className="p-5 h-[130px] flex flex-col justify-between" style={{ backgroundColor: bg }}>

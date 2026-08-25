@@ -161,6 +161,18 @@ export interface NormalizedSponsor {
   isPartner: boolean;
   isHotel?: boolean;
   logoHasDarkBg?: boolean;
+  /** Preferred cover image for hotels (venue photo / thumbnail / logo). */
+  coverImage?: string;
+  city?: string;
+  country?: string;
+  email?: string;
+  phone?: string;
+  address?: string;
+  googleMaps?: string;
+  bookingsUrl?: string | null;
+  youtubeUrl?: string;
+  youtubeVideos?: string[];
+  brochureUrl?: string;
 }
 
 export interface APIResponse<T> {
@@ -266,6 +278,16 @@ export interface CMSCompanyItem {
   affiliated_hotel_published?: boolean;
   company_affiliated_hotel_bookings_url?: string | null;
   company_website?: string;
+  company_embedded_youtube?: string;
+  company_youtube_videos?: string[];
+  venue_photo?: string;
+  company_thumbnail?: string;
+  company_email?: string;
+  company_phone?: string;
+  company_address?: string;
+  company_city?: string;
+  company_google_maps?: string;
+  brochure_url?: string;
 }
 
 export interface CMSFormFieldChoice {
