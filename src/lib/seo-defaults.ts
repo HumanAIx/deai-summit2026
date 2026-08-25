@@ -208,11 +208,19 @@ export function buildSocialMetadata(options: {
 export function generatePageMetadata(
   seo: SEOSettings | null,
   pageSlug: string,
-  baseUrl: string = process.env.NEXT_PUBLIC_SITE_URL || ''
+  baseUrl: string = process.env.NEXT_PUBLIC_SITE_URL || '',
+  fallbacks?: { title?: string; description?: string }
 ): Metadata {
-  const title = seo?.meta_title || PAGE_TITLES[pageSlug] || SEO_DEFAULTS.defaultTitle;
-  const description = seo?.meta_description || PAGE_DESCRIPTIONS[pageSlug] || SEO_DEFAULTS.defaultDescription;
-  const canonicalPath = seo?.canonical_url || PAGE_CANONICALS[pageSlug] || '/';
+  const title =
+    seo?.meta_title || PAGE_TITLES[pageSlug] || fallbacks?.title || SEO_DEFAULTS.defaultTitle;
+  const description =
+    seo?.meta_description ||
+    PAGE_DESCRIPTIONS[pageSlug] ||
+    fallbacks?.description ||
+    SEO_DEFAULTS.defaultDescription;
+  // Unknown CMS slugs (e.g. partner-hotels) should canonicalize to /{slug}, not home.
+  const canonicalPath =
+    seo?.canonical_url || PAGE_CANONICALS[pageSlug] || (pageSlug === 'home' ? '/' : `/${pageSlug}`);
   const canonical = toAbsoluteUrl(canonicalPath, baseUrl);
 
   return {
