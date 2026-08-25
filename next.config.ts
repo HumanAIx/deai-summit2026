@@ -1,6 +1,11 @@
 import type { NextConfig } from "next";
 
+const isLocal =
+  process.env.NEXT_PUBLIC_GCONF_API_URL?.includes('localhost') ||
+  process.env.NEXT_PUBLIC_API_URL?.includes('localhost');
+
 const nextConfig: NextConfig = {
+  serverExternalPackages: ['sharp'],
   images: {
     // SECURITY NOTE: `hostname: '**'` accepts any HTTPS host and turns
     // /_next/image into a public open image proxy. Replace with an explicit
@@ -12,7 +17,16 @@ const nextConfig: NextConfig = {
         protocol: 'https',
         hostname: '**',
       },
+      // Local Supabase serves over http on 127.0.0.1 — production always uses https,
+      // so this only ever matches local dev.
+      ...(isLocal ? [{
+        protocol: 'http' as const,
+        hostname: '127.0.0.1',
+        port: '54321',
+        pathname: '/storage/v1/object/public/**',
+      }] : []),
     ],
+    ...(isLocal && { unoptimized: true }),
   },
   async headers() {
     return [

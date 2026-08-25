@@ -47,9 +47,28 @@ export async function GET(
   const storagePath = `${TENANT_SLUG}/${decoded.join('/')}`;
   const supabaseUrl = `https://${STORAGE_HOST}/storage/v1/object/public/${STORAGE_BUCKET}/${storagePath.split('/').map(encodeURIComponent).join('/')}`;
 
+  // Next's data cache rejects anything over 2MB (logs a noisy error and falls
+  // through uncached) — a HEAD probe lets us skip the cache attempt entirely
+  // for large files instead of hitting that limit on every request.
+  const DATA_CACHE_LIMIT_BYTES = 2 * 1024 * 1024;
+  let isLarge = true;
+  try {
+    const head = await fetch(supabaseUrl, { method: 'HEAD' });
+    const contentLength = head.headers.get('content-length');
+    if (contentLength) {
+      isLarge = Number(contentLength) > DATA_CACHE_LIMIT_BYTES;
+    }
+  } catch {
+    // HEAD failed — assume large and skip the cache attempt; the GET below
+    // still runs and reports its own failure if the file truly isn't reachable.
+  }
+
   let upstream: Response;
   try {
-    upstream = await fetch(supabaseUrl, { next: { revalidate: 3600 } });
+    upstream = await fetch(
+      supabaseUrl,
+      isLarge ? { cache: 'no-store' } : { next: { revalidate: 3600 } },
+    );
   } catch (err) {
     console.error(`[files proxy] fetch failed for ${supabaseUrl}:`, err);
     return NextResponse.json({ error: 'Upstream storage request failed' }, { status: 502 });
