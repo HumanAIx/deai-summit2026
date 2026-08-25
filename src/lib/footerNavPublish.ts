@@ -1,4 +1,4 @@
-export type PublicEntityKind = 'venues' | 'companies' | 'sponsors' | 'partners';
+export type PublicEntityKind = 'venues' | 'companies' | 'sponsors' | 'partners' | 'partner-hotels';
 
 export type FooterCompanyPublishFields = {
   id?: string;
@@ -7,12 +7,14 @@ export type FooterCompanyPublishFields = {
   venue_published?: boolean;
   sponsor_published?: boolean;
   partner_published?: boolean;
+  affiliated_hotel_published?: boolean;
   company_is_venue?: boolean;
   company_is_sponsor?: boolean;
   company_is_partner?: boolean;
+  company_is_affiliated_hotel?: boolean;
 };
 
-/** Parse `/venues|companies|sponsors|partners/:slug` paths. External/other URLs return null. */
+/** Parse `/venues|companies|sponsors|partners|partner-hotels/:slug` paths. External/other URLs return null. */
 export function parsePublicEntityPath(
   href: string,
 ): { kind: PublicEntityKind; slug: string } | null {
@@ -29,7 +31,9 @@ export function parsePublicEntityPath(
   }
 
   const path = trimmed.split('?')[0]?.split('#')[0] || '';
-  const match = path.match(/^\/(venues|companies|sponsors|partners)\/([^/]+)\/?$/);
+  const match = path.match(
+    /^\/(venues|companies|sponsors|partners|partner-hotels)\/([^/]+)\/?$/,
+  );
   if (!match) return null;
   return { kind: match[1] as PublicEntityKind, slug: decodeURIComponent(match[2]) };
 }
@@ -57,6 +61,11 @@ export function isPublicEntityPathLive(
       return company.company_is_sponsor === true && company.sponsor_published === true;
     case 'partners':
       return company.company_is_partner === true && company.partner_published === true;
+    case 'partner-hotels':
+      return (
+        company.company_is_affiliated_hotel === true &&
+        company.affiliated_hotel_published === true
+      );
     case 'companies':
       return true;
     default:
