@@ -159,10 +159,10 @@ window.rdt('track','PageVisit');`
           data-key="cmt2vdx1z00m40vmjcl2v42ny"
           data-lang="en"
           data-modes="both"
-          data-color="#7B61FF"
+          data-color="#7b61ff"
           data-label="DEAI Summit"
           data-title="Event Assistant"
-          data-teasers="Questions about the program?|Tickets or directions?"
+          data-teasers="How can I help you?|Questions about your stay?"
         />
       </body>
     </html>
