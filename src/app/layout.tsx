@@ -152,8 +152,18 @@ window.rdt('track','PageVisit');`
         ) : null}
 
         {children}
-        {/* Bitpull voice widget — logic lives in /public/bitpull-widget.js (do not paste inline JS here) */}
-        <Script src="/bitpull-widget.js" strategy="afterInteractive" />
+        {/* Official Bitpull embed — chat + voice (data-modes="both") */}
+        <Script
+          src="https://bitpull.ai/widget/template.js"
+          strategy="afterInteractive"
+          data-key="cmt2vdx1z00m40vmjcl2v42ny"
+          data-lang="en"
+          data-modes="both"
+          data-color="#7B61FF"
+          data-label="DEAI Summit"
+          data-title="Event Assistant"
+          data-teasers="Questions about the program?|Tickets or directions?"
+        />
       </body>
     </html>
   );
