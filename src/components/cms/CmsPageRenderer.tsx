@@ -6,8 +6,9 @@ import { useLayoutEffect, useRef, useState } from 'react';
 import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
 import { AnimatedGrid } from '@/components/AnimatedGrid';
+import { DownloadDialog } from '@/components/DownloadDialog';
 import { getCompanyPublicPath } from '@/lib/company-public-path';
-import { blockListType, blockMarkdownBody, documentDisplayTitle, isCompaniesListBlock, isDocumentsListBlock, isMembersListBlock, resolveBlockDocuments } from '@/lib/cmsBlocks';
+import { blockListType, blockMarkdownBody, documentDisplayTitle, formatDocumentPageCount, formatDocumentSize, isCompaniesListBlock, isDocumentsListBlock, isMembersListBlock, resolveBlockDocuments } from '@/lib/cmsBlocks';
 import { youtubeToEmbed } from '@/lib/utils';
 import type {
   CMSBlock,
@@ -18,6 +19,11 @@ import type {
   Company,
 } from '@/lib/api-types';
 
+type CaptchaProps = {
+  captchaSiteKey?: string;
+  captchaDisabled?: boolean;
+  captchaProvider?: string;
+};
 const CARD_COLORS = ['#00B0C2', '#0E6FEB', '#050A1F', '#00B0C2', '#0E6FEB', '#050A1F'];
 
 function highlightTitle(text: string): string {
@@ -432,10 +438,11 @@ function LinkOutSection({
   );
 }
 
-function DocumentsSection({ block }: { block: CMSBlock }) {
+function DocumentsSection({ block, captcha }: { block: CMSBlock; captcha?: CaptchaProps }) {
   const title = block.title?.trim() || 'Downloads';
   const body = blockMarkdownBody(block);
   const documents = resolveBlockDocuments(block);
+  const [selected, setSelected] = useState<CMSDocument | null>(null);
 
   return (
     <>
@@ -457,28 +464,34 @@ function DocumentsSection({ block }: { block: CMSBlock }) {
         </div>
       </section>
 
-      <section className="bg-[#F0F0EF] py-16 md:py-20">
-        <div className="max-w-[1440px] mx-auto px-6">
+      <section className="bg-[#F0F0EF] py-16 md:py-20 w-full">
+        <div className="w-full px-4 sm:px-6 lg:px-8 xl:px-10">
           {documents.length === 0 ? (
             <p className="text-center text-slate-500">No downloads are available yet.</p>
           ) : (
             <div className="flex flex-wrap items-center justify-center gap-7">
               {documents.map((doc) => (
-                <DocumentCard key={doc.path || doc.url} doc={doc} />
+                <DocumentCard key={doc.path || doc.url} doc={doc} onOpen={() => setSelected(doc)} />
               ))}
             </div>
           )}
         </div>
       </section>
+
+      <DownloadDialog
+        doc={selected}
+        open={!!selected}
+        onClose={() => setSelected(null)}
+        captchaSiteKey={captcha?.captchaSiteKey}
+        captchaDisabled={captcha?.captchaDisabled}
+        captchaProvider={captcha?.captchaProvider}
+      />
     </>
   );
 }
 
-function DocumentCard({ doc }: { doc: CMSDocument }) {
+function DocumentCard({ doc, onOpen }: { doc: CMSDocument; onOpen: () => void }) {
   const label = documentDisplayTitle(doc);
-  // Use the public storage URLs directly. Routing through `/files/` requires
-  // NEXT_PUBLIC_SUPABASE_STORAGE_HOST and breaks local previews when unset.
-  const href = doc.url;
   const thumb = doc.thumbnailUrl || null;
   const imgRef = useRef<HTMLImageElement | null>(null);
   const [orientation, setOrientation] = useState<'portrait' | 'landscape'>('portrait');
@@ -505,16 +518,15 @@ function DocumentCard({ doc }: { doc: CMSDocument }) {
   }, [thumb]);
 
   return (
-    <a
-      href={href}
-      target="_blank"
-      rel="noopener noreferrer"
-      className={`group flex flex-col self-center overflow-hidden rounded-3xl bg-white border border-black/5 shadow-[0_18px_50px_-28px_rgba(5,10,31,0.45)] transition-all duration-500 hover:-translate-y-1 hover:border-brand-cyan/40 hover:shadow-[0_28px_70px_-24px_rgba(0,176,194,0.35)] no-underline ${
+    <button
+      type="button"
+      onClick={onOpen}
+      className={`group flex flex-col self-center overflow-hidden rounded-3xl bg-white border border-black/5 shadow-[0_18px_50px_-28px_rgba(5,10,31,0.45)] transition-all duration-500 hover:-translate-y-1 hover:border-brand-cyan/40 hover:shadow-[0_28px_70px_-24px_rgba(0,176,194,0.35)] text-left ${
         isLandscape
           ? 'w-full max-w-[34rem] sm:w-[34rem]'
           : 'w-full max-w-[17rem] sm:w-[17rem]'
       }`}
-      aria-label={`Open ${label}`}
+      aria-label={`Open options for ${label}`}
     >
       <div
         className={`relative w-full overflow-hidden rounded-t-3xl bg-[#0a1028] ${
@@ -539,28 +551,42 @@ function DocumentCard({ doc }: { doc: CMSDocument }) {
         )}
         <div className="pointer-events-none absolute inset-0 bg-gradient-to-t from-[#050A1F]/45 via-transparent to-transparent" />
         <div className="absolute bottom-3 right-3 inline-flex items-center gap-1.5 rounded-full bg-black/50 backdrop-blur-md border border-white/15 px-3 py-1.5 text-white text-[10px] font-mono uppercase tracking-[0.18em]">
-          <i className="ri-external-link-line text-brand-cyan" />
-          Open
+          <i className="ri-file-download-line text-brand-cyan" />
+          Get
         </div>
       </div>
       <div className="p-5">
         <h3 className="text-[#050A1F] text-base font-display font-bold leading-snug group-hover:text-brand-cyan transition-colors">
           {label}
         </h3>
-        {doc.mimeType?.includes('pdf') || doc.name?.toLowerCase().endsWith('.pdf') ? (
-          <p className="mt-2 text-xs font-mono uppercase tracking-widest text-slate-400">PDF document</p>
-        ) : null}
+        <p className="mt-2 text-xs font-mono uppercase tracking-widest text-slate-400">
+          {[
+            doc.mimeType?.includes('pdf') || doc.name?.toLowerCase().endsWith('.pdf') ? 'PDF' : null,
+            formatDocumentPageCount(doc.pageCount),
+            formatDocumentSize(doc.size),
+          ]
+            .filter(Boolean)
+            .join(' · ') || 'Document'}
+        </p>
       </div>
-    </a>
+    </button>
   );
 }
 
-function BlockRouter({ block, index }: { block: CMSBlock; index: number }) {
+function BlockRouter({
+  block,
+  index,
+  captcha,
+}: {
+  block: CMSBlock;
+  index: number;
+  captcha?: CaptchaProps;
+}) {
   const layout = (block as { layout?: string }).layout;
   const addon = block.addon;
 
   if (isDocumentsListBlock(block) || addon === 'documents-list') {
-    return <DocumentsSection block={block} />;
+    return <DocumentsSection block={block} captcha={captcha} />;
   }
   if (isCompaniesListBlock(block) || addon === 'companies-list') {
     return <CompaniesGridSection block={block} />;
@@ -617,13 +643,24 @@ function BlockRouter({ block, index }: { block: CMSBlock; index: number }) {
 interface CmsPageRendererProps {
   blocks: CMSBlock[];
   pageTitle?: string;
+  captchaSiteKey?: string;
+  captchaDisabled?: boolean;
+  captchaProvider?: string;
 }
 
 /**
  * Generic CMS page body for DeAI Summit — routes content/simple boxes and addons
  * (documents-list, companies-list, members-list, youtube, etc.) into on-brand sections.
  */
-export function CmsPageRenderer({ blocks, pageTitle }: CmsPageRendererProps) {
+export function CmsPageRenderer({
+  blocks,
+  pageTitle,
+  captchaSiteKey,
+  captchaDisabled,
+  captchaProvider,
+}: CmsPageRendererProps) {
+  const captcha: CaptchaProps = { captchaSiteKey, captchaDisabled, captchaProvider };
+
   if (!blocks.length) {
     return (
       <section className="bg-[#F0F0EF] py-24">
@@ -640,7 +677,7 @@ export function CmsPageRenderer({ blocks, pageTitle }: CmsPageRendererProps) {
   return (
     <>
       {blocks.map((block, index) => (
-        <BlockRouter key={block.id || `block-${index}`} block={block} index={index} />
+        <BlockRouter key={block.id || `block-${index}`} block={block} index={index} captcha={captcha} />
       ))}
     </>
   );
