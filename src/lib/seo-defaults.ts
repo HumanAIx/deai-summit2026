@@ -20,6 +20,7 @@ export const PAGE_TITLES: Record<string, string> = {
   sponsors: `Sponsors & Partners - ${SEO_DEFAULTS.siteName}`,
   partners: `Sponsors & Partners - ${SEO_DEFAULTS.siteName}`,
   'partner-hotels': `Partner Hotels - ${SEO_DEFAULTS.siteName}`,
+  downloads: `Downloads - ${SEO_DEFAULTS.siteName}`,
   agenda: `Agenda - ${SEO_DEFAULTS.siteName}`,
   schedule: `Schedule - ${SEO_DEFAULTS.siteName}`,
   contact: `Contact - ${SEO_DEFAULTS.siteName}`,
@@ -37,6 +38,7 @@ export const PAGE_DESCRIPTIONS: Record<string, string> = {
   sponsors: 'Sponsors and partners of DeAI Summit 2026.',
   partners: 'Meet the sponsors and partners powering DeAI Summit 2026. Join leading organizations shaping the future of decentralized AI.',
   'partner-hotels': 'Official partner hotels for DeAI Summit 2026 in Malta. Browse stays close to the conference.',
+  downloads: 'Download DeAI Summit 2026 prospectuses, sponsorship materials, and event flyers.',
   agenda: 'DeAI Summit 2026 agenda. High-stakes programming formats including Oxford debates, technical rebuttals, and alignment sessions.',
   schedule: 'Full conference schedule — keynotes, sessions, and speakers at DeAI Malta.',
   contact: 'Get in touch with the DeAI Summit 2026 team for partnerships, sponsorships, speaker applications, and general inquiries.',
@@ -54,6 +56,7 @@ export const PAGE_CANONICALS: Record<string, string> = {
   sponsors: '/partners',
   partners: '/partners',
   'partner-hotels': '/partner-hotels',
+  downloads: '/downloads',
   agenda: '/agenda',
   schedule: '/schedule',
   contact: '/contact',
@@ -83,23 +86,32 @@ const STORAGE_BUCKET = 'tenants';
  * previews historically fail on WebP og:image.
  */
 export function toBrandedFilesUrl(imageUrl: string, baseUrl: string): string {
-  if (!baseUrl || !imageUrl.startsWith('http')) return imageUrl;
+  const branded = toBrandedStorageUrl(imageUrl, baseUrl);
+  if (branded === imageUrl) return imageUrl;
+  // Always request JPEG for social crawlers (safe for already-JPEG sources too).
+  return `${branded}${branded.includes('?') ? '&' : '?'}format=jpeg`;
+}
+
+/**
+ * Same as {@link toBrandedFilesUrl} but without forcing JPEG — use for PDFs,
+ * PNG thumbnails, and other assets that should keep their original bytes.
+ */
+export function toBrandedStorageUrl(fileUrl: string, baseUrl: string): string {
+  if (!baseUrl || !fileUrl.startsWith('http')) return fileUrl;
   try {
-    const u = new URL(imageUrl);
+    const u = new URL(fileUrl);
     const prefix = `/storage/v1/object/public/${STORAGE_BUCKET}/${TENANT_SLUG}/`;
-    if (!u.pathname.startsWith(prefix)) return imageUrl;
+    if (!u.pathname.startsWith(prefix)) return fileUrl;
     const rest = u.pathname.slice(prefix.length);
-    if (!rest) return imageUrl;
+    if (!rest) return fileUrl;
     const encoded = rest
       .split('/')
       .filter(Boolean)
       .map((seg) => encodeURIComponent(decodeURIComponent(seg)))
       .join('/');
-    const branded = `${baseUrl.replace(/\/+$/, '')}/files/${encoded}`;
-    // Always request JPEG for social crawlers (safe for already-JPEG sources too).
-    return `${branded}?format=jpeg`;
+    return `${baseUrl.replace(/\/+$/, '')}/files/${encoded}`;
   } catch {
-    return imageUrl;
+    return fileUrl;
   }
 }
 

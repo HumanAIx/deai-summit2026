@@ -48,7 +48,10 @@ async function fetchFromAPI<T>(
       const headers: Record<string, string> = {
         'Content-Type': 'application/json',
       };
-      if (!options?.noAuth) {
+      // Never send `Authorization: Bearer ` with an empty token — the API treats
+      // that as an anonymous request and can return empty tenant-less payloads
+      // (e.g. navigation with mainNav: []), which then wipe siteConfig fallbacks.
+      if (!options?.noAuth && API_KEY) {
         headers['Authorization'] = `Bearer ${API_KEY}`;
       }
 
@@ -505,14 +508,15 @@ export async function prefetchCMSPage(pageSlug: string): Promise<CMSPageData | n
 
 export async function prefetchNavigation(): Promise<NavigationAPIData | null> {
   const nav = await fetchFromAPI<NavigationAPIData>('/settings/public/navigation', { cacheDuration: 60 });
-  if (nav) {
-    console.log(
-      '[prefetch/nav] mainNav:',
-      (nav.mainNav || []).map((i) => `${i.slug}${i.published ? '' : '(hidden)'}`).join(', ') || '(empty)',
-    );
-  } else {
-    console.log('[prefetch/nav] null response — nav fallback to siteConfig');
+  const mainCount = nav?.mainNav?.length ?? 0;
+  if (!nav || mainCount === 0) {
+    console.log('[prefetch/nav] null/empty response — nav fallback to siteConfig');
+    return null;
   }
+  console.log(
+    '[prefetch/nav] mainNav:',
+    (nav.mainNav || []).map((i) => `${i.slug}${i.published ? '' : '(hidden)'}`).join(', '),
+  );
   return nav;
 }
 

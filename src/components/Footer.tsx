@@ -358,7 +358,7 @@ export const Footer: React.FC<FooterProps> = ({ navData, navigationAPIData, onSh
             <div className="lg:max-w-md">
               <Link href="/" className="flex items-center group mb-6">
                 <div className="w-11 h-11 relative flex-shrink-0 mr-2">
-                  <Image src="/icontransparent.png" alt="DeAI Summit" fill className="object-contain" />
+                  <Image src="/icontransparent.png" alt="DeAI Summit" fill sizes="40px" className="object-contain" />
                 </div>
                 <div className="flex flex-col leading-none justify-center">
                   <span className="font-bold tracking-tight text-white text-[2rem] leading-none">DeAI</span>
@@ -434,7 +434,7 @@ export const Footer: React.FC<FooterProps> = ({ navData, navigationAPIData, onSh
               if (w.type === 'logo') return (
                 <Link key={w.id} href="/" className="flex items-center group mb-2">
                   <div className="w-11 h-11 relative flex-shrink-0 mr-2">
-                    <Image src="/icontransparent.png" alt="DeAI Summit" fill className="object-contain" />
+                    <Image src="/icontransparent.png" alt="DeAI Summit" fill sizes="40px" className="object-contain" />
                   </div>
                   <div className="flex flex-col leading-none justify-center">
                     <span className="font-bold tracking-tight text-white text-[2rem] leading-none">DeAI</span>

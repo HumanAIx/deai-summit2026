@@ -2,16 +2,18 @@
 
 import Image from 'next/image';
 import Link from 'next/link';
+import { useState } from 'react';
 import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
 import { AnimatedGrid } from '@/components/AnimatedGrid';
 import { getCompanyPublicPath } from '@/lib/company-public-path';
-import { blockListType, blockMarkdownBody, isCompaniesListBlock, isMembersListBlock } from '@/lib/cmsBlocks';
+import { blockListType, blockMarkdownBody, documentDisplayTitle, isCompaniesListBlock, isDocumentsListBlock, isMembersListBlock, resolveBlockDocuments } from '@/lib/cmsBlocks';
 import { youtubeToEmbed } from '@/lib/utils';
 import type {
   CMSBlock,
   CMSButton,
   CMSCompanyItem,
+  CMSDocument,
   CMSSpeakerItem,
   Company,
 } from '@/lib/api-types';
@@ -430,10 +432,122 @@ function LinkOutSection({
   );
 }
 
+function DocumentsSection({ block }: { block: CMSBlock }) {
+  const title = block.title?.trim() || 'Downloads';
+  const body = blockMarkdownBody(block);
+  const documents = resolveBlockDocuments(block);
+
+  return (
+    <>
+      <section className="relative bg-[#050A1F] text-white pt-16 pb-12">
+        <div className="absolute inset-0 pointer-events-none animated-grid">
+          <AnimatedGrid />
+        </div>
+        <div className="relative z-10 max-w-[1440px] mx-auto px-6 text-center">
+          <p className="text-brand-cyan text-sm font-mono uppercase tracking-widest mb-4">Resources</p>
+          <h1
+            className="text-4xl md:text-5xl lg:text-6xl font-display font-bold tracking-tight leading-[1.1] mb-6"
+            dangerouslySetInnerHTML={{ __html: highlightTitle(title) }}
+          />
+          {body ? (
+            <div className="text-white/65 text-lg max-w-2xl mx-auto prose prose-invert prose-p:my-2 prose-a:text-brand-cyan">
+              <ReactMarkdown remarkPlugins={[remarkGfm]}>{body}</ReactMarkdown>
+            </div>
+          ) : null}
+        </div>
+      </section>
+
+      <section className="bg-[#F0F0EF] py-16 md:py-20">
+        <div className="max-w-[1440px] mx-auto px-6">
+          {documents.length === 0 ? (
+            <p className="text-center text-slate-500">No downloads are available yet.</p>
+          ) : (
+            <div className="flex flex-wrap items-center justify-center gap-7">
+              {documents.map((doc) => (
+                <DocumentCard key={doc.path || doc.url} doc={doc} />
+              ))}
+            </div>
+          )}
+        </div>
+      </section>
+    </>
+  );
+}
+
+function DocumentCard({ doc }: { doc: CMSDocument }) {
+  const label = documentDisplayTitle(doc);
+  // Use the public storage URLs directly. Routing through `/files/` requires
+  // NEXT_PUBLIC_SUPABASE_STORAGE_HOST and breaks local previews when unset.
+  const href = doc.url;
+  const thumb = doc.thumbnailUrl || null;
+  const [orientation, setOrientation] = useState<'portrait' | 'landscape'>(
+    'portrait',
+  );
+  const isLandscape = orientation === 'landscape';
+
+  return (
+    <a
+      href={href}
+      target="_blank"
+      rel="noopener noreferrer"
+      className={`group flex flex-col self-center overflow-hidden rounded-3xl bg-white border border-black/5 shadow-[0_18px_50px_-28px_rgba(5,10,31,0.45)] transition-all duration-500 hover:-translate-y-1 hover:border-brand-cyan/40 hover:shadow-[0_28px_70px_-24px_rgba(0,176,194,0.35)] no-underline ${
+        isLandscape
+          ? 'w-full max-w-[34rem] sm:w-[34rem]'
+          : 'w-full max-w-[17rem] sm:w-[17rem]'
+      }`}
+      aria-label={`Open ${label}`}
+    >
+      <div
+        className={`relative w-full overflow-hidden rounded-t-3xl bg-[#0a1028] ${
+          isLandscape ? 'h-44 sm:h-48' : 'aspect-[3/4]'
+        }`}
+      >
+        {thumb ? (
+          // eslint-disable-next-line @next/next/no-img-element -- external storage previews; avoid /_next/image + /files proxy failures locally
+          <img
+            src={thumb}
+            alt={`Preview of ${label}`}
+            className="absolute inset-0 h-full w-full object-cover object-center transition-transform duration-700 group-hover:scale-[1.03]"
+            loading="lazy"
+            decoding="async"
+            onLoad={(e) => {
+              const img = e.currentTarget;
+              if (img.naturalWidth > 0 && img.naturalHeight > 0) {
+                setOrientation(img.naturalWidth >= img.naturalHeight ? 'landscape' : 'portrait');
+              }
+            }}
+          />
+        ) : (
+          <div className="absolute inset-0 flex flex-col items-center justify-center gap-3 text-white/35">
+            <i className="ri-file-pdf-2-line text-5xl" />
+            <span className="text-xs font-mono uppercase tracking-widest">PDF</span>
+          </div>
+        )}
+        <div className="pointer-events-none absolute inset-0 bg-gradient-to-t from-[#050A1F]/45 via-transparent to-transparent" />
+        <div className="absolute bottom-3 right-3 inline-flex items-center gap-1.5 rounded-full bg-black/50 backdrop-blur-md border border-white/15 px-3 py-1.5 text-white text-[10px] font-mono uppercase tracking-[0.18em]">
+          <i className="ri-external-link-line text-brand-cyan" />
+          Open
+        </div>
+      </div>
+      <div className="p-5">
+        <h3 className="text-[#050A1F] text-base font-display font-bold leading-snug group-hover:text-brand-cyan transition-colors">
+          {label}
+        </h3>
+        {doc.mimeType?.includes('pdf') || doc.name?.toLowerCase().endsWith('.pdf') ? (
+          <p className="mt-2 text-xs font-mono uppercase tracking-widest text-slate-400">PDF document</p>
+        ) : null}
+      </div>
+    </a>
+  );
+}
+
 function BlockRouter({ block, index }: { block: CMSBlock; index: number }) {
   const layout = (block as { layout?: string }).layout;
   const addon = block.addon;
 
+  if (isDocumentsListBlock(block) || addon === 'documents-list') {
+    return <DocumentsSection block={block} />;
+  }
   if (isCompaniesListBlock(block) || addon === 'companies-list') {
     return <CompaniesGridSection block={block} />;
   }
@@ -493,7 +607,7 @@ interface CmsPageRendererProps {
 
 /**
  * Generic CMS page body for DeAI Summit — routes content/simple boxes and addons
- * (companies-list, members-list, youtube, etc.) into on-brand sections.
+ * (documents-list, companies-list, members-list, youtube, etc.) into on-brand sections.
  */
 export function CmsPageRenderer({ blocks, pageTitle }: CmsPageRendererProps) {
   if (!blocks.length) {
