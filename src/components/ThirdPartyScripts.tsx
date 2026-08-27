@@ -38,11 +38,20 @@ function injectExternalScript(
   const el = document.createElement('script');
   el.id = id;
   el.src = src;
-  el.async = true;
   if (attrs) {
     for (const [key, value] of Object.entries(attrs)) {
+      if (key === 'defer') {
+        el.defer = true;
+        continue;
+      }
+      if (key === 'async') {
+        el.async = true;
+        continue;
+      }
       el.setAttribute(key, value);
     }
+  } else {
+    el.async = true;
   }
   document.body.appendChild(el);
 }
@@ -121,10 +130,13 @@ window.rdt('track','PageVisit');`,
       'data-key': 'cmt2vdx1z00m40vmjcl2v42ny',
       'data-lang': 'en',
       'data-modes': 'both',
-      'data-color': '#7b61ff',
+      'data-color': '#7B61FF',
       'data-label': 'DEAI Summit',
       'data-title': 'Event Assistant',
-      'data-teasers': 'How can I help you?|Questions about your stay?',
+      'data-teasers': 'Questions about the program?|Tickets or directions?',
+      // Hosted asset (same image as Bitpull’s data-URI snippet) so we don’t inline a huge base64 string.
+      'data-avatar': `${window.location.origin}/bitpull-avatar.webp`,
+      defer: '',
     });
   }, [gtmId, ga4Id, linkedinPid, redditBoot]);
 
