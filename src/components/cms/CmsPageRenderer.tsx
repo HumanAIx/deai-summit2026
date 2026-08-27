@@ -2,7 +2,7 @@
 
 import Image from 'next/image';
 import Link from 'next/link';
-import { useState } from 'react';
+import { useLayoutEffect, useRef, useState } from 'react';
 import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
 import { AnimatedGrid } from '@/components/AnimatedGrid';
@@ -480,10 +480,29 @@ function DocumentCard({ doc }: { doc: CMSDocument }) {
   // NEXT_PUBLIC_SUPABASE_STORAGE_HOST and breaks local previews when unset.
   const href = doc.url;
   const thumb = doc.thumbnailUrl || null;
-  const [orientation, setOrientation] = useState<'portrait' | 'landscape'>(
-    'portrait',
-  );
+  const imgRef = useRef<HTMLImageElement | null>(null);
+  const [orientation, setOrientation] = useState<'portrait' | 'landscape'>('portrait');
   const isLandscape = orientation === 'landscape';
+
+  useLayoutEffect(() => {
+    const img = imgRef.current;
+    if (!img || !thumb) return;
+
+    const applyOrientation = () => {
+      if (img.naturalWidth > 0 && img.naturalHeight > 0) {
+        setOrientation(img.naturalWidth >= img.naturalHeight ? 'landscape' : 'portrait');
+      }
+    };
+
+    // Cached images often finish before React attaches onLoad — check `complete`.
+    if (img.complete) {
+      applyOrientation();
+      return;
+    }
+
+    img.addEventListener('load', applyOrientation);
+    return () => img.removeEventListener('load', applyOrientation);
+  }, [thumb]);
 
   return (
     <a
@@ -505,17 +524,12 @@ function DocumentCard({ doc }: { doc: CMSDocument }) {
         {thumb ? (
           // eslint-disable-next-line @next/next/no-img-element -- external storage previews; avoid /_next/image + /files proxy failures locally
           <img
+            ref={imgRef}
             src={thumb}
             alt={`Preview of ${label}`}
             className="absolute inset-0 h-full w-full object-cover object-center transition-transform duration-700 group-hover:scale-[1.03]"
             loading="lazy"
             decoding="async"
-            onLoad={(e) => {
-              const img = e.currentTarget;
-              if (img.naturalWidth > 0 && img.naturalHeight > 0) {
-                setOrientation(img.naturalWidth >= img.naturalHeight ? 'landscape' : 'portrait');
-              }
-            }}
           />
         ) : (
           <div className="absolute inset-0 flex flex-col items-center justify-center gap-3 text-white/35">
