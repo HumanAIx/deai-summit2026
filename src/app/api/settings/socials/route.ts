@@ -7,11 +7,16 @@ const API_KEY = process.env.GCONF_SITE_KEY || process.env.GCONF_API_KEY || proce
 
 export async function GET() {
   try {
+    if (!API_KEY) {
+      // Avoid proxying with an empty Bearer token (returns 403 / empty tenant context).
+      return NextResponse.json({ success: false, data: [] }, { status: 503 });
+    }
+
     const response = await fetch(`${EXTERNAL_API_URL}/settings/public/socials`, {
       method: 'GET',
       headers: {
         'Content-Type': 'application/json',
-        'Authorization': `Bearer ${API_KEY}`,
+        Authorization: `Bearer ${API_KEY}`,
       },
       next: { revalidate: 300 },
     });

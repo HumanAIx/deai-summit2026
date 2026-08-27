@@ -213,6 +213,17 @@ export interface NavigationAPIData {
 
 // CMS Page types
 
+/** Document attached via CMS `documents-list` addon (from uploads). */
+export interface CMSDocument {
+  name: string;
+  url: string;
+  path?: string;
+  size?: number;
+  mimeType?: string;
+  thumbnailUrl?: string;
+  title?: string;
+}
+
 export interface CMSBlock {
   id: string;
   type: string;
@@ -226,6 +237,10 @@ export interface CMSBlock {
   items?: CMSSpeakerItem[];
   buttons?: CMSButton[];
   textNodes?: Array<{ id?: string; text: string; icon?: string; link?: string }>;
+  /** Hydrated upload items for `documents-list` addon */
+  documents?: CMSDocument[];
+  /** Storage paths selected in the dashboard (may include items not yet in `documents`) */
+  documentPaths?: string[];
   [key: string]: unknown;
 }
 

@@ -72,7 +72,7 @@ export const Navbar: React.FC<NavbarProps> = ({ onShowToast, onOpenContact, data
         {/* Logo */}
         <Link href="/" className="flex items-center pl-2 group">
           <div className="w-8 h-8 relative flex-shrink-0 mr-1.5">
-            <Image src="/icontransparent.png" alt="DeAI Summit" fill className="object-contain" />
+            <Image src="/icontransparent.png" alt="DeAI Summit" fill sizes="32px" className="object-contain" />
           </div>
           <div className="flex flex-col leading-none justify-center">
             <span className="font-bold tracking-tight text-white text-[1.55rem] leading-none">DeAI</span>
