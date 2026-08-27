@@ -90,6 +90,44 @@ export function documentDisplayTitle(doc: Pick<CMSDocument, 'name' | 'title' | '
     .replace(/\b\w/g, (c) => c.toUpperCase());
 }
 
+/** Format CMS upload byte sizes for UI (e.g. 2.1 MB). */
+export function formatDocumentSize(bytes?: number | string | null): string | null {
+  const n = normalizeByteSize(bytes);
+  if (n == null) return null;
+  if (n < 1024) return `${Math.round(n)} B`;
+  const kb = n / 1024;
+  if (kb < 1024) return `${kb < 10 ? kb.toFixed(1) : Math.round(kb)} KB`;
+  const mb = kb / 1024;
+  if (mb < 1024) return `${mb < 10 ? mb.toFixed(1) : Math.round(mb)} MB`;
+  const gb = mb / 1024;
+  return `${gb < 10 ? gb.toFixed(1) : Math.round(gb)} GB`;
+}
+
+/** Format PDF page counts for UI (e.g. 10 pages). */
+export function formatDocumentPageCount(pages?: number | string | null): string | null {
+  const n = normalizePageCount(pages);
+  if (n == null) return null;
+  return n === 1 ? '1 page' : `${n} pages`;
+}
+
+function normalizeByteSize(value: unknown): number | undefined {
+  if (typeof value === 'number' && Number.isFinite(value) && value >= 0) return value;
+  if (typeof value === 'string' && value.trim()) {
+    const n = Number(value);
+    if (Number.isFinite(n) && n >= 0) return n;
+  }
+  return undefined;
+}
+
+function normalizePageCount(value: unknown): number | undefined {
+  if (typeof value === 'number' && Number.isFinite(value) && value > 0) return Math.round(value);
+  if (typeof value === 'string' && value.trim()) {
+    const n = Number(value);
+    if (Number.isFinite(n) && n > 0) return Math.round(n);
+  }
+  return undefined;
+}
+
 function storageHostFromSample(url?: string): string | null {
   if (!url?.startsWith('http')) return null;
   try {
@@ -161,6 +199,8 @@ export function resolveBlockDocuments(block: CMSBlock): CMSDocument[] {
     if (existing) {
       result.push({
         ...existing,
+        size: normalizeByteSize(existing.size),
+        pageCount: normalizePageCount(existing.pageCount ?? (existing as { pages?: unknown }).pages),
         thumbnailUrl: existing.thumbnailUrl || thumbnailUrlForPath(path, sampleUrl || existing.url),
       });
       continue;
@@ -181,7 +221,11 @@ export function resolveBlockDocuments(block: CMSBlock): CMSDocument[] {
     const key = doc.path || doc.url;
     if (seen.has(key)) continue;
     seen.add(key);
-    result.push(doc);
+    result.push({
+      ...doc,
+      size: normalizeByteSize(doc.size),
+      pageCount: normalizePageCount(doc.pageCount ?? (doc as { pages?: unknown }).pages),
+    });
   }
 
   return result;

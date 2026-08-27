@@ -219,6 +219,8 @@ export interface CMSDocument {
   url: string;
   path?: string;
   size?: number;
+  /** PDF page count when provided by uploads / CMS hydration. */
+  pageCount?: number;
   mimeType?: string;
   thumbnailUrl?: string;
   title?: string;
