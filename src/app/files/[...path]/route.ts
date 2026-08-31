@@ -28,6 +28,24 @@ function wantsJpeg(request: Request): boolean {
   return format === 'jpeg' || format === 'jpg';
 }
 
+function wantsDownload(request: Request): boolean {
+  const flag = new URL(request.url).searchParams.get('download')?.toLowerCase();
+  return flag === '1' || flag === 'true' || flag === 'yes';
+}
+
+function attachmentFilename(segments: string[]): string {
+  const raw = segments[segments.length - 1] || 'download';
+  // Keep a conservative ASCII filename for the legacy `filename=` param.
+  const safe = raw.replace(/[^\w.\-()+ ]+/g, '_').trim() || 'download';
+  return safe;
+}
+
+function contentDispositionAttachment(filename: string): string {
+  const ascii = filename.replace(/[^\x20-\x7E]/g, '_').replace(/"/g, '') || 'download';
+  const encoded = encodeURIComponent(filename);
+  return `attachment; filename="${ascii}"; filename*=UTF-8''${encoded}`;
+}
+
 export async function GET(
   request: Request,
   { params }: { params: Promise<{ path: string[] }> },
@@ -79,6 +97,14 @@ export async function GET(
 
   const upstreamType = upstream.headers.get('content-type') || 'application/octet-stream';
   const upstreamBuffer = Buffer.from(await upstream.arrayBuffer());
+  const download = wantsDownload(request);
+  const baseHeaders: Record<string, string> = {
+    'Cache-Control': 'public, max-age=31536000, immutable',
+    'X-Content-Type-Options': 'nosniff',
+  };
+  if (download) {
+    baseHeaders['Content-Disposition'] = contentDispositionAttachment(attachmentFilename(decoded));
+  }
 
   // Telegram (and some other crawlers) fail to render WebP og:image previews.
   // Social metadata appends ?format=jpeg so we re-encode here.
@@ -99,10 +125,9 @@ export async function GET(
       return new NextResponse(new Uint8Array(jpeg), {
         status: 200,
         headers: {
+          ...baseHeaders,
           'Content-Type': 'image/jpeg',
           'Content-Length': String(jpeg.byteLength),
-          'Cache-Control': 'public, max-age=31536000, immutable',
-          'X-Content-Type-Options': 'nosniff',
         },
       });
     } catch (err) {
@@ -114,10 +139,9 @@ export async function GET(
   return new NextResponse(new Uint8Array(upstreamBuffer), {
     status: 200,
     headers: {
+      ...baseHeaders,
       'Content-Type': upstreamType,
       'Content-Length': String(upstreamBuffer.byteLength),
-      'Cache-Control': 'public, max-age=31536000, immutable',
-      'X-Content-Type-Options': 'nosniff',
     },
   });
 }

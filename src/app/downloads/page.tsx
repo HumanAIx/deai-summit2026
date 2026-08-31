@@ -7,6 +7,7 @@ import { parseCmsBlocks } from '@/lib/cmsBlocks';
 import {
   prefetchCMSPage,
   prefetchCaptchaConfig,
+  prefetchDocumentsGateForms,
   prefetchNavigation,
   prefetchSocials,
   mapNavigationData,
@@ -42,6 +43,10 @@ export default async function DownloadsPage() {
 
   const navigationData = apiNav ? mapNavigationData(apiNav) : siteConfig.navigation;
   const blocks = parseCmsBlocks(cmsPage);
+  const formConfigs = await prefetchDocumentsGateForms(
+    blocks,
+    cmsPage.content?.formConfigs || null,
+  );
 
   return (
     <DetailPageLayout
@@ -52,6 +57,7 @@ export default async function DownloadsPage() {
       <CmsPageRenderer
         blocks={blocks}
         pageTitle={cmsPage.page_title}
+        formConfigs={formConfigs}
         captchaSiteKey={captchaConfig.site_key}
         captchaDisabled={captchaConfig.disabled === true}
         captchaProvider={captchaConfig.provider}

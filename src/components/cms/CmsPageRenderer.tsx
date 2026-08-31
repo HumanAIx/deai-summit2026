@@ -8,13 +8,14 @@ import remarkGfm from 'remark-gfm';
 import { AnimatedGrid } from '@/components/AnimatedGrid';
 import { DownloadDialog } from '@/components/DownloadDialog';
 import { getCompanyPublicPath } from '@/lib/company-public-path';
-import { blockListType, blockMarkdownBody, documentDisplayTitle, formatDocumentPageCount, formatDocumentSize, isCompaniesListBlock, isDocumentsListBlock, isMembersListBlock, resolveBlockDocuments } from '@/lib/cmsBlocks';
+import { blockListType, blockMarkdownBody, documentDisplayTitle, formatDocumentPageCount, formatDocumentSize, isCompaniesListBlock, isDocumentsListBlock, isMembersListBlock, resolveBlockDocuments, resolveDocumentsGateForm } from '@/lib/cmsBlocks';
 import { youtubeToEmbed } from '@/lib/utils';
 import type {
   CMSBlock,
   CMSButton,
   CMSCompanyItem,
   CMSDocument,
+  CMSFormConfig,
   CMSSpeakerItem,
   Company,
 } from '@/lib/api-types';
@@ -438,10 +439,19 @@ function LinkOutSection({
   );
 }
 
-function DocumentsSection({ block, captcha }: { block: CMSBlock; captcha?: CaptchaProps }) {
+function DocumentsSection({
+  block,
+  captcha,
+  formConfigs,
+}: {
+  block: CMSBlock;
+  captcha?: CaptchaProps;
+  formConfigs?: Record<string, CMSFormConfig> | null;
+}) {
   const title = block.title?.trim() || 'Downloads';
   const body = blockMarkdownBody(block);
   const documents = resolveBlockDocuments(block);
+  const gateForm = resolveDocumentsGateForm(block, formConfigs);
   const [selected, setSelected] = useState<CMSDocument | null>(null);
 
   return (
@@ -482,6 +492,7 @@ function DocumentsSection({ block, captcha }: { block: CMSBlock; captcha?: Captc
         doc={selected}
         open={!!selected}
         onClose={() => setSelected(null)}
+        gateForm={gateForm}
         captchaSiteKey={captcha?.captchaSiteKey}
         captchaDisabled={captcha?.captchaDisabled}
         captchaProvider={captcha?.captchaProvider}
@@ -577,16 +588,18 @@ function BlockRouter({
   block,
   index,
   captcha,
+  formConfigs,
 }: {
   block: CMSBlock;
   index: number;
   captcha?: CaptchaProps;
+  formConfigs?: Record<string, CMSFormConfig> | null;
 }) {
   const layout = (block as { layout?: string }).layout;
   const addon = block.addon;
 
   if (isDocumentsListBlock(block) || addon === 'documents-list') {
-    return <DocumentsSection block={block} captcha={captcha} />;
+    return <DocumentsSection block={block} captcha={captcha} formConfigs={formConfigs} />;
   }
   if (isCompaniesListBlock(block) || addon === 'companies-list') {
     return <CompaniesGridSection block={block} />;
@@ -643,6 +656,7 @@ function BlockRouter({
 interface CmsPageRendererProps {
   blocks: CMSBlock[];
   pageTitle?: string;
+  formConfigs?: Record<string, CMSFormConfig> | null;
   captchaSiteKey?: string;
   captchaDisabled?: boolean;
   captchaProvider?: string;
@@ -655,6 +669,7 @@ interface CmsPageRendererProps {
 export function CmsPageRenderer({
   blocks,
   pageTitle,
+  formConfigs,
   captchaSiteKey,
   captchaDisabled,
   captchaProvider,
@@ -677,7 +692,13 @@ export function CmsPageRenderer({
   return (
     <>
       {blocks.map((block, index) => (
-        <BlockRouter key={block.id || `block-${index}`} block={block} index={index} captcha={captcha} />
+        <BlockRouter
+          key={block.id || `block-${index}`}
+          block={block}
+          index={index}
+          captcha={captcha}
+          formConfigs={formConfigs}
+        />
       ))}
     </>
   );
