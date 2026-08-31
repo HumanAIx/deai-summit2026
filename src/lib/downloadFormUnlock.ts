@@ -2,6 +2,8 @@ const STORAGE_PREFIX = 'deai:downloads-form-unlock:';
 
 export type DownloadFormUnlock = {
   email: string;
+  /** ep-api form_submissions.id — proves the gate was completed. */
+  submissionId: string;
   unlockedAt: string;
 };
 
@@ -14,12 +16,14 @@ function readRecord(formIdOrSlug: string): DownloadFormUnlock | null {
   try {
     const raw = window.localStorage.getItem(storageKey(formIdOrSlug));
     if (!raw) return null;
-    // Legacy unlock flag from earlier builds
+    // Legacy unlock flag / email-only records from earlier builds
     if (raw === '1') return null;
     const parsed = JSON.parse(raw) as Partial<DownloadFormUnlock>;
     if (!parsed?.email || typeof parsed.email !== 'string') return null;
+    if (!parsed?.submissionId || typeof parsed.submissionId !== 'string') return null;
     return {
       email: parsed.email.trim().toLowerCase(),
+      submissionId: parsed.submissionId,
       unlockedAt: typeof parsed.unlockedAt === 'string' ? parsed.unlockedAt : new Date().toISOString(),
     };
   } catch {
@@ -39,14 +43,7 @@ function writeRecord(formIdOrSlug: string, record: DownloadFormUnlock): void {
 /** True when this browser already unlocked the given downloads gate form. */
 export function isDownloadFormUnlocked(formIdOrSlug: string | null | undefined): boolean {
   if (!formIdOrSlug) return false;
-  try {
-    const raw = window.localStorage.getItem(storageKey(formIdOrSlug));
-    if (!raw) return false;
-    if (raw === '1') return true;
-    return !!readRecord(formIdOrSlug)?.email;
-  } catch {
-    return false;
-  }
+  return !!readRecord(formIdOrSlug)?.submissionId;
 }
 
 /** Email saved when the gate form was completed (if any). */
@@ -55,14 +52,24 @@ export function getDownloadFormEmail(formIdOrSlug: string | null | undefined): s
   return readRecord(formIdOrSlug)?.email || null;
 }
 
-/** Persist unlock + email after a successful gate-form submission. */
+/** ep-api submission id needed for deliver/email-document. */
+export function getDownloadFormSubmissionId(
+  formIdOrSlug: string | null | undefined,
+): string | null {
+  if (!formIdOrSlug) return null;
+  return readRecord(formIdOrSlug)?.submissionId || null;
+}
+
+/** Persist unlock after a successful gate-form submission. */
 export function unlockDownloadForm(
   formIdOrSlug: string | null | undefined,
   email: string,
+  submissionId: string,
 ): void {
-  if (!formIdOrSlug || !email?.trim()) return;
+  if (!formIdOrSlug || !email?.trim() || !submissionId?.trim()) return;
   writeRecord(formIdOrSlug, {
     email: email.trim().toLowerCase(),
+    submissionId: submissionId.trim(),
     unlockedAt: new Date().toISOString(),
   });
 }

@@ -31,13 +31,25 @@ export async function POST(request: Request, context: RouteContext) {
       body.submission_data && typeof body.submission_data === 'object'
         ? body.submission_data
         : (() => {
-            const { captchaToken: _a, captcha_token: _b, formSlug: _c, formId: _d, ...rest } = body;
+            const {
+              captchaToken: _a,
+              captcha_token: _b,
+              formSlug: _c,
+              formId: _d,
+              download_request: _e,
+              ...rest
+            } = body;
             return rest;
           })();
 
     if (!submissionData || typeof submissionData !== 'object' || Object.keys(submissionData).length === 0) {
       return NextResponse.json({ success: false, error: 'Missing form fields.' }, { status: 400 });
     }
+
+    const downloadRequest =
+      body.download_request && typeof body.download_request === 'object'
+        ? body.download_request
+        : undefined;
 
     const response = await fetch(
       `${EXTERNAL_API_URL}/forms/${encodeURIComponent(idOrSlug.trim())}/submit`,
@@ -50,6 +62,7 @@ export async function POST(request: Request, context: RouteContext) {
         body: JSON.stringify({
           submission_data: submissionData,
           captcha_token: captchaToken,
+          ...(downloadRequest ? { download_request: downloadRequest } : {}),
         }),
       },
     );
@@ -65,6 +78,7 @@ export async function POST(request: Request, context: RouteContext) {
     return NextResponse.json({
       success: true,
       message: data.message || 'Submitted successfully',
+      data: data.data ?? null,
     });
   } catch (error) {
     console.error('[forms submit proxy] error:', error);
