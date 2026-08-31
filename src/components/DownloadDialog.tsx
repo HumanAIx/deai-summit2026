@@ -4,6 +4,7 @@ import { useEffect, useRef, useState } from 'react';
 import { documentDisplayTitle, formatDocumentPageCount, formatDocumentSize } from '@/lib/cmsBlocks';
 import {
   getDownloadFormEmail,
+  getDownloadFormSubmissionId,
   isDownloadFormUnlocked,
   unlockDownloadForm,
 } from '@/lib/downloadFormUnlock';
@@ -67,14 +68,21 @@ function filesDownloadHref(doc: CMSDocument): string | null {
   }
 }
 
-function absoluteDocumentUrl(doc: CMSDocument): string {
-  // Prefer the public storage URL — email worker can fetch it without looping through /files.
-  if (doc.url && /^https?:\/\//i.test(doc.url)) return doc.url;
-  if (typeof window !== 'undefined') {
-    const proxy = filesDownloadHref(doc);
-    if (proxy) return new URL(proxy.replace(/\?download=1$/, ''), window.location.origin).toString();
+function gatedDocumentPath(doc: CMSDocument): string | null {
+  const raw = doc.path?.replace(/^\/+/, '').trim();
+  if (raw) {
+    return raw.startsWith(`${TENANT_SLUG}/`) ? raw : `${TENANT_SLUG}/${raw}`;
   }
-  return doc.url;
+  try {
+    const u = new URL(doc.url);
+    const marker = '/storage/v1/object/public/tenants/';
+    const idx = u.pathname.indexOf(marker);
+    if (idx < 0) return null;
+    const after = decodeURIComponent(u.pathname.slice(idx + marker.length));
+    return after.replace(/^\/+/, '') || null;
+  } catch {
+    return null;
+  }
 }
 
 function extractEmailFromValues(
@@ -143,6 +151,7 @@ export function DownloadDialog({
   const [successMessage, setSuccessMessage] = useState('');
   const [unlocked, setUnlocked] = useState(false);
   const [savedEmail, setSavedEmail] = useState<string | null>(null);
+  const [submissionId, setSubmissionId] = useState<string | null>(null);
   const [emailDraft, setEmailDraft] = useState('');
   const [editingEmail, setEditingEmail] = useState(false);
   /** Hide email CTA right after form submit — that flow already mailed this document. */
@@ -184,7 +193,9 @@ export function DownloadDialog({
       const already = needsGate ? isDownloadFormUnlocked(formKey) : true;
       setUnlocked(already);
       const stored = needsGate ? getDownloadFormEmail(formKey) : null;
+      const storedSubmission = needsGate ? getDownloadFormSubmissionId(formKey) : null;
       setSavedEmail(stored);
+      setSubmissionId(storedSubmission);
       setEmailDraft(stored || '');
       setEditingEmail(false);
       setSuppressEmailAction(false);
@@ -291,23 +302,22 @@ export function DownloadDialog({
     }
   };
 
-  const emailDocument = async (to: string, opts?: { skipCaptcha?: boolean }) => {
-    if (!doc) throw new Error('No document selected.');
-    const documentUrl = absoluteDocumentUrl(doc);
-    const filename = sanitizeFilename(
-      doc.name || (isPdf ? `${label}.pdf` : label) || 'document.pdf',
-    );
+  const emailDocumentViaApi = async (opts: {
+    submissionId: string;
+    email?: string;
+  }) => {
+    if (!doc || !gateForm) throw new Error('No document selected.');
+    const documentPath = gatedDocumentPath(doc);
+    if (!documentPath) throw new Error('This document cannot be emailed.');
 
-    const res = await fetch('/api/email-download', {
+    const idOrSlug = gateForm.form_slug || gateForm.id;
+    const res = await fetch(`/api/forms/${encodeURIComponent(idOrSlug)}/email-document`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
-        email: to,
-        documentUrl,
-        documentTitle: label,
-        documentName: filename,
-        documentSize: typeof doc.size === 'number' ? doc.size : Number(doc.size) || undefined,
-        skipCaptcha: opts?.skipCaptcha === true,
+        submission_id: opts.submissionId,
+        document_path: documentPath,
+        ...(opts.email ? { email: opts.email } : {}),
       }),
     });
     const data = await res.json().catch(() => ({}));
@@ -319,6 +329,11 @@ export function DownloadDialog({
 
   const handleEmailSelf = async () => {
     if (!doc || emailing) return;
+    const sid = submissionId || (needsGate ? getDownloadFormSubmissionId(formKey) : null);
+    if (!sid) {
+      setErrorMessage('Please complete the unlock form again before emailing.');
+      return;
+    }
     const to = (
       (editingEmail || !savedEmail ? emailDraft.trim().toLowerCase() : null) ||
       savedEmail ||
@@ -334,8 +349,8 @@ export function DownloadDialog({
     setErrorMessage('');
     setSuccessMessage('');
     try {
-      const message = await emailDocument(to, { skipCaptcha: true });
-      if (needsGate && formKey) persistUnlock(to);
+      const message = await emailDocumentViaApi({ submissionId: sid, email: to });
+      if (needsGate && formKey) persistUnlock(to, sid);
       setEditingEmail(false);
       setSuccessMessage(message);
     } catch (err) {
@@ -364,7 +379,12 @@ export function DownloadDialog({
       setErrorMessage('Enter a valid email address.');
       return;
     }
-    if (needsGate && formKey) persistUnlock(next);
+    const sid = submissionId || getDownloadFormSubmissionId(formKey);
+    if (!sid) {
+      setErrorMessage('Please complete the unlock form again.');
+      return;
+    }
+    if (needsGate && formKey) persistUnlock(next, sid);
     setEditingEmail(false);
     setErrorMessage('');
     setSuccessMessage('');
@@ -391,11 +411,12 @@ export function DownloadDialog({
     return token;
   };
 
-  const persistUnlock = (email: string) => {
-    unlockDownloadForm(formKey, email);
-    if (gateForm?.form_slug) unlockDownloadForm(gateForm.form_slug, email);
-    if (gateForm?.id) unlockDownloadForm(gateForm.id, email);
+  const persistUnlock = (email: string, sid: string) => {
+    unlockDownloadForm(formKey, email, sid);
+    if (gateForm?.form_slug) unlockDownloadForm(gateForm.form_slug, email, sid);
+    if (gateForm?.id) unlockDownloadForm(gateForm.id, email, sid);
     setSavedEmail(email);
+    setSubmissionId(sid);
     setUnlocked(true);
   };
 
@@ -427,12 +448,14 @@ export function DownloadDialog({
       }
 
       const idOrSlug = gateForm.form_slug || gateForm.id;
+      const documentPath = doc ? gatedDocumentPath(doc) : null;
       const res = await fetch(`/api/forms/${encodeURIComponent(idOrSlug)}/submit`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           submission_data: values,
           captchaToken,
+          ...(documentPath ? { download_request: { document_path: documentPath } } : {}),
         }),
       });
       const data = await res.json().catch(() => ({}));
@@ -448,14 +471,22 @@ export function DownloadDialog({
         return;
       }
 
-      persistUnlock(email);
+      const sid =
+        (typeof data.data?.id === 'string' && data.data.id) ||
+        (typeof data.id === 'string' && data.id) ||
+        '';
+      if (!sid) {
+        setErrorMessage('Form saved, but unlock token was missing. Please try again.');
+        return;
+      }
+
+      persistUnlock(email, sid);
 
       try {
-        const message = await emailDocument(email, { skipCaptcha: true });
+        const message = await emailDocumentViaApi({ submissionId: sid, email });
         setSuppressEmailAction(true);
         setSuccessMessage(message);
       } catch (mailErr) {
-        // Unlock still stands — keep email CTA so they can retry.
         setSuppressEmailAction(false);
         setErrorMessage(
           mailErr instanceof Error
