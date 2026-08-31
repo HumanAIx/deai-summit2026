@@ -1,4 +1,4 @@
-import { Member, Company, SEOSettings, NormalizedSpeaker, NormalizedSponsor, CMSPageData, NavigationAPIData, BlogPost, BlogPublisher } from './api-types';
+import { Member, Company, SEOSettings, NormalizedSpeaker, NormalizedSponsor, CMSPageData, NavigationAPIData, BlogPost, BlogPublisher, CMSBlock, CMSFormConfig } from './api-types';
 import { resolveGeneralLogoSrc, resolveScrollerLogoHasDarkBg, resolveScrollerLogoSrc } from './companyLogo';
 import type { NavigationConfig } from '@/config/types';
 import {
@@ -504,6 +504,40 @@ export async function prefetchHotelDetailPageData(slug: string) {
 
 export async function prefetchCMSPage(pageSlug: string): Promise<CMSPageData | null> {
   return fetchFromAPI<CMSPageData>(`/cms/pages/${pageSlug}`, { cacheDuration: 0 });
+}
+
+export async function prefetchForm(idOrSlug: string): Promise<CMSFormConfig | null> {
+  if (!idOrSlug?.trim()) return null;
+  return fetchFromAPI<CMSFormConfig>(`/forms/${encodeURIComponent(idOrSlug.trim())}`, {
+    cacheDuration: 60,
+  });
+}
+
+/** Prefetch any documents-list gate forms referenced by `requiredFormId` / `formId`. */
+export async function prefetchDocumentsGateForms(
+  blocks: CMSBlock[],
+  existing?: Record<string, CMSFormConfig> | null,
+): Promise<Record<string, CMSFormConfig>> {
+  const configs: Record<string, CMSFormConfig> = { ...(existing || {}) };
+  const ids = new Set<string>();
+  for (const block of blocks) {
+    const isDocs =
+      block.type === 'documents-list' ||
+      block.addon === 'documents-list';
+    if (!isDocs) continue;
+    const id =
+      (typeof block.requiredFormId === 'string' && block.requiredFormId) ||
+      (typeof block.formId === 'string' && block.formId) ||
+      '';
+    if (id && !configs[id] && !block.requiredForm && !block.form) ids.add(id);
+  }
+  await Promise.all(
+    [...ids].map(async (id) => {
+      const form = await prefetchForm(id);
+      if (form) configs[id] = form;
+    }),
+  );
+  return configs;
 }
 
 export async function prefetchNavigation(): Promise<NavigationAPIData | null> {

@@ -6,6 +6,8 @@ import { siteConfig } from '@/config/site';
 import { parseCmsBlocks } from '@/lib/cmsBlocks';
 import {
   prefetchCMSPage,
+  prefetchCaptchaConfig,
+  prefetchDocumentsGateForms,
   prefetchNavigation,
   prefetchSocials,
   mapNavigationData,
@@ -40,10 +42,11 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
 export default async function CmsContentPage({ params }: PageProps) {
   const { slug } = await params;
 
-  const [cmsPage, apiNav, socials] = await Promise.all([
+  const [cmsPage, apiNav, socials, captchaConfig] = await Promise.all([
     prefetchCMSPage(slug),
     prefetchNavigation(),
     prefetchSocials(),
+    prefetchCaptchaConfig(),
   ]);
 
   if (!cmsPage) {
@@ -52,6 +55,10 @@ export default async function CmsContentPage({ params }: PageProps) {
 
   const navigationData = apiNav ? mapNavigationData(apiNav) : siteConfig.navigation;
   const blocks = parseCmsBlocks(cmsPage);
+  const formConfigs = await prefetchDocumentsGateForms(
+    blocks,
+    cmsPage.content?.formConfigs || null,
+  );
 
   return (
     <DetailPageLayout
@@ -59,7 +66,14 @@ export default async function CmsContentPage({ params }: PageProps) {
       navigationAPIData={apiNav || undefined}
       socials={socials}
     >
-      <CmsPageRenderer blocks={blocks} pageTitle={cmsPage.page_title} />
+      <CmsPageRenderer
+        blocks={blocks}
+        pageTitle={cmsPage.page_title}
+        formConfigs={formConfigs}
+        captchaSiteKey={captchaConfig.site_key}
+        captchaDisabled={captchaConfig.disabled === true}
+        captchaProvider={captchaConfig.provider}
+      />
     </DetailPageLayout>
   );
 }

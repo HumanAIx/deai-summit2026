@@ -243,6 +243,12 @@ export interface CMSBlock {
   documents?: CMSDocument[];
   /** Storage paths selected in the dashboard (may include items not yet in `documents`) */
   documentPaths?: string[];
+  /** Optional form that must be completed before view/download (documents-list gate). */
+  requiredFormId?: string | null;
+  /** Hydrated gate form when the API includes it on the block. */
+  requiredForm?: CMSFormConfig | null;
+  formId?: string | null;
+  form?: CMSFormConfig | null;
   [key: string]: unknown;
 }
 
@@ -330,6 +336,12 @@ export interface CMSFormConfig {
   form_slug: string;
   form_description?: string;
   form_fields: CMSFormField[];
+  form_settings?: {
+    captcha?: { enabled?: boolean; type?: string };
+    successMessage?: string;
+  };
+  is_active?: boolean;
+  is_public?: boolean;
 }
 
 export interface CMSPageData {

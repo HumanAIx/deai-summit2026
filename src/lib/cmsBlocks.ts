@@ -1,4 +1,4 @@
-import type { CMSBlock, CMSDocument, CMSPageData } from '@/lib/api-types';
+import type { CMSBlock, CMSDocument, CMSFormConfig, CMSPageData } from '@/lib/api-types';
 
 const TENANT_SLUG = process.env.TENANT_SLUG || 'deaisummit';
 const STORAGE_PUBLIC_PREFIX = `/storage/v1/object/public/tenants/`;
@@ -229,4 +229,27 @@ export function resolveBlockDocuments(block: CMSBlock): CMSDocument[] {
   }
 
   return result;
+}
+
+/**
+ * Resolve the optional download-gate form for a documents-list block.
+ * Prefers a hydrated form on the block, then formConfigs by requiredFormId/formId.
+ */
+export function resolveDocumentsGateForm(
+  block: CMSBlock,
+  formConfigs?: Record<string, CMSFormConfig> | null,
+): CMSFormConfig | null {
+  const hydrated =
+    (block.requiredForm && typeof block.requiredForm === 'object' ? block.requiredForm : null) ||
+    (block.form && typeof block.form === 'object' ? block.form : null);
+  if (hydrated?.form_fields?.length || hydrated?.form_slug || hydrated?.id) {
+    return hydrated as CMSFormConfig;
+  }
+
+  const id =
+    (typeof block.requiredFormId === 'string' && block.requiredFormId) ||
+    (typeof block.formId === 'string' && block.formId) ||
+    '';
+  if (!id || !formConfigs) return null;
+  return formConfigs[id] || null;
 }
