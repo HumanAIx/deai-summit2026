@@ -41,7 +41,8 @@ function sanitizeFilename(name: string): string {
   return trimmed.replace(/[^\w.\-()+ ]+/g, '_');
 }
 
-function filesDownloadHref(doc: CMSDocument): string | null {
+function filesHref(doc: CMSDocument, opts?: { download?: boolean }): string | null {
+  const suffix = opts?.download ? '?download=1' : '';
   const fromPath = (() => {
     const raw = doc.path?.replace(/^\/+/, '');
     if (!raw) return null;
@@ -49,7 +50,7 @@ function filesDownloadHref(doc: CMSDocument): string | null {
     if (!parts.length) return null;
     if (parts[0] === TENANT_SLUG) parts.shift();
     if (!parts.length) return null;
-    return `/files/${parts.map(encodeURIComponent).join('/')}?download=1`;
+    return `/files/${parts.map(encodeURIComponent).join('/')}${suffix}`;
   })();
   if (fromPath) return fromPath;
 
@@ -62,10 +63,14 @@ function filesDownloadHref(doc: CMSDocument): string | null {
     const parts = after.split('/').filter(Boolean);
     if (parts[0] === TENANT_SLUG) parts.shift();
     if (!parts.length) return null;
-    return `/files/${parts.map(encodeURIComponent).join('/')}?download=1`;
+    return `/files/${parts.map(encodeURIComponent).join('/')}${suffix}`;
   } catch {
     return null;
   }
+}
+
+function filesDownloadHref(doc: CMSDocument): string | null {
+  return filesHref(doc, { download: true });
 }
 
 function gatedDocumentPath(doc: CMSDocument): string | null {
@@ -257,8 +262,10 @@ export function DownloadDialog({
   };
 
   const handleView = () => {
-    if (!doc?.url) return;
-    window.open(doc.url, '_blank', 'noopener,noreferrer');
+    if (!doc) return;
+    const href = filesHref(doc) || doc.url;
+    if (!href) return;
+    window.open(href, '_blank', 'noopener,noreferrer');
   };
 
   const handleDownload = async () => {
