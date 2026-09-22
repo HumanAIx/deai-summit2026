@@ -181,26 +181,12 @@ export default async function Home() {
       };
     });
 
+  // Only the CMS companies-list / all-organizers add-on may populate Hosted-by.
+  // Do not fall back to every published organizer when the add-on is "none".
   const resolvedOrganizers: OrganizerConfig[] | undefined = (() => {
     const fromCms = cmsSections.stats?.organizers;
-    let list: OrganizerConfig[] | undefined;
-    if (fromCms && fromCms.length > 0) list = enrichOrganizers(fromCms);
-    else if (organizerCompanies.length > 0) {
-      list = enrichOrganizers(
-        organizerCompanies.map((c) => ({
-          name: c.company_name,
-          slug: c.company_slug,
-          role: 'Host',
-          image:
-            resolveGeneralLogoSrc(c) ||
-            resolveScrollerLogoSrc(c) ||
-            c.company_logo ||
-            '',
-          href: `/companies/${c.company_slug}`,
-        })),
-      );
-    }
-    if (!list || list.length === 0) return undefined;
+    if (!fromCms || fromCms.length === 0) return undefined;
+    const list = enrichOrganizers(fromCms);
     // HumanAIx leads the Hosted-by row.
     return [...list].sort((a, b) => {
       const rank = (o: OrganizerConfig) =>
