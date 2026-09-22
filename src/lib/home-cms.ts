@@ -214,38 +214,43 @@ function extractStats(blocks: CMSBlock[]): Partial<StatsConfig> | undefined {
   if (quoteImage) quote.image = quoteImage;
   if (quoteUrl) quote.url = quoteUrl;
 
+  const addon = typeof block.addon === 'string' ? block.addon.trim() : '';
   const listType =
     ((block as Record<string, unknown>).companiesListType as string | undefined) ||
     ((block as Record<string, unknown>).listType as string | undefined);
-  // Stats block with companiesListType === 'all-organizers' carries host companies
-  // in `items`. Older API hydration may dump every company into `items` when it
-  // doesn't understand that list type — require the organizer flag explicitly.
+  // Hosted-by tiles only when the CMS add-on is companies-list + all-organizers.
+  // Leftover companiesListType after switching the add-on to "none" must not
+  // keep rendering organizers.
+  const wantsOrganizers =
+    (addon === 'companies-list' || block.type === 'companies-list') &&
+    listType === 'all-organizers';
+  // Older API hydration may dump every company into `items` when it doesn't
+  // understand that list type — require the organizer flag explicitly.
   const companyItems = (block.items as unknown as CMSCompanyItem[] | undefined) ?? [];
-  const organizers =
-    listType === 'all-organizers'
-      ? companyItems
-          .filter(
-            (c) =>
-              c.company_is_organizer === true &&
-              c.organizer_published === true &&
-              c.company_published !== false &&
-              !!(c.company_slug || c.company_name),
-          )
-          .map((c) => {
-            const logo = resolveGeneralLogoSrc(c) || resolveScrollerLogoSrc(c) || c.company_logo || '';
-            const slug = c.company_slug || '';
-            const organizer: OrganizerConfig = {
-              name: c.company_name,
-              slug,
-              role: 'Host',
-              image: logo,
-              href: slug ? `/companies/${slug}` : '#',
-              websiteLabel: websiteHostname(c.company_website),
-            };
-            return organizer;
-          })
-          .filter((o) => o.name)
-      : undefined;
+  const organizers = wantsOrganizers
+    ? companyItems
+        .filter(
+          (c) =>
+            c.company_is_organizer === true &&
+            c.organizer_published === true &&
+            c.company_published !== false &&
+            !!(c.company_slug || c.company_name),
+        )
+        .map((c) => {
+          const logo = resolveGeneralLogoSrc(c) || resolveScrollerLogoSrc(c) || c.company_logo || '';
+          const slug = c.company_slug || '';
+          const organizer: OrganizerConfig = {
+            name: c.company_name,
+            slug,
+            role: 'Host',
+            image: logo,
+            href: slug ? `/companies/${slug}` : '#',
+            websiteLabel: websiteHostname(c.company_website),
+          };
+          return organizer;
+        })
+        .filter((o) => o.name)
+    : undefined;
 
   return {
     quote: quote as unknown as Partial<StatsConfig>['quote'],

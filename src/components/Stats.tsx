@@ -84,38 +84,8 @@ function OrganizerTile({ organizer }: { organizer: OrganizerConfig }) {
   );
 }
 
-function organizersFromQuote(data: StatsConfig): OrganizerConfig[] {
-  const q = data.quote;
-  if (!q?.author) return [];
-  let href = '/companies/humanaix-foundation';
-  let websiteLabel: string | undefined = 'humanaix.io';
-  if (q.url) {
-    try {
-      const u = new URL(q.url);
-      websiteLabel = u.hostname.replace(/^www\./i, '');
-      // External quote URLs stay as-is; relative paths pass through.
-      href = q.url.startsWith('/') ? q.url : href;
-    } catch {
-      if (q.url.startsWith('/')) href = q.url;
-    }
-  }
-  return [
-    {
-      name: q.author,
-      slug: 'humanaix-foundation',
-      role: q.role || 'Host',
-      image: q.image,
-      href,
-      websiteLabel,
-    },
-  ];
-}
-
 export const Stats: React.FC<StatsProps> = ({ data }) => {
-  const organizers =
-    data.organizers && data.organizers.length > 0
-      ? data.organizers
-      : organizersFromQuote(data);
+  const organizers = data.organizers ?? [];
 
   return (
     <section className="relative w-full py-20 md:py-32 bg-white z-20 overflow-hidden">
