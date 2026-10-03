@@ -1,10 +1,10 @@
 'use client';
 
 import React, { useEffect, useState } from 'react';
-import Image from 'next/image';
 import Link from 'next/link';
 import { useSearchParams } from 'next/navigation';
 import type { MarqueeItemData } from '@/components/LandingPage';
+import { FittedCompanyLogo } from '@/components/FittedCompanyLogo';
 import { sponsorScrollerUsesSilhouetteFilter, SPONSOR_SCROLLER_TILE_CLASS } from '@/lib/logoDisplay';
 
 interface MarqueeProps {
@@ -38,18 +38,15 @@ const MarqueeItem: React.FC<{
       onMouseLeave={() => onHover(false)}
     >
       {item.logo ? (
-        <div className={`relative w-full h-full px-4 py-3 box-border ${SPONSOR_SCROLLER_TILE_CLASS}`}>
+        <div className={`relative w-full h-full overflow-hidden px-4 py-3 box-border ${SPONSOR_SCROLLER_TILE_CLASS}`}>
           <div
             className={`relative w-full h-full sponsor-logo-image ${
               silhouette ? 'sponsor-logo-image--silhouette' : 'sponsor-logo-image--natural'
             }`}
           >
-            <Image
+            <FittedCompanyLogo
               src={item.logo}
               alt={item.label}
-              fill
-              sizes={`${ITEM_WIDTH}px`}
-              className="object-contain pointer-events-none select-none"
               unoptimized={item.logo.startsWith('http')}
             />
           </div>
@@ -235,12 +232,12 @@ export const Marquee: React.FC<MarqueeProps> = ({ data }) => {
             transition: filter 0.2s ease, opacity 0.2s ease;
           }
           .sponsor-logo-image--silhouette {
-            filter: grayscale(100%) brightness(0) contrast(1.15);
-            opacity: 0.9;
+            filter: grayscale(100%) brightness(0) invert(36%);
+            opacity: 0.82;
           }
           .sponsor-logo-image--natural {
-            filter: grayscale(100%) contrast(1.2) brightness(0.72);
-            opacity: 0.92;
+            filter: grayscale(100%) contrast(0.85) brightness(1.05);
+            opacity: 0.82;
           }
           .sponsor-logo-wrapper:hover .sponsor-logo-image--silhouette,
           .sponsor-logo-wrapper:hover .sponsor-logo-image--natural {

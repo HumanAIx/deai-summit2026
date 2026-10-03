@@ -67,9 +67,11 @@ interface SpeakerCardProps {
   speaker: NormalizedSpeaker;
   colorIndex: number;
   detailBasePath?: string;
+  /** Company path to return to from the speaker profile. */
+  returnTo?: string;
 }
 
-function SpeakerCard({ speaker, colorIndex, detailBasePath }: SpeakerCardProps) {
+export function SpeakerCard({ speaker, colorIndex, detailBasePath, returnTo }: SpeakerCardProps) {
   const canLink = !!detailBasePath && !!speaker.slug;
   const displayName = formatPersonName(speaker.title, speaker.name);
 
@@ -132,7 +134,11 @@ function SpeakerCard({ speaker, colorIndex, detailBasePath }: SpeakerCardProps) 
   if (canLink) {
     return (
       <Link
-        href={`${detailBasePath}/${speaker.slug}`}
+        href={
+          returnTo
+            ? `${detailBasePath}/${speaker.slug}?from=${encodeURIComponent(returnTo)}`
+            : `${detailBasePath}/${speaker.slug}`
+        }
         className="group relative block overflow-hidden rounded-2xl transition-all duration-300 hover:scale-[1.02] hover:shadow-xl no-underline"
         style={wrapperStyle}
       >

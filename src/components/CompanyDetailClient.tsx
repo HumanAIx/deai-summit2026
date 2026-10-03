@@ -8,7 +8,10 @@ import { DetailPageLayout } from '@/components/DetailPageLayout';
 import { AnimatedGrid } from '@/components/AnimatedGrid';
 import { markdownToHtml, youtubeThumbnail, youtubeToEmbed } from '@/lib/utils';
 import type { Company, CompanySocials, NavigationAPIData } from '@/lib/api-types';
+import type { CompanyPageSpeaker } from '@/lib/prefetch';
 import type { NavigationConfig } from '@/config/types';
+import { SpeakerCard } from '@/components/SpeakersListClient';
+import { getCompanyPublicPath } from '@/lib/company-public-path';
 
 interface SocialLinkData {
   key: string;
@@ -25,6 +28,8 @@ interface CompanyDetailClientProps {
   navigationData?: NavigationConfig;
   navigationAPIData?: NavigationAPIData;
   socials?: SocialLinkData[];
+  /** Published speakers linked to this company. */
+  speakers?: CompanyPageSpeaker[];
   /** Hotels use cover photography + richer contact/media presentation. */
   variant?: 'default' | 'hotel';
 }
@@ -108,6 +113,40 @@ function hotelCover(company: Company): string | undefined {
   return company.venue_photo || company.company_thumbnail || company.company_logo || undefined;
 }
 
+function CompanySpeakersSection({
+  speakers,
+  company,
+}: {
+  speakers: CompanyPageSpeaker[];
+  company: Company;
+}) {
+  if (speakers.length === 0) return null;
+  const returnTo = getCompanyPublicPath(company);
+
+  return (
+    <section className="bg-white border-t border-gray-200">
+      <div className="max-w-4xl mx-auto px-6 py-16">
+        <div className="flex items-center gap-4 mb-10">
+          <div className="w-1 h-8 bg-brand-blue rounded-full" />
+          <h2 className="text-2xl md:text-3xl font-display font-bold text-[#050A1F]">Speakers</h2>
+        </div>
+        <div className="flex flex-wrap justify-center gap-6">
+          {speakers.map(({ speaker, colorIndex }) => (
+            <div key={speaker.id} className="w-full md:w-[calc(50%-12px)]">
+              <SpeakerCard
+                speaker={speaker}
+                colorIndex={colorIndex}
+                detailBasePath="/speakers"
+                returnTo={returnTo}
+              />
+            </div>
+          ))}
+        </div>
+      </div>
+    </section>
+  );
+}
+
 function hotelVideos(company: Company): string[] {
   const urls: string[] = [];
   if (company.company_embedded_youtube) urls.push(company.company_embedded_youtube);
@@ -126,6 +165,7 @@ export const CompanyDetailClient: React.FC<CompanyDetailClientProps> = ({
   navigationData,
   navigationAPIData,
   socials,
+  speakers = [],
   variant = 'default',
 }) => {
   const router = useRouter();
@@ -310,6 +350,8 @@ export const CompanyDetailClient: React.FC<CompanyDetailClientProps> = ({
             </div>
           </section>
         )}
+
+        <CompanySpeakersSection speakers={speakers} company={company} />
       </DetailPageLayout>
     );
   }
@@ -417,6 +459,8 @@ export const CompanyDetailClient: React.FC<CompanyDetailClientProps> = ({
           </div>
         </section>
       )}
+
+      <CompanySpeakersSection speakers={speakers} company={company} />
     </DetailPageLayout>
   );
 };

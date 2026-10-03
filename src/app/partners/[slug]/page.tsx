@@ -2,6 +2,7 @@ import { notFound, permanentRedirect } from 'next/navigation';
 import type { Metadata } from 'next';
 import {
   prefetchPartnerDetailPageData,
+  prefetchCompanySpeakers,
   prefetchSponsorDetailPageData,
   prefetchNavigation,
   prefetchSocials,
@@ -78,6 +79,7 @@ export default async function PartnerDetailPage({ params }: { params: Promise<{ 
     permanentRedirect(preferredPath);
   }
 
+  const speakers = await prefetchCompanySpeakers(company.id, company.company_name);
   const navigationData = apiNav ? mapNavigationData(apiNav) : undefined;
 
   const schema = generateOrganizationSchema(company, BASE_URL, 'partners');
@@ -101,6 +103,7 @@ export default async function PartnerDetailPage({ params }: { params: Promise<{ 
         navigationData={navigationData}
         navigationAPIData={apiNav || undefined}
         socials={socials}
+        speakers={speakers}
       />
     </>
   );

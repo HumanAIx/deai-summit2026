@@ -97,7 +97,17 @@ function placementForBox(ink: InkBox, boxW: number, boxH: number): Placement {
   };
 }
 
-export function FittedCompanyLogo({ src, alt }: { src: string; alt: string }) {
+const inkCache = new Map<string, InkBox | null>();
+
+export function FittedCompanyLogo({
+  src,
+  alt,
+  unoptimized = false,
+}: {
+  src: string;
+  alt: string;
+  unoptimized?: boolean;
+}) {
   const frameRef = useRef<HTMLDivElement>(null);
   const inkRef = useRef<InkBox | null>(null);
   const [placement, setPlacement] = useState<Placement>({ scale: 1, x: 0, y: 0 });
@@ -124,7 +134,12 @@ export function FittedCompanyLogo({ src, alt }: { src: string; alt: string }) {
     img.crossOrigin = 'anonymous';
     img.onload = () => {
       if (cancelled) return;
-      inkRef.current = measureInk(img);
+      if (inkCache.has(src)) {
+        inkRef.current = inkCache.get(src) ?? null;
+      } else {
+        inkRef.current = measureInk(img);
+        inkCache.set(src, inkRef.current);
+      }
       if (!inkRef.current) {
         setPlacement({ scale: 1, x: 0, y: 0 });
         setReady(true);
@@ -154,6 +169,7 @@ export function FittedCompanyLogo({ src, alt }: { src: string; alt: string }) {
         alt={alt}
         fill
         sizes="280px"
+        unoptimized={unoptimized}
         className="object-contain"
         style={{
           opacity: ready ? 1 : 0,

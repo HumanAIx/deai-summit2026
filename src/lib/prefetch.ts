@@ -169,6 +169,30 @@ export async function prefetchSpeakers(): Promise<NormalizedSpeaker[]> {
     .map(normalizeSpeaker);
 }
 
+export interface CompanyPageSpeaker {
+  speaker: NormalizedSpeaker;
+  colorIndex: number;
+}
+
+/** Published speakers linked to this company, in the same order and tile color as the speakers page. */
+export async function prefetchCompanySpeakers(companyId: string, companyName?: string): Promise<CompanyPageSpeaker[]> {
+  const speakers = await prefetchSpeakers();
+  const tiles: CompanyPageSpeaker[] = [];
+  speakers.forEach((speaker, colorIndex) => {
+    const link = speaker.companies?.find((company) => company.company_id === companyId);
+    if (!link) return;
+    tiles.push({
+      speaker: {
+        ...speaker,
+        company: link.company_name || companyName || speaker.company,
+        role: link.person_job_title || link.member_job_title || speaker.role,
+      },
+      colorIndex,
+    });
+  });
+  return tiles;
+}
+
 export async function prefetchSpeakerBySlug(slug: string): Promise<Member | null> {
   return fetchFromAPI<Member>(`/members/${slug}`, { cacheDuration: 0 });
 }
