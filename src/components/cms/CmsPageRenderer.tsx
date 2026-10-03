@@ -1,6 +1,7 @@
 'use client';
 
 import Image from 'next/image';
+import { FittedCompanyLogo } from '@/components/FittedCompanyLogo';
 import Link from 'next/link';
 import { useLayoutEffect, useRef, useState } from 'react';
 import ReactMarkdown from 'react-markdown';
@@ -8,6 +9,7 @@ import remarkGfm from 'remark-gfm';
 import { AnimatedGrid } from '@/components/AnimatedGrid';
 import { DownloadDialog } from '@/components/DownloadDialog';
 import { getCompanyPublicPath } from '@/lib/company-public-path';
+import { resolvePublicCardHasDarkBg } from '@/lib/companyLogo';
 import { blockListType, blockMarkdownBody, documentDisplayTitle, formatDocumentPageCount, formatDocumentSize, isCompaniesListBlock, isDocumentsListBlock, isMembersListBlock, resolveBlockDocuments, resolveDocumentsGateForm } from '@/lib/cmsBlocks';
 import { youtubeToEmbed } from '@/lib/utils';
 import type {
@@ -26,6 +28,7 @@ type CaptchaProps = {
   captchaProvider?: string;
 };
 const CARD_COLORS = ['#00B0C2', '#0E6FEB', '#050A1F', '#00B0C2', '#0E6FEB', '#050A1F'];
+const COMPANY_FOOTER_COLORS = ['#00B0C2', '#0E6FEB'] as const;
 
 function highlightTitle(text: string): string {
   if (text.includes('**')) {
@@ -226,6 +229,8 @@ function CompaniesGridSection({ block }: { block: CMSBlock }) {
   const rawItems = (block.items as unknown as CMSCompanyItem[] | undefined) || [];
   const items = filterCompanyItems(rawItems, listType);
   const title = block.title || sectionTitleForCompanies(listType);
+  const isPhotoList = listType === 'all-affiliated-hotels' || listType === 'all-venues';
+  const footerBg = items.map((_, index) => COMPANY_FOOTER_COLORS[index % COMPANY_FOOTER_COLORS.length]);
 
   return (
     <section className="bg-[#F0F0EF] py-16">
@@ -241,27 +246,28 @@ function CompaniesGridSection({ block }: { block: CMSBlock }) {
         ) : (
           <div className="flex flex-wrap justify-center gap-6">
             {items.map((item, index) => {
-              const bg = CARD_COLORS[index % CARD_COLORS.length];
+              const bg = footerBg[index];
               const href = item.company_slug ? companyCardHref(item, listType) : '#';
+              const darkLogoPlate = !isPhotoList && resolvePublicCardHasDarkBg(item);
               return (
                 <Link
                   key={item.id}
                   href={href}
                   className="group block w-full sm:w-[calc(50%-12px)] lg:w-[calc(33.333%-16px)] xl:w-[calc(25%-18px)] overflow-hidden rounded-2xl transition-all duration-300 hover:scale-[1.02] hover:shadow-xl no-underline bg-white border border-gray-200"
                 >
-                  <div className="relative h-[200px] overflow-hidden bg-[#050A1F]">
-                    {item.company_logo || item.venue_photo || item.company_thumbnail ? (
+                  <div className={`relative h-[200px] overflow-hidden ${darkLogoPlate ? 'bg-[#050A1F]' : 'bg-white'}`}>
+                    {isPhotoList && (item.venue_photo || item.company_thumbnail || item.company_logo) ? (
                       <Image
                         src={item.venue_photo || item.company_thumbnail || item.company_logo || ''}
                         alt={item.company_name}
                         fill
                         sizes="280px"
-                        className={
-                          listType === 'all-affiliated-hotels' || listType === 'all-venues'
-                            ? 'object-cover'
-                            : 'object-contain p-8 bg-white'
-                        }
+                        className="object-cover"
                       />
+                    ) : item.company_logo ? (
+                      <div className="absolute inset-0 p-8">
+                        <FittedCompanyLogo src={item.company_logo} alt={item.company_name} />
+                      </div>
                     ) : (
                       <span className="absolute inset-0 flex items-center justify-center text-gray-300 font-display font-bold">
                         {item.company_name}

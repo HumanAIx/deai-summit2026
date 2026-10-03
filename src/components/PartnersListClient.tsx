@@ -2,7 +2,7 @@
 
 import React from 'react';
 import { AnimatedCounter } from '@/components/AnimatedCounter';
-import Image from 'next/image';
+import { FittedCompanyLogo } from '@/components/FittedCompanyLogo';
 import Link from 'next/link';
 import { DetailPageLayout } from '@/components/DetailPageLayout';
 import { AnimatedGrid } from '@/components/AnimatedGrid';
@@ -35,20 +35,10 @@ function highlightTitle(text: string): string {
     .replace(/(Partners)/gi, '<span class="text-brand-cyan">$1</span>');
 }
 
-const cardColors = [
-  '#00B0C2',   // digital teal
-  '#0E6FEB',   // electric blue
-  '#050A1F',   // deep navy
-  '#00B0C2',   // digital teal
-  '#0E6FEB',   // electric blue
-  '#050A1F',   // deep navy
-  '#00B0C2',   // digital teal
-  '#0E6FEB',   // electric blue
-];
+const FOOTER_COLORS = ['#00B0C2', '#0E6FEB'] as const;
 
-function CompanyCard({ company, type, index }: { company: NormalizedSponsor; type: 'sponsor' | 'partner'; index: number }) {
+function CompanyCard({ company, type, bgColor }: { company: NormalizedSponsor; type: 'sponsor' | 'partner'; bgColor: string }) {
   const href = type === 'sponsor' ? `/sponsors/${company.slug}` : `/partners/${company.slug}`;
-  const bgColor = cardColors[index % cardColors.length];
 
   return (
     <Link
@@ -57,19 +47,13 @@ function CompanyCard({ company, type, index }: { company: NormalizedSponsor; typ
     >
       {/* Logo section */}
       <div
-        className={`relative h-[160px] flex items-center justify-center p-8 ${
+        className={`relative h-[160px] overflow-hidden ${
           company.logoHasDarkBg ? 'bg-[#050A1F]' : 'bg-white'
         }`}
       >
         {company.logo ? (
-          <div className="relative w-full h-full">
-            <Image
-              src={company.logo}
-              alt={company.name}
-              fill
-              sizes="280px"
-              className="object-contain"
-            />
+          <div className="absolute inset-0 p-8">
+            <FittedCompanyLogo src={company.logo} alt={company.name} />
           </div>
         ) : (
           <div className="w-full h-full flex items-center justify-center">
@@ -102,11 +86,12 @@ function CompanyCard({ company, type, index }: { company: NormalizedSponsor; typ
 }
 
 function CompanyGrid({ companies, type }: { companies: NormalizedSponsor[]; type: 'sponsor' | 'partner' }) {
+  const colors = companies.map((_, index) => FOOTER_COLORS[index % FOOTER_COLORS.length]);
   return (
     <div className="flex flex-wrap justify-center gap-6">
       {companies.map((company, index) => (
         <div key={company.id} className="w-full sm:w-[calc(50%-12px)] lg:w-[calc(33.333%-16px)] xl:w-[calc(25%-18px)]">
-          <CompanyCard company={company} type={type} index={index} />
+          <CompanyCard company={company} type={type} bgColor={colors[index]} />
         </div>
       ))}
     </div>

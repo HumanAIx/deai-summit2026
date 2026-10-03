@@ -46,6 +46,17 @@ export function resolveScrollerLogoSrc(company: CompanyLogoFields): string {
   return resolveGeneralLogoSrc(company);
 }
 
+/**
+ * Company cards on the public site.
+ * The dashboard checkbox "Dark background on public site" stores
+ * `logo_background_white === false`. The Event Studio flag
+ * `company_logo_has_dark_bg` is a different control and is not hydrated
+ * onto CMS company cards.
+ */
+export function resolvePublicCardHasDarkBg(company: CompanyLogoFields): boolean {
+  return company.logo_background_white === false;
+}
+
 export function resolveScrollerLogoHasDarkBg(company: CompanyLogoFields, src?: string): boolean | undefined {
   const url = src || resolveScrollerLogoSrc(company);
   if (!url) return undefined;
