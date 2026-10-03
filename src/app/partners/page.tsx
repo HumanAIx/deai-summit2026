@@ -3,6 +3,7 @@ import { prefetchCMSPage, prefetchSponsors, prefetchPartners, prefetchNavigation
 import { generatePageMetadata } from '@/lib/seo-defaults';
 import { PartnersListClient } from '@/components/PartnersListClient';
 import type { NormalizedSponsor, CMSBlock, CMSCompanyItem } from '@/lib/api-types';
+import { resolveGeneralLogoSrc, resolvePublicCardHasDarkBg } from '@/lib/companyLogo';
 
 const BASE_URL = process.env.NEXT_PUBLIC_SITE_URL || 'https://deaisummit.org';
 
@@ -11,12 +12,12 @@ function normalizeCMSCompany(item: CMSCompanyItem, isSponsor: boolean, isPartner
     id: item.id,
     name: item.company_name,
     slug: item.company_slug || '',
-    logo: item.company_logo || '',
+    logo: resolveGeneralLogoSrc(item) || item.company_logo || '',
     bio: item.company_bio,
     socials: item.company_socials,
     isSponsor,
     isPartner,
-    logoHasDarkBg: item.company_logo_has_dark_bg,
+    logoHasDarkBg: resolvePublicCardHasDarkBg(item),
   };
 }
 
