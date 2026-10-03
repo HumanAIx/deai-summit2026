@@ -1,9 +1,9 @@
 'use client';
 
 import React from 'react';
-import Image from 'next/image';
 import Link from 'next/link';
 import { AnimatedGrid } from '@/components/AnimatedGrid';
+import { FittedCompanyLogo } from '@/components/FittedCompanyLogo';
 import { AnimatedCounter } from '@/components/AnimatedCounter';
 import type { PartnerItemData } from '@/components/LandingPage';
 
@@ -26,6 +26,7 @@ function renderHeroTitle(cmsTitle?: string) {
 }
 
 const HOME_SPONSORS_PARTNERS_MAX = 15;
+const HOME_LOGO_HOLD = { width: 150, height: 55 };
 
 /** Strip any HTML tags and `**markers**` from a CMS title for plain-text display. */
 function plainTitle(cmsTitle?: string): string {
@@ -177,12 +178,11 @@ function SponsorCard({ item, index = 0 }: { item: PartnerItemData; index?: numbe
 
       {/* Logo */}
       <div className="relative w-full h-full flex flex-col items-center justify-center px-6 pt-6 pb-4">
-        <div className="relative w-full flex-1 max-w-[150px] max-h-[55px]">
-          <Image
+        <div className="relative w-full flex-1 overflow-hidden">
+          <FittedCompanyLogo
             src={item.logo}
             alt={item.name}
-            fill
-            className="object-contain transition-all duration-500 group-hover:scale-110"
+            holdBox={HOME_LOGO_HOLD}
           />
         </div>
 

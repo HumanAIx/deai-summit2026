@@ -78,12 +78,17 @@ function measureInk(img: HTMLImageElement): InkBox | null {
   };
 }
 
+function containSize(aspect: number, boxW: number, boxH: number) {
+  const widthLimited = aspect >= boxW / boxH;
+  return {
+    dispW: widthLimited ? boxW : boxH * aspect,
+    dispH: widthLimited ? boxW / aspect : boxH,
+  };
+}
+
 function placementForBox(ink: InkBox, boxW: number, boxH: number): Placement {
   if (boxW < 8 || boxH < 8) return { scale: 1, x: 0, y: 0 };
-  const boxAspect = boxW / boxH;
-  const widthLimited = ink.aspect >= boxAspect;
-  const dispW = widthLimited ? boxW : boxH * ink.aspect;
-  const dispH = widthLimited ? boxW / ink.aspect : boxH;
+  const { dispW, dispH } = containSize(ink.aspect, boxW, boxH);
   const inkW = dispW * ink.fillW;
   const inkH = dispH * ink.fillH;
   if (inkW < 1 || inkH < 1) return { scale: 1, x: 0, y: 0 };
@@ -97,16 +102,42 @@ function placementForBox(ink: InkBox, boxW: number, boxH: number): Placement {
   };
 }
 
+/**
+ * Logos whose artwork already fills a reference slot stay at that size.
+ * Smaller marks use the real frame, so a taller card can enlarge them.
+ */
+function placementForFrame(
+  ink: InkBox,
+  frameW: number,
+  frameH: number,
+  hold?: { width: number; height: number },
+): Placement {
+  if (!hold || hold.width < 8 || hold.height < 8) return placementForBox(ink, frameW, frameH);
+  const held = containSize(ink.aspect, hold.width, hold.height);
+  const inkW = held.dispW * ink.fillW;
+  const inkH = held.dispH * ink.fillH;
+  const established = inkW >= 85 && inkH >= 20;
+  if (!established) return placementForBox(ink, frameW, frameH);
+  const frame = containSize(ink.aspect, frameW, frameH);
+  if (frame.dispW < 1) return { scale: 1, x: 0, y: 0 };
+  const scale = held.dispW / frame.dispW;
+  if (scale >= 0.98) return { scale: 1, x: 0, y: 0 };
+  return { scale, x: 0, y: 0 };
+}
+
 const inkCache = new Map<string, InkBox | null>();
 
 export function FittedCompanyLogo({
   src,
   alt,
   unoptimized = false,
+  holdBox,
 }: {
   src: string;
   alt: string;
   unoptimized?: boolean;
+  /** Pixel size of the previous slot. Logos that already fill it are not enlarged. */
+  holdBox?: { width: number; height: number };
 }) {
   const frameRef = useRef<HTMLDivElement>(null);
   const inkRef = useRef<InkBox | null>(null);
@@ -126,7 +157,7 @@ export function FittedCompanyLogo({
       const node = frameRef.current;
       if (!ink || !node || cancelled) return;
       const { width, height } = node.getBoundingClientRect();
-      setPlacement(placementForBox(ink, width, height));
+      setPlacement(placementForFrame(ink, width, height, holdBox));
       setReady(true);
     };
 
@@ -160,7 +191,7 @@ export function FittedCompanyLogo({
       cancelled = true;
       observer.disconnect();
     };
-  }, [src]);
+  }, [src, holdBox?.width, holdBox?.height]);
 
   return (
     <div ref={frameRef} className="relative h-full w-full">
@@ -174,7 +205,7 @@ export function FittedCompanyLogo({
         style={{
           opacity: ready ? 1 : 0,
           transform:
-            placement.scale > 1
+            Math.abs(placement.scale - 1) > 0.02
               ? `translate(${placement.x}px, ${placement.y}px) scale(${placement.scale})`
               : undefined,
         }}
