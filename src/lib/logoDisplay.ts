@@ -2,7 +2,7 @@ const SVG_SRC = /\.svg(\?|$)/i;
 
 /**
  * Logos rendered on the uniform white scroller tile.
- * SVG / dark-bg artwork → dark silhouette (brightness(0), no invert).
+ * SVG / dark-bg artwork → gray silhouette (brightness(0) invert, no color).
  * Raster logos → grayscale only so white PNG backgrounds stay white.
  */
 export function sponsorScrollerUsesSilhouetteFilter(src: string, logoHasDarkBg?: boolean): boolean {

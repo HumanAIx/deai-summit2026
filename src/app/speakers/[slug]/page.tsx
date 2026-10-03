@@ -5,6 +5,8 @@ import { generatePersonSchema, jsonLdSafe } from '@/lib/structured-data';
 import { SEO_DEFAULTS, buildSocialMetadata } from '@/lib/seo-defaults';
 import { SpeakerDetailClient } from '@/components/SpeakerDetailClient';
 import { formatPersonName } from '@/lib/utils';
+import { getCompanyPublicPath } from '@/lib/company-public-path';
+import type { Company } from '@/lib/api-types';
 
 const BASE_URL = process.env.NEXT_PUBLIC_SITE_URL || 'https://deaisummit.org';
 
@@ -45,8 +47,23 @@ export async function generateMetadata({ params }: { params: Promise<{ slug: str
   };
 }
 
-export default async function SpeakerDetailPage({ params }: { params: Promise<{ slug: string }> }) {
+function companyBackLink(from: string | undefined, companies: Company[]) {
+  if (!from || !from.startsWith('/') || from.startsWith('//')) return null;
+  const path = from.split('?')[0].split('#')[0];
+  const match = companies.find((company) => getCompanyPublicPath(company) === path);
+  if (!match) return null;
+  return { href: path, label: match.company_name };
+}
+
+export default async function SpeakerDetailPage({
+  params,
+  searchParams,
+}: {
+  params: Promise<{ slug: string }>;
+  searchParams: Promise<{ from?: string }>;
+}) {
   const { slug } = await params;
+  const { from } = await searchParams;
   const [{ member, companies }, apiNav, socials] = await Promise.all([
     prefetchSpeakerDetailPageData(slug),
     prefetchNavigation(),
@@ -58,6 +75,7 @@ export default async function SpeakerDetailPage({ params }: { params: Promise<{ 
   }
 
   const navigationData = apiNav ? mapNavigationData(apiNav) : undefined;
+  const back = companyBackLink(from, companies);
 
   const schema = generatePersonSchema(member, BASE_URL, 'speakers');
   const seoOverrides = member.seo?.structured_data;
@@ -79,6 +97,8 @@ export default async function SpeakerDetailPage({ params }: { params: Promise<{ 
         navigationData={navigationData}
         navigationAPIData={apiNav || undefined}
         socials={socials}
+        backHref={back?.href}
+        backLabel={back?.label}
       />
     </>
   );

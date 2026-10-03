@@ -1,12 +1,13 @@
 'use client';
 
 import React from 'react';
-import Image from 'next/image';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { DetailPageLayout } from '@/components/DetailPageLayout';
+import { FittedCompanyLogo } from '@/components/FittedCompanyLogo';
 import { AnimatedGrid } from '@/components/AnimatedGrid';
 import { markdownToHtml, formatPersonName } from '@/lib/utils';
+import { resolveGeneralLogoSrc, resolvePublicCardHasDarkBg } from '@/lib/companyLogo';
 import { resolvePersonPhotoSrc, withPhotoCacheBuster } from '@/lib/personPhoto';
 import type { Member, Company, PersonSocials, NavigationAPIData } from '@/lib/api-types';
 import type { NavigationConfig } from '@/config/types';
@@ -26,6 +27,8 @@ interface SpeakerDetailClientProps {
   navigationData?: NavigationConfig;
   navigationAPIData?: NavigationAPIData;
   socials?: SocialLinkData[];
+  backHref?: string;
+  backLabel?: string;
 }
 
 function getSocialIcon(key: string): string {
@@ -88,9 +91,19 @@ function renderBio(bio: string): string {
   return markdownToHtml(bio);
 }
 
-export const SpeakerDetailClient: React.FC<SpeakerDetailClientProps> = ({ member, companies, navigationData, navigationAPIData, socials }) => {
+export const SpeakerDetailClient: React.FC<SpeakerDetailClientProps> = ({
+  member,
+  companies,
+  navigationData,
+  navigationAPIData,
+  socials,
+  backHref = '/speakers',
+  backLabel = 'All Speakers',
+}) => {
   const router = useRouter();
+  const explicitBack = backHref !== '/speakers';
   const handleBack = (e: React.MouseEvent<HTMLAnchorElement>) => {
+    if (explicitBack) return;
     if (typeof window !== 'undefined' && document.referrer) {
       try {
         const ref = new URL(document.referrer);
@@ -146,8 +159,8 @@ export const SpeakerDetailClient: React.FC<SpeakerDetailClientProps> = ({ member
 
             {/* Info */}
             <div className="flex-1 text-center md:text-left">
-              <Link href="/speakers" onClick={handleBack} className="text-brand-cyan text-sm font-mono uppercase tracking-widest hover:underline mb-6 inline-flex items-center gap-1">
-                <i className="ri-arrow-left-line"></i> All Speakers
+              <Link href={backHref} onClick={handleBack} className="text-brand-cyan text-sm font-mono uppercase tracking-widest hover:underline mb-6 inline-flex items-center gap-1">
+                <i className="ri-arrow-left-line"></i> {backLabel}
               </Link>
               <h1 className="text-4xl md:text-5xl lg:text-6xl font-display font-bold tracking-tight leading-[1.1] mb-5">
                 {name}
@@ -216,9 +229,11 @@ export const SpeakerDetailClient: React.FC<SpeakerDetailClientProps> = ({ member
             </div>
             <div className="flex flex-wrap justify-center gap-6">
               {companies.map((company, index) => {
-                const colors = ['#00B0C2', '#0E6FEB', '#050A1F', '#00B0C2', '#0E6FEB', '#050A1F', '#00B0C2', '#0E6FEB'];
-                const bgColor = colors[index % colors.length];
+                const footerColors = ['#00B0C2', '#0E6FEB'] as const;
+                const bgColor = footerColors[index % footerColors.length];
                 const href = getCompanyPublicPath(company);
+                const logo = resolveGeneralLogoSrc(company) || company.company_logo || '';
+                const darkLogoPlate = resolvePublicCardHasDarkBg(company);
 
                 return (
                   <Link
@@ -226,19 +241,13 @@ export const SpeakerDetailClient: React.FC<SpeakerDetailClientProps> = ({ member
                     href={href}
                     className="group block overflow-hidden rounded-2xl transition-all duration-300 hover:scale-[1.02] hover:shadow-xl no-underline bg-white border border-gray-200 hover:border-gray-300 w-full md:w-[calc(50%-12px)]"
                   >
-                    {/* Logo section */}
-                    <div className="relative h-[130px] flex items-center justify-center p-6 bg-white">
-                      {company.company_logo ? (
-                        <div className="relative w-full h-full max-w-[160px]">
-                          <Image
-                            src={company.company_logo}
-                            alt={company.company_name}
-                            fill
-                            className="object-contain"
-                          />
+                    <div className={`relative h-[160px] overflow-hidden ${darkLogoPlate ? 'bg-[#050A1F]' : 'bg-white'}`}>
+                      {logo ? (
+                        <div className="absolute inset-0 p-8">
+                          <FittedCompanyLogo src={logo} alt={company.company_name} />
                         </div>
                       ) : (
-                        <span className="text-gray-300 text-lg font-display font-bold">{company.company_name}</span>
+                        <span className="absolute inset-0 flex items-center justify-center text-gray-300 text-lg font-display font-bold">{company.company_name}</span>
                       )}
                     </div>
 

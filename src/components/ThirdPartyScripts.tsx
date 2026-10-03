@@ -125,19 +125,6 @@ window.rdt('init',${JSON.stringify(redditBoot)});
 window.rdt('track','PageVisit');`,
       );
     }
-
-    injectExternalScript('bitpull-widget', 'https://bitpull.ai/widget/template.js', {
-      'data-key': 'cmt2vdx1z00m40vmjcl2v42ny',
-      'data-lang': 'en',
-      'data-modes': 'both',
-      'data-color': '#7B61FF',
-      'data-label': 'DEAI Summit',
-      'data-title': 'Event Assistant',
-      'data-teasers': 'Questions about the program?|Tickets or directions?',
-      // Hosted asset (same image as Bitpull’s data-URI snippet) so we don’t inline a huge base64 string.
-      'data-avatar': `${window.location.origin}/bitpull-avatar.webp`,
-      defer: '',
-    });
   }, [gtmId, ga4Id, linkedinPid, redditBoot]);
 
   return null;

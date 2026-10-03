@@ -8,6 +8,7 @@ export interface PersonCompany {
   company_website?: string;
   is_founder?: boolean;
   person_job_title?: string;
+  member_job_title?: string;
 }
 
 export interface PersonSocials {

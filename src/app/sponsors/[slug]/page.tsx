@@ -1,6 +1,6 @@
 import { notFound } from 'next/navigation';
 import type { Metadata } from 'next';
-import { prefetchSponsorDetailPageData, prefetchNavigation, prefetchSocials, mapNavigationData } from '@/lib/prefetch';
+import { prefetchSponsorDetailPageData, prefetchCompanySpeakers, prefetchNavigation, prefetchSocials, mapNavigationData } from '@/lib/prefetch';
 import { getCompanyCanonicalUrl } from '@/lib/company-public-path';
 import { generateOrganizationSchema, jsonLdSafe } from '@/lib/structured-data';
 import { SEO_DEFAULTS, buildSocialMetadata } from '@/lib/seo-defaults';
@@ -55,6 +55,7 @@ export default async function SponsorDetailPage({ params }: { params: Promise<{ 
     notFound();
   }
 
+  const speakers = await prefetchCompanySpeakers(company.id, company.company_name);
   const navigationData = apiNav ? mapNavigationData(apiNav) : undefined;
 
   const schema = generateOrganizationSchema(company, BASE_URL, 'sponsors');
@@ -79,6 +80,7 @@ export default async function SponsorDetailPage({ params }: { params: Promise<{ 
         navigationData={navigationData}
         navigationAPIData={apiNav || undefined}
         socials={socials}
+        speakers={speakers}
       />
     </>
   );

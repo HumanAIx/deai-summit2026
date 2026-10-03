@@ -1,6 +1,6 @@
 import { notFound, permanentRedirect } from 'next/navigation';
 import type { Metadata } from 'next';
-import { prefetchCompanyDetailPageData, prefetchNavigation, prefetchSocials, mapNavigationData } from '@/lib/prefetch';
+import { prefetchCompanyDetailPageData, prefetchCompanySpeakers, prefetchNavigation, prefetchSocials, mapNavigationData } from '@/lib/prefetch';
 import { getCompanyCanonicalUrl, getCompanyPublicPath, getCompanyPublicPrefix } from '@/lib/company-public-path';
 import { generateOrganizationSchema, jsonLdSafe } from '@/lib/structured-data';
 import { SEO_DEFAULTS, buildSocialMetadata } from '@/lib/seo-defaults';
@@ -62,6 +62,7 @@ export default async function CompanyDetailPage({ params }: { params: Promise<{ 
     permanentRedirect(preferredPath);
   }
 
+  const speakers = await prefetchCompanySpeakers(company.id, company.company_name);
   const navigationData = apiNav ? mapNavigationData(apiNav) : undefined;
   const prefix = getCompanyPublicPrefix(company);
 
@@ -86,6 +87,7 @@ export default async function CompanyDetailPage({ params }: { params: Promise<{ 
         navigationData={navigationData}
         navigationAPIData={apiNav || undefined}
         socials={socials}
+        speakers={speakers}
       />
     </>
   );
