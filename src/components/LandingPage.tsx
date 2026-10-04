@@ -81,6 +81,7 @@ interface LandingPageProps {
     aboutData?: AboutConfig;
     highlightsData?: HighlightsConfig;
     networkingData?: NetworkingItem[];
+    networkingHeading?: { title?: string; badge?: string };
     speakerCtaData?: { title?: string; subtitle?: string; button?: { label: string; link: string } };
     sponsorsSectionData?: { title?: string; badge?: string; subtitle?: string };
     redditSpeakerLeadPixelId?: string;
@@ -98,6 +99,7 @@ export const LandingPage: React.FC<LandingPageProps> = ({
     aboutData,
     highlightsData,
     networkingData,
+    networkingHeading,
     speakerCtaData,
     sponsorsSectionData,
     redditSpeakerLeadPixelId,
@@ -168,7 +170,7 @@ export const LandingPage: React.FC<LandingPageProps> = ({
                 </div>
 
                 {/* Dark Networking Section */}
-                <Networking data={networkingData || siteConfig.networking} />
+                <Networking data={networkingData || siteConfig.networking} heading={networkingHeading} />
 
                 {/* Sponsors Logo Grid */}
                 <PastSponsors data={partnerItems} onOpenContact={handleOpenContact} sectionData={sponsorsSectionData} />
