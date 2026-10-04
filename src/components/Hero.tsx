@@ -112,7 +112,7 @@ export const Hero: React.FC<HeroProps> = ({ data, onOpenContact, onOpenSpeakerAp
             dangerouslySetInnerHTML={{ __html: data.headline }}
           />
 
-          <p className={`text-xl md:text-3xl font-sans font-bold max-w-3xl mx-auto leading-relaxed tracking-wide px-2 ${videoSrc ? 'text-white drop-shadow-[0_0_20px_rgba(0,176,194,0.5)]' : 'text-[#0E6FEB]'}`}>
+          <p className={`text-xl md:text-3xl font-sans font-bold max-w-5xl mx-auto leading-relaxed tracking-wide px-2 ${videoSrc ? 'text-white drop-shadow-[0_0_20px_rgba(0,176,194,0.5)]' : 'text-[#0E6FEB]'}`}>
             {data.subheadline}
           </p>
         </div>
