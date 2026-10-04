@@ -35,15 +35,6 @@ export const AboutVideo: React.FC<AboutVideoProps> = ({ data }) => {
                     {/* Cinematic Overlay */}
                     <div className="absolute inset-0 bg-gradient-to-t from-[#050A1F] via-transparent to-transparent opacity-80" />
                     <div className="absolute inset-0 bg-brand-blue/10 mix-blend-overlay" />
-
-
-
-                    {/* Overlay Caption Text */}
-                    <div className="absolute bottom-0 left-0 w-full p-6 md:p-10 lg:p-16 text-left flex flex-col justify-end">
-                        <h3 className="text-2xl md:text-4xl lg:text-6xl font-display font-bold text-white tracking-tighter mb-2 md:mb-4 max-w-3xl">
-                            {data.overlayTitle}
-                        </h3>
-                    </div>
                 </div>
 
                 {/* Text Content */}

@@ -213,8 +213,8 @@ export default async function Home() {
     techxpoCompany ? { [techxpoCompany.company_slug]: techxpoCompany } : undefined,
   );
   const networkingData =
-    cmsSections.networking && cmsSections.networking.length > 0
-      ? cmsSections.networking
+    cmsSections.networking && cmsSections.networking.items.length > 0
+      ? cmsSections.networking.items
       : siteConfig.networking;
 
   return (
@@ -237,6 +237,10 @@ export default async function Home() {
         aboutData={aboutData}
         highlightsData={highlightsData}
         networkingData={networkingData}
+        networkingHeading={{
+          title: cmsSections.networking?.title,
+          badge: cmsSections.networking?.badge,
+        }}
         speakerCtaData={cmsSections.speakerCta}
         sponsorsSectionData={cmsSections.sponsorsAndPartners}
         redditSpeakerLeadPixelId={

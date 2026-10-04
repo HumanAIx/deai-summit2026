@@ -4,11 +4,35 @@ import { NetworkingItem } from '@/config/types';
 
 interface NetworkingProps {
     data: NetworkingItem[];
+    heading?: { title?: string; badge?: string };
+}
+
+const FALLBACK_BADGE = 'Precision Networking';
+const FALLBACK_TITLE = 'HumanAIx is advancing the open infrastructure for decentralized AI — where compute, data, and intelligence are governed by people.';
+
+function renderHeading(title: string) {
+    if (title.includes('<')) {
+        return <span dangerouslySetInnerHTML={{ __html: title }} />;
+    }
+    const marked = title.split(/(\*\*[^*]+\*\*)/g);
+    if (marked.length > 1) {
+        return marked.map((part, i) => {
+            const highlight = part.match(/^\*\*([^*]+)\*\*$/);
+            return highlight
+                ? <span key={i} className="text-brand-cyan">{highlight[1]}</span>
+                : <React.Fragment key={i}>{part}</React.Fragment>;
+        });
+    }
+    const dash = title.match(/^(.+?)\s([—–])\s(.+)$/);
+    if (dash) {
+        return <>{dash[1]} {dash[2]} <span className="text-brand-cyan">{dash[3]}</span></>;
+    }
+    return <>{title}</>;
 }
 
 const cardAccents = ['#00B0C2', '#0E6FEB', '#00B0C2', '#0E6FEB'];
 
-export const Networking: React.FC<NetworkingProps> = ({ data }) => {
+export const Networking: React.FC<NetworkingProps> = ({ data, heading }) => {
     const [activeTab, setActiveTab] = useState(0);
     const [hoveredTab, setHoveredTab] = useState<number | null>(null);
     const [isAutoPlaying, setIsAutoPlaying] = useState(true);
@@ -45,11 +69,11 @@ export const Networking: React.FC<NetworkingProps> = ({ data }) => {
                             <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-brand-cyan opacity-75"></span>
                             <span className="relative inline-flex rounded-full h-2 w-2 bg-brand-cyan"></span>
                         </span>
-                        <span className="text-xs font-mono uppercase tracking-widest text-brand-cyan">Precision Networking</span>
+                        <span className="text-xs font-mono uppercase tracking-widest text-brand-cyan">{heading?.badge || FALLBACK_BADGE}</span>
                     </div>
 
                     <h2 className="text-3xl md:text-5xl font-display font-bold tracking-tight leading-[1.2]">
-                        HumanAIx is advancing the open infrastructure for decentralized AI — <span className="text-brand-cyan">where compute, data, and intelligence are governed by people.</span>
+                        {renderHeading(heading?.title || FALLBACK_TITLE)}
                     </h2>
                 </div>
 

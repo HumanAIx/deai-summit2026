@@ -396,7 +396,13 @@ function extractSpeakerCta(blocks: CMSBlock[]): { title?: string; subtitle?: str
   };
 }
 
-function extractNetworking(blocks: CMSBlock[]): NetworkingItem[] | undefined {
+export interface NetworkingSection {
+  title?: string;
+  badge?: string;
+  items: NetworkingItem[];
+}
+
+function extractNetworking(blocks: CMSBlock[]): NetworkingSection | undefined {
   const block =
     findBySlot(blocks, 'networking') ??
     findByIdPrefix(blocks, ['content-networking-', 'networking-']);
@@ -405,13 +411,20 @@ function extractNetworking(blocks: CMSBlock[]): NetworkingItem[] | undefined {
   const items = (block as Record<string, unknown>).collectionItems as Array<{ title?: string; description?: string; icon?: string; image?: string }> | undefined;
   if (!items || items.length === 0) return undefined;
 
-  return items.map((i, idx) => ({
-    id: idx + 1,
-    title: i.title || '',
-    description: i.description || '',
-    icon: i.icon || '',
-    image: i.image || '',
-  }));
+  const title = (block.title || '').trim() || undefined;
+  const badge = ((block.subtitle as string) || (block.badge as string) || '').trim() || undefined;
+
+  return {
+    title,
+    badge,
+    items: items.map((i, idx) => ({
+      id: idx + 1,
+      title: i.title || '',
+      description: i.description || '',
+      icon: i.icon || '',
+      image: i.image || '',
+    })),
+  };
 }
 
 export interface SponsorsAndPartnersSection {
@@ -469,7 +482,7 @@ export interface HomeSections {
   highlights?: Partial<HighlightsConfig>;
   leadingVoices?: LeadingSpeakerData[];
   speakerCta?: { title?: string; subtitle?: string; button?: { label: string; link: string } };
-  networking?: NetworkingItem[];
+  networking?: NetworkingSection;
   partnerItems?: PartnerItemData[];
   sponsorsAndPartners?: SponsorsAndPartnersSection;
 }
