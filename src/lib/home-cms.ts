@@ -214,6 +214,9 @@ function extractStats(blocks: CMSBlock[]): Partial<StatsConfig> | undefined {
   if (quoteImage) quote.image = quoteImage;
   if (quoteUrl) quote.url = quoteUrl;
 
+  const intro = ((block.subtitle as string) || '').trim();
+  const body = ((block.description as string) || '').trim();
+
   const addon = typeof block.addon === 'string' ? block.addon.trim() : '';
   const listType =
     ((block as Record<string, unknown>).companiesListType as string | undefined) ||
@@ -255,6 +258,8 @@ function extractStats(blocks: CMSBlock[]): Partial<StatsConfig> | undefined {
   return {
     quote: quote as unknown as Partial<StatsConfig>['quote'],
     ...(organizers && organizers.length > 0 ? { organizers } : {}),
+    ...(intro ? { intro } : {}),
+    ...(body ? { body } : {}),
     items: items.map((i) => ({ number: i.title, label: i.description })),
   } as Partial<StatsConfig>;
 }
@@ -485,6 +490,140 @@ export interface HomeSections {
   networking?: NetworkingSection;
   partnerItems?: PartnerItemData[];
   sponsorsAndPartners?: SponsorsAndPartnersSection;
+}
+
+export type HomeBuiltinSlot =
+  | 'hero'
+  | 'marquee'
+  | 'stats'
+  | 'about'
+  | 'speakers'
+  | 'speakerCta'
+  | 'networking'
+  | 'sponsors';
+
+export type HomeRenderNode =
+  | { type: 'builtin'; slot: HomeBuiltinSlot }
+  | { type: 'block'; block: CMSBlock };
+
+const DEFAULT_HOME_PLAN: HomeRenderNode[] = [
+  { type: 'builtin', slot: 'hero' },
+  { type: 'builtin', slot: 'marquee' },
+  { type: 'builtin', slot: 'stats' },
+  { type: 'builtin', slot: 'about' },
+  { type: 'builtin', slot: 'speakers' },
+  { type: 'builtin', slot: 'speakerCta' },
+  { type: 'builtin', slot: 'networking' },
+  { type: 'builtin', slot: 'sponsors' },
+];
+
+function blockId(block: CMSBlock): string {
+  return typeof block.id === 'string' ? block.id.toLowerCase() : '';
+}
+
+function hasIdPrefix(block: CMSBlock, prefixes: string[]): boolean {
+  const id = blockId(block);
+  return prefixes.some((prefix) => id.startsWith(prefix));
+}
+
+/**
+ * Designed homepage sections own blocks that match their slot or id prefix.
+ * Anything else is a new CMS block and must render on its own.
+ */
+function builtinSlotForBlock(block: CMSBlock): HomeBuiltinSlot | null {
+  const slot = (block as Record<string, unknown>).slot;
+  const slotName = typeof slot === 'string' ? slot : '';
+
+  if (slotName === 'hero' || hasIdPrefix(block, ['content-hero-', 'hero-'])) return 'hero';
+  if (slotName === 'marquee' || hasIdPrefix(block, ['content-marquee-', 'marquee-'])) return 'marquee';
+  if (slotName === 'stats' || hasIdPrefix(block, ['content-stats-', 'stats-'])) return 'stats';
+  if (slotName === 'about' || hasIdPrefix(block, ['content-about-', 'about-'])) return 'about';
+  if (
+    slotName === 'leading-voices' ||
+    slotName === 'speakers' ||
+    hasIdPrefix(block, ['content-speakers-', 'speakers-', 'content-leading-voices-']) ||
+    block.addon === 'members-list' ||
+    block.type === 'members-list'
+  ) {
+    return 'speakers';
+  }
+  if (
+    slotName === 'speaker-cta' ||
+    hasIdPrefix(block, ['content-speaker-cta-', 'content-cta-', 'cta-'])
+  ) {
+    return 'speakerCta';
+  }
+  if (slotName === 'networking' || hasIdPrefix(block, ['content-networking-', 'networking-'])) {
+    return 'networking';
+  }
+  if (
+    slotName === 'sponsors' ||
+    slotName === 'partners' ||
+    hasIdPrefix(block, ['content-partners-', 'content-sponsors-', 'partners-', 'sponsors-'])
+  ) {
+    return 'sponsors';
+  }
+
+  const listType =
+    (block as Record<string, unknown>).listType ??
+    (block as Record<string, unknown>).companiesListType;
+  if (
+    (block.addon === 'companies-list' || block.type === 'companies-list') &&
+    (listType === 'all-partners' || listType === 'all-companies')
+  ) {
+    return 'sponsors';
+  }
+  if (
+    (block.addon === 'companies-list' || block.type === 'companies-list') &&
+    listType === 'all-sponsors'
+  ) {
+    return 'marquee';
+  }
+  return null;
+}
+
+function planHasSlot(plan: HomeRenderNode[], slot: HomeBuiltinSlot): boolean {
+  return plan.some((node) => node.type === 'builtin' && node.slot === slot);
+}
+
+function insertAfterSlot(plan: HomeRenderNode[], slot: HomeBuiltinSlot): number {
+  let index = plan.findIndex((node) => node.type === 'builtin' && node.slot === slot);
+  if (index < 0) return plan.length;
+  if (slot === 'hero') {
+    const marquee = plan.findIndex((node) => node.type === 'builtin' && node.slot === 'marquee');
+    if (marquee > index) index = marquee;
+  }
+  if (slot === 'speakers') {
+    const cta = plan.findIndex((node) => node.type === 'builtin' && node.slot === 'speakerCta');
+    if (cta > index) index = cta;
+  }
+  return index + 1;
+}
+
+/**
+ * Designed sections stay in their homepage order. CMS blocks that don't map
+ * onto one of those sections are inserted after the previous known block,
+ * so a newly added block shows up without a code change.
+ */
+export function buildHomeRenderPlan(blocks: CMSBlock[] | undefined | null): HomeRenderNode[] {
+  const plan: HomeRenderNode[] = DEFAULT_HOME_PLAN.map((node) => ({ ...node }));
+  if (!blocks?.length) return plan;
+
+  const seen = new Set<HomeBuiltinSlot>();
+  let insertAt = 0;
+
+  for (const block of blocks) {
+    const slot = builtinSlotForBlock(block);
+    if (slot && !seen.has(slot) && planHasSlot(plan, slot)) {
+      seen.add(slot);
+      insertAt = insertAfterSlot(plan, slot);
+      continue;
+    }
+    plan.splice(insertAt, 0, { type: 'block', block });
+    insertAt += 1;
+  }
+
+  return plan;
 }
 
 export function extractHomeSections(blocks: CMSBlock[] | undefined | null): HomeSections {

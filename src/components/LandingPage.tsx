@@ -7,10 +7,10 @@ import { Hero } from '@/components/Hero';
 import { Marquee } from '@/components/Marquee';
 import { Stats } from '@/components/Stats';
 import { AboutVideo } from '@/components/AboutVideo';
-import { SceneHighlights } from '@/components/SceneHighlights';
 import { LeadingVoices } from '@/components/LeadingVoices';
 import { Networking } from '@/components/Networking';
 import { PastSponsors } from '@/components/PastSponsors';
+import { CmsPageRenderer } from '@/components/cms/CmsPageRenderer';
 import { Footer } from '@/components/Footer';
 import { ContactModal } from '@/components/ContactModal';
 import { SpeakerApplicationModal } from '@/components/SpeakerApplicationModal';
@@ -19,12 +19,12 @@ import { Toast } from '@/components/Toast';
 
 // Import Site Config (for sections not yet driven by API)
 import { siteConfig } from '@/config/site';
+import type { HomeRenderNode } from '@/lib/home-cms';
 import type {
   NavigationConfig,
   HeroConfig,
   StatsConfig,
   AboutConfig,
-  HighlightsConfig,
   NetworkingItem,
 } from '@/config/types';
 import type { NavigationAPIData } from '@/lib/api-types';
@@ -79,12 +79,13 @@ interface LandingPageProps {
     heroData?: HeroConfig;
     statsData?: StatsConfig;
     aboutData?: AboutConfig;
-    highlightsData?: HighlightsConfig;
     networkingData?: NetworkingItem[];
     networkingHeading?: { title?: string; badge?: string };
     speakerCtaData?: { title?: string; subtitle?: string; button?: { label: string; link: string } };
     sponsorsSectionData?: { title?: string; badge?: string; subtitle?: string };
     redditSpeakerLeadPixelId?: string;
+    /** Designed sections plus any CMS blocks that don't map onto one. */
+    renderPlan?: HomeRenderNode[];
 }
 
 export const LandingPage: React.FC<LandingPageProps> = ({
@@ -97,12 +98,12 @@ export const LandingPage: React.FC<LandingPageProps> = ({
     heroData,
     statsData,
     aboutData,
-    highlightsData,
     networkingData,
     networkingHeading,
     speakerCtaData,
     sponsorsSectionData,
     redditSpeakerLeadPixelId,
+    renderPlan,
 }) => {
     const [toast, setToast] = useState({ visible: false, message: '' });
     const [isContactOpen, setIsContactOpen] = useState(false);
@@ -135,45 +136,78 @@ export const LandingPage: React.FC<LandingPageProps> = ({
             />
 
             <main className="w-full mx-auto">
-                <Suspense>
-                    <Hero data={heroData || siteConfig.hero} onOpenContact={handleOpenContact} onOpenSpeakerApp={handleOpenSpeakerApp} onOpenWaitlist={() => setIsWaitlistOpen(true)} />
-                </Suspense>
+                {(renderPlan ?? [
+                    { type: 'builtin' as const, slot: 'hero' as const },
+                    { type: 'builtin' as const, slot: 'marquee' as const },
+                    { type: 'builtin' as const, slot: 'stats' as const },
+                    { type: 'builtin' as const, slot: 'about' as const },
+                    { type: 'builtin' as const, slot: 'speakers' as const },
+                    { type: 'builtin' as const, slot: 'speakerCta' as const },
+                    { type: 'builtin' as const, slot: 'networking' as const },
+                    { type: 'builtin' as const, slot: 'sponsors' as const },
+                ]).map((node, index) => {
+                    if (node.type === 'block') {
+                        return (
+                            <CmsPageRenderer
+                                key={node.block.id || `cms-block-${index}`}
+                                blocks={[node.block]}
+                                embedded
+                            />
+                        );
+                    }
 
-                {/* Sponsor logo scroller */}
-                <Suspense>
-                    <Marquee data={marqueeItems} />
-                </Suspense>
-
-                {/* Light Stats Section */}
-                <Stats data={statsData || siteConfig.stats} />
-
-
-                {/* Dark Video Section */}
-                <AboutVideo data={aboutData || siteConfig.about} />
-
-                {/* Full Screen Image Highlights */}
-                {/* Pass the whole config object since the component expects HighlightsConfig */}
-                <SceneHighlights data={highlightsData || siteConfig.highlights} />
-
-                {/* Light Grid Speakers Section (Leading Voices) */}
-                <LeadingVoices data={speakers} />
-
-                {/* Speaker Call to Action */}
-                <div className="w-full bg-[#F0F0EF] pb-20 flex justify-center">
-                    <Link
-                        href={speakerCtaData?.button?.link || '/contact?inquiry=Speaker+Application'}
-                        className="px-8 py-3 rounded-full border border-[#050A1F] bg-white text-[#050A1F] hover:bg-[#050A1F] hover:text-white transition-all duration-300 text-sm font-bold shadow-md hover:shadow-xl flex items-center gap-2"
-                    >
-                        <i className="ri-mic-line"></i>
-                        {speakerCtaData?.button?.label || 'Apply to Speak'}
-                    </Link>
-                </div>
-
-                {/* Dark Networking Section */}
-                <Networking data={networkingData || siteConfig.networking} heading={networkingHeading} />
-
-                {/* Sponsors Logo Grid */}
-                <PastSponsors data={partnerItems} onOpenContact={handleOpenContact} sectionData={sponsorsSectionData} />
+                    switch (node.slot) {
+                        case 'hero':
+                            return (
+                                <Suspense key="hero">
+                                    <Hero data={heroData || siteConfig.hero} onOpenContact={handleOpenContact} onOpenSpeakerApp={handleOpenSpeakerApp} onOpenWaitlist={() => setIsWaitlistOpen(true)} />
+                                </Suspense>
+                            );
+                        case 'marquee':
+                            return (
+                                <Suspense key="marquee">
+                                    <Marquee data={marqueeItems} />
+                                </Suspense>
+                            );
+                        case 'stats':
+                            return <Stats key="stats" data={statsData || siteConfig.stats} />;
+                        case 'about':
+                            return <AboutVideo key="about" data={aboutData || siteConfig.about} />;
+                        case 'speakers':
+                            return <LeadingVoices key="speakers" data={speakers} />;
+                        case 'speakerCta':
+                            return (
+                                <div key="speaker-cta" className="w-full bg-[#F0F0EF] pb-20 flex justify-center">
+                                    <Link
+                                        href={speakerCtaData?.button?.link || '/contact?inquiry=Speaker+Application'}
+                                        className="px-8 py-3 rounded-full border border-[#050A1F] bg-white text-[#050A1F] hover:bg-[#050A1F] hover:text-white transition-all duration-300 text-sm font-bold shadow-md hover:shadow-xl flex items-center gap-2"
+                                    >
+                                        <i className="ri-mic-line"></i>
+                                        {speakerCtaData?.button?.label || 'Apply to Speak'}
+                                    </Link>
+                                </div>
+                            );
+                        case 'networking':
+                            return (
+                                <Networking
+                                    key="networking"
+                                    data={networkingData || siteConfig.networking}
+                                    heading={networkingHeading}
+                                />
+                            );
+                        case 'sponsors':
+                            return (
+                                <PastSponsors
+                                    key="sponsors"
+                                    data={partnerItems}
+                                    onOpenContact={handleOpenContact}
+                                    sectionData={sponsorsSectionData}
+                                />
+                            );
+                        default:
+                            return null;
+                    }
+                })}
             </main>
 
             <Footer

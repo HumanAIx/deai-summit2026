@@ -104,6 +104,10 @@ export interface StatsConfig {
     /** CMS `all-organizers` companies for the Hosted-by tiles */
     organizers?: OrganizerConfig[];
     items: StatItem[];
+    /** Supporting line under the section title (CMS subtitle). */
+    intro?: string;
+    /** Body copy under the title (CMS description). */
+    body?: string;
 }
 
 export interface MarqueeItem {

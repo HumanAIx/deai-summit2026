@@ -6,15 +6,14 @@ import {
   prefetchCMSPage,
   mapNavigationData,
   prefetchPublicAnalyticsTags,
-  prefetchVenues,
-  prefetchColocatedPartnerCompany,
   prefetchOrganizers,
 } from '@/lib/prefetch';
 import { redditSpeakerLeadPixel } from '@/lib/analytics-tags';
 import type { SocialLink } from '@/lib/prefetch';
 import { siteConfig } from '@/config/site';
 import { generateEventSchema, jsonLdSafe } from '@/lib/structured-data';
-import { extractHomeSections, enrichHighlightsWithVenue } from '@/lib/home-cms';
+import { extractHomeSections, buildHomeRenderPlan } from '@/lib/home-cms';
+import { parseCmsBlocks } from '@/lib/cmsBlocks';
 import { generatePageMetadata } from '@/lib/seo-defaults';
 import type { CMSBlock } from '@/lib/api-types';
 import type { OrganizerConfig } from '@/config/types';
@@ -40,11 +39,7 @@ export default async function Home() {
   const apiNav = await prefetchNavigation();
   const navigationData = apiNav ? mapNavigationData(apiNav) : undefined;
   const analyticsTags = await prefetchPublicAnalyticsTags();
-  const [venues, techxpoCompany, organizerCompanies] = await Promise.all([
-    prefetchVenues(),
-    prefetchColocatedPartnerCompany(),
-    prefetchOrganizers(),
-  ]);
+  const organizerCompanies = await prefetchOrganizers();
 
   try {
     const data = await prefetchHomePageData();
@@ -58,18 +53,19 @@ export default async function Home() {
 
   // Pull CMS-managed content for the home page. Each section falls back to
   // the existing entity APIs or siteConfig when the CMS doesn't provide data.
+  // Blocks that don't match a designed section are rendered in place.
+  let cmsBlocks: CMSBlock[] = [];
   let cmsSections = {} as ReturnType<typeof extractHomeSections>;
   try {
     const cmsPage = await prefetchCMSPage('home');
-    if (cmsPage?.content?.blocks) {
-      const blocks: CMSBlock[] = Array.isArray(cmsPage.content.blocks)
-        ? cmsPage.content.blocks
-        : (Object.values(cmsPage.content.blocks) as CMSBlock[]);
-      cmsSections = extractHomeSections(blocks);
+    if (cmsPage) {
+      cmsBlocks = parseCmsBlocks(cmsPage);
+      cmsSections = extractHomeSections(cmsBlocks);
     }
   } catch (error) {
     console.error('Failed to fetch CMS home page, falling back to entity APIs / siteConfig:', error);
   }
+  const renderPlan = buildHomeRenderPlan(cmsBlocks);
 
   const eventSchema = generateEventSchema(BASE_URL);
 
@@ -195,23 +191,25 @@ export default async function Home() {
     });
   })();
 
+  const cmsQuote = cmsSections.stats?.quote;
   const statsData = {
-    quote: {
-      ...siteConfig.stats.quote,
-      ...(cmsSections.stats?.quote ?? {}),
-    },
-    items: cmsSections.stats?.items ?? siteConfig.stats.items,
+    quote: cmsQuote?.text
+      ? {
+          text: cmsQuote.text,
+          author: cmsQuote.author || '',
+          role: cmsQuote.role || '',
+          image: cmsQuote.image || '',
+          url: cmsQuote.url || '',
+        }
+      : siteConfig.stats.quote,
+    items: cmsSections.stats?.items?.length
+      ? cmsSections.stats.items
+      : siteConfig.stats.items,
+    ...(cmsSections.stats?.intro ? { intro: cmsSections.stats.intro } : {}),
+    ...(cmsSections.stats?.body ? { body: cmsSections.stats.body } : {}),
     ...(resolvedOrganizers ? { organizers: resolvedOrganizers } : {}),
   };
   const aboutData = { ...siteConfig.about, ...(cmsSections.about ?? {}) };
-  const highlightsBase = cmsSections.highlights
-    ? { ...siteConfig.highlights, ...cmsSections.highlights }
-    : siteConfig.highlights;
-  const highlightsData = enrichHighlightsWithVenue(
-    highlightsBase,
-    venues,
-    techxpoCompany ? { [techxpoCompany.company_slug]: techxpoCompany } : undefined,
-  );
   const networkingData =
     cmsSections.networking && cmsSections.networking.items.length > 0
       ? cmsSections.networking.items
@@ -235,7 +233,6 @@ export default async function Home() {
         heroData={heroData}
         statsData={statsData}
         aboutData={aboutData}
-        highlightsData={highlightsData}
         networkingData={networkingData}
         networkingHeading={{
           title: cmsSections.networking?.title,
@@ -243,6 +240,7 @@ export default async function Home() {
         }}
         speakerCtaData={cmsSections.speakerCta}
         sponsorsSectionData={cmsSections.sponsorsAndPartners}
+        renderPlan={renderPlan}
         redditSpeakerLeadPixelId={
           redditSpeakerLeadPixel(analyticsTags) || undefined
         }
