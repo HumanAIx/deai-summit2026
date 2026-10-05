@@ -86,6 +86,10 @@ function OrganizerTile({ organizer }: { organizer: OrganizerConfig }) {
 
 export const Stats: React.FC<StatsProps> = ({ data }) => {
   const organizers = data.organizers ?? [];
+  const intro = data.intro?.trim();
+  const body = data.body?.trim();
+  const sectionCopy = Boolean(intro || body);
+  const paragraphs = body ? body.split(/\n{2,}/).map((part) => part.trim()).filter(Boolean) : [];
 
   return (
     <section className="relative w-full py-20 md:py-32 bg-white z-20 overflow-hidden">
@@ -94,10 +98,30 @@ export const Stats: React.FC<StatsProps> = ({ data }) => {
         {/* Featured Quote + Hosts */}
         <div className="mb-24 pb-12 border-b border-gray-100">
           <h2 className="text-4xl md:text-5xl lg:text-6xl font-display font-bold text-[#050A1F] tracking-tight leading-[1.1] max-w-4xl">
-            <span className="text-brand-blue">&ldquo;</span>
-            {data.quote.text}
-            <span className="text-brand-blue">&rdquo;</span>
+            {sectionCopy ? (
+              data.quote.text
+            ) : (
+              <>
+                <span className="text-brand-blue">&ldquo;</span>
+                {data.quote.text}
+                <span className="text-brand-blue">&rdquo;</span>
+              </>
+            )}
           </h2>
+          {intro ? (
+            <p className="mt-6 max-w-3xl text-lg md:text-xl text-gray-600 leading-relaxed">
+              {intro}
+            </p>
+          ) : null}
+          {paragraphs.length > 0 ? (
+            <div className="mt-8 max-w-3xl space-y-5">
+              {paragraphs.map((paragraph) => (
+                <p key={paragraph} className="text-base md:text-lg text-gray-600 leading-relaxed whitespace-pre-line">
+                  {paragraph}
+                </p>
+              ))}
+            </div>
+          ) : null}
 
           {organizers.length > 0 && (
             <div className="mt-12">

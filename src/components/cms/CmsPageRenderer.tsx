@@ -595,11 +595,14 @@ function BlockRouter({
   index,
   captcha,
   formConfigs,
+  embedded = false,
 }: {
   block: CMSBlock;
   index: number;
   captcha?: CaptchaProps;
   formConfigs?: Record<string, CMSFormConfig> | null;
+  /** Mid-page block. Don't promote it to a page hero just because it is first. */
+  embedded?: boolean;
 }) {
   const layout = (block as { layout?: string }).layout;
   const addon = block.addon;
@@ -642,9 +645,9 @@ function BlockRouter({
   if (block.type === 'cta' || block.type === 'call-to-action') {
     return <CtaSection block={block} />;
   }
-  if (block.type === 'hero' || block.type === 'heading' || layout === 'hero' || index === 0) {
-    // First block or explicit hero → dark hero treatment when it looks like a page intro
-    if (index === 0 || block.type === 'hero' || layout === 'hero') {
+  const pageIntro = !embedded && index === 0;
+  if (block.type === 'hero' || block.type === 'heading' || layout === 'hero' || pageIntro) {
+    if (pageIntro || block.type === 'hero' || layout === 'hero') {
       return <HeroSection block={block} />;
     }
   }
@@ -666,6 +669,8 @@ interface CmsPageRendererProps {
   captchaSiteKey?: string;
   captchaDisabled?: boolean;
   captchaProvider?: string;
+  /** Render inside an existing page. Unknown blocks stay content sections. */
+  embedded?: boolean;
 }
 
 /**
@@ -679,10 +684,12 @@ export function CmsPageRenderer({
   captchaSiteKey,
   captchaDisabled,
   captchaProvider,
+  embedded = false,
 }: CmsPageRendererProps) {
   const captcha: CaptchaProps = { captchaSiteKey, captchaDisabled, captchaProvider };
 
   if (!blocks.length) {
+    if (embedded) return null;
     return (
       <section className="bg-[#F0F0EF] py-24">
         <div className="max-w-3xl mx-auto px-6 text-center">
@@ -704,6 +711,7 @@ export function CmsPageRenderer({
           index={index}
           captcha={captcha}
           formConfigs={formConfigs}
+          embedded={embedded}
         />
       ))}
     </>
