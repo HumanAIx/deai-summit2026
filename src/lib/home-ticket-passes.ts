@@ -10,6 +10,9 @@ export interface HomeTicketPass {
   includes: string[];
   href: string;
   featured: boolean;
+  notice: string;
+  dateLine: string;
+  placeLine: string;
 }
 
 function text(value: unknown): string {
@@ -49,22 +52,49 @@ function hrefOf(block: CMSBlock): string {
   return text(btn.link) || '/tickets';
 }
 
+function nodeLines(block: CMSBlock): string[] {
+  const nodes = block.textNodes;
+  if (!Array.isArray(nodes)) return [];
+  return nodes.map((node) => text(node?.text)).filter(Boolean);
+}
+
+function splitEventLine(value: string): { date: string; place: string } {
+  const match = value.match(/^(.*?\d{4})\s+(.+)$/);
+  if (!match) return { date: value, place: '' };
+  return { date: match[1], place: match[2] };
+}
+
+function isTicketBlock(block: CMSBlock): boolean {
+  const title = text(block.title);
+  const subtitle = text(block.subtitle);
+  if (block.type && block.type !== 'simple' && block.type !== 'content') return false;
+  return /\bpass\b/i.test(title) || /ticket/i.test(subtitle);
+}
+
+function priceOf(block: CMSBlock, lines: string[]): { major: string; minor: string } {
+  const candidates = [text(block.description), ...nodeLines(block), ...lines];
+  const priced = candidates.find(isPrice);
+  return priced ? splitPrice(priced) : { major: '', minor: '' };
+}
+
 /** Ticket cards on the homepage, including drafts the CMS has not published yet. */
 export function extractHomeTicketPasses(blocks: CMSBlock[]): HomeTicketPass[] {
   const passes: HomeTicketPass[] = [];
 
   for (const block of blocks) {
-    const description = text(block.description);
     const title = text(block.title);
-    if (!title || !isPrice(description)) continue;
-    if (block.type && block.type !== 'simple' && block.type !== 'content') continue;
+    if (!title || !isTicketBlock(block)) continue;
 
     const lines = linesOf(block);
     let includesLabel = '';
     if (lines.length > 0 && isHeadingLine(lines[0])) {
       includesLabel = lines.shift() || '';
     }
-    const price = splitPrice(description);
+    const notes = nodeLines(block).filter((line) => !isPrice(line));
+    const notice = notes.find((line) => /price|increase/i.test(line)) || '';
+    const event = notes.find((line) => line !== notice) || '';
+    const when = splitEventLine(event);
+    const price = priceOf(block, lines);
     passes.push({
       id: block.id,
       eyebrow: text(block.subtitle),
@@ -72,9 +102,12 @@ export function extractHomeTicketPasses(blocks: CMSBlock[]): HomeTicketPass[] {
       priceMajor: price.major,
       priceMinor: price.minor,
       includesLabel,
-      includes: lines,
+      includes: lines.filter((line) => !isPrice(line)),
       href: hrefOf(block),
       featured: /\bvip\b/i.test(title),
+      notice,
+      dateLine: when.date,
+      placeLine: when.place,
     });
   }
 
