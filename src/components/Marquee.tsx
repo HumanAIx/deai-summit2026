@@ -1,7 +1,6 @@
 'use client';
 
 import React, { useEffect, useRef, useState } from 'react';
-import { createPortal } from 'react-dom';
 import Link from 'next/link';
 import { useSearchParams } from 'next/navigation';
 import type { MarqueeItemData } from '@/components/LandingPage';
@@ -16,8 +15,7 @@ const SCROLL_SPEED = 85;
 const MarqueeItem: React.FC<{
   item: MarqueeItemData;
   onHover: (hovering: boolean) => void;
-  onOpen: () => void;
-}> = ({ item, onHover, onOpen }) => {
+}> = ({ item, onHover }) => {
   const wordmark = (
     <div
       className="flex items-center gap-8 md:gap-10 pl-8 md:pl-10"
@@ -39,7 +37,7 @@ const MarqueeItem: React.FC<{
 
   if (item.slug) {
     return (
-      <Link href={`/sponsors/${item.slug}`} className="flex-shrink-0 no-underline" onClick={onOpen}>
+      <Link href={`/sponsors/${item.slug}`} className="flex-shrink-0 no-underline">
         {wordmark}
       </Link>
     );
@@ -69,7 +67,6 @@ function pinTheBit(items: MarqueeItemData[]): MarqueeItemData[] {
 
 export const Marquee: React.FC<MarqueeProps> = ({ data }) => {
   const [isHovering, setIsHovering] = useState(false);
-  const [isLoading, setIsLoading] = useState(false);
   const [items, setItems] = useState<MarqueeItemData[]>(data);
   const [distance, setDistance] = useState(0);
   const setRef = useRef<HTMLDivElement>(null);
@@ -132,25 +129,11 @@ export const Marquee: React.FC<MarqueeProps> = ({ data }) => {
                 key={`${setIndex}-${item.slug || item.label}-${i}`}
                 item={item}
                 onHover={setIsHovering}
-                onOpen={() => setIsLoading(true)}
               />
             ))}
           </div>
         ))}
       </div>
-      {isLoading && typeof document !== 'undefined'
-        ? createPortal(
-            <div
-              className="fixed inset-0 z-[100] flex items-center justify-center bg-[#050A1F]/55"
-              role="status"
-              aria-live="polite"
-              aria-label="Loading"
-            >
-              <i className="ri-loader-4-line animate-spin text-6xl text-white" />
-            </div>,
-            document.body,
-          )
-        : null}
     </section>
   );
 };

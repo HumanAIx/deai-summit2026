@@ -12,6 +12,7 @@ import { Networking } from '@/components/Networking';
 import { PastSponsors } from '@/components/PastSponsors';
 import { CmsPageRenderer } from '@/components/cms/CmsPageRenderer';
 import { Footer } from '@/components/Footer';
+import { HomeTicketPasses } from '@/components/HomeTicketPasses';
 import { ContactModal } from '@/components/ContactModal';
 import { SpeakerApplicationModal } from '@/components/SpeakerApplicationModal';
 import { WaitlistModal } from '@/components/WaitlistModal';
@@ -20,6 +21,7 @@ import { Toast } from '@/components/Toast';
 // Import Site Config (for sections not yet driven by API)
 import { siteConfig } from '@/config/site';
 import type { HomeRenderNode } from '@/lib/home-cms';
+import type { HomeTicketPass } from '@/lib/home-ticket-passes';
 import type {
   NavigationConfig,
   HeroConfig,
@@ -86,6 +88,7 @@ interface LandingPageProps {
     redditSpeakerLeadPixelId?: string;
     /** Designed sections plus any CMS blocks that don't map onto one. */
     renderPlan?: HomeRenderNode[];
+    ticketPasses?: HomeTicketPass[];
 }
 
 export const LandingPage: React.FC<LandingPageProps> = ({
@@ -104,11 +107,15 @@ export const LandingPage: React.FC<LandingPageProps> = ({
     sponsorsSectionData,
     redditSpeakerLeadPixelId,
     renderPlan,
+    ticketPasses,
 }) => {
     const [toast, setToast] = useState({ visible: false, message: '' });
     const [isContactOpen, setIsContactOpen] = useState(false);
     const [isSpeakerModalOpen, setIsSpeakerModalOpen] = useState(false);
     const [isWaitlistOpen, setIsWaitlistOpen] = useState(false);
+    const [heroScale, setHeroScale] = useState(1);
+    const [navSlot, setNavSlot] = useState(48);
+    const [navBottom, setNavBottom] = useState(0);
 
     const showToast = (message: string) => {
         setToast({ visible: true, message });
@@ -128,7 +135,19 @@ export const LandingPage: React.FC<LandingPageProps> = ({
 
     return (
         <div className="min-h-screen relative w-full selection:bg-brand-cyan/30 selection:text-brand-cyan font-sans">
+            <div className="lg:hidden">
+                <Navbar
+                    onShowToast={showToast}
+                    onOpenContact={handleOpenContact}
+                    data={navigationData || siteConfig.navigation}
+                    socials={socials}
+                />
+            </div>
             <Navbar
+                layout="hero"
+                heroScale={heroScale}
+                onNavHeight={setNavSlot}
+                onNavBottom={setNavBottom}
                 onShowToast={showToast}
                 onOpenContact={handleOpenContact}
                 data={navigationData || siteConfig.navigation}
@@ -145,7 +164,7 @@ export const LandingPage: React.FC<LandingPageProps> = ({
                     { type: 'builtin' as const, slot: 'speakerCta' as const },
                     { type: 'builtin' as const, slot: 'networking' as const },
                     { type: 'builtin' as const, slot: 'sponsors' as const },
-                ]).map((node, index) => {
+                ]).map((node, index, plan) => {
                     if (node.type === 'block') {
                         return (
                             <CmsPageRenderer
@@ -156,13 +175,36 @@ export const LandingPage: React.FC<LandingPageProps> = ({
                         );
                     }
 
+                    const next = plan[index + 1];
+                    const marqueeFollowsHero = next?.type === 'builtin' && next.slot === 'marquee';
+                    const previous = plan[index - 1];
+                    if (
+                        node.slot === 'marquee' &&
+                        previous?.type === 'builtin' &&
+                        previous.slot === 'hero'
+                    ) {
+                        return null;
+                    }
+
                     switch (node.slot) {
-                        case 'hero':
-                            return (
+                        case 'hero': {
+                            const hero = (
                                 <Suspense key="hero">
-                                    <Hero data={heroData || siteConfig.hero} onOpenContact={handleOpenContact} onOpenSpeakerApp={handleOpenSpeakerApp} onOpenWaitlist={() => setIsWaitlistOpen(true)} />
+                                    <Hero data={heroData || siteConfig.hero} onOpenContact={handleOpenContact} onOpenSpeakerApp={handleOpenSpeakerApp} onOpenWaitlist={() => setIsWaitlistOpen(true)} onScale={setHeroScale} navSlot={navSlot} navBottom={navBottom} contained={marqueeFollowsHero} />
                                 </Suspense>
                             );
+                            if (!marqueeFollowsHero) return hero;
+                            return (
+                                <div key="hero-fold" className="flex flex-col lg:h-[100dvh]">
+                                    <div className="lg:min-h-0 lg:flex-1">{hero}</div>
+                                    <div className="lg:shrink-0">
+                                        <Suspense key="marquee">
+                                            <Marquee data={marqueeItems} />
+                                        </Suspense>
+                                    </div>
+                                </div>
+                            );
+                        }
                         case 'marquee':
                             return (
                                 <Suspense key="marquee">
@@ -209,6 +251,8 @@ export const LandingPage: React.FC<LandingPageProps> = ({
                     }
                 })}
             </main>
+
+            <HomeTicketPasses passes={ticketPasses ?? []} />
 
             <Footer
                 onShowToast={showToast}

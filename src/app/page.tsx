@@ -14,6 +14,7 @@ import { siteConfig } from '@/config/site';
 import { generateEventSchema, jsonLdSafe } from '@/lib/structured-data';
 import { extractHomeSections, buildHomeRenderPlan } from '@/lib/home-cms';
 import { parseCmsBlocks } from '@/lib/cmsBlocks';
+import { extractHomeTicketPasses, type HomeTicketPass } from '@/lib/home-ticket-passes';
 import { generatePageMetadata } from '@/lib/seo-defaults';
 import type { CMSBlock } from '@/lib/api-types';
 import type { OrganizerConfig } from '@/config/types';
@@ -55,11 +56,15 @@ export default async function Home() {
   // the existing entity APIs or siteConfig when the CMS doesn't provide data.
   // Blocks that don't match a designed section are rendered in place.
   let cmsBlocks: CMSBlock[] = [];
+  let ticketPasses: HomeTicketPass[] = [];
   let cmsSections = {} as ReturnType<typeof extractHomeSections>;
   try {
     const cmsPage = await prefetchCMSPage('home');
     if (cmsPage) {
-      cmsBlocks = parseCmsBlocks(cmsPage);
+      const allBlocks = parseCmsBlocks(cmsPage, { includeUnpublished: true });
+      ticketPasses = extractHomeTicketPasses(allBlocks);
+      const ticketIds = new Set(ticketPasses.map((pass) => pass.id));
+      cmsBlocks = parseCmsBlocks(cmsPage).filter((block) => !ticketIds.has(block.id));
       cmsSections = extractHomeSections(cmsBlocks);
     }
   } catch (error) {
@@ -241,6 +246,7 @@ export default async function Home() {
         }}
         speakerCtaData={cmsSections.speakerCta}
         sponsorsSectionData={cmsSections.sponsorsAndPartners}
+        ticketPasses={ticketPasses}
         renderPlan={renderPlan}
         redditSpeakerLeadPixelId={
           redditSpeakerLeadPixel(analyticsTags) || undefined

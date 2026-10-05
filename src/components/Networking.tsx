@@ -51,7 +51,7 @@ export const Networking: React.FC<NetworkingProps> = ({ data, heading }) => {
     };
 
     return (
-        <section className="relative w-full py-32 px-6 bg-[#050A1F] text-white overflow-hidden">
+        <section className="relative w-full border-b border-white py-32 px-6 bg-[#050A1F] text-white overflow-hidden">
 
             {/* Background effects */}
             <div className="absolute inset-0 pointer-events-none">

@@ -3,7 +3,10 @@ import type { CMSBlock, CMSDocument, CMSFormConfig, CMSPageData } from '@/lib/ap
 const TENANT_SLUG = process.env.TENANT_SLUG || 'deaisummit';
 const STORAGE_PUBLIC_PREFIX = `/storage/v1/object/public/tenants/`;
 
-export function parseCmsBlocks(cmsPage: CMSPageData | null | undefined): CMSBlock[] {
+export function parseCmsBlocks(
+  cmsPage: CMSPageData | null | undefined,
+  options?: { includeUnpublished?: boolean },
+): CMSBlock[] {
   if (!cmsPage?.content) return [];
 
   const rawBlocks = cmsPage.content.blocks;
@@ -28,7 +31,7 @@ export function parseCmsBlocks(cmsPage: CMSPageData | null | undefined): CMSBloc
   }
 
   return blocks.filter((b) => {
-    if ((b as { published?: boolean }).published === false) return false;
+    if (!options?.includeUnpublished && (b as { published?: boolean }).published === false) return false;
     if ((b as { showSection?: boolean }).showSection === false) return false;
     return true;
   });

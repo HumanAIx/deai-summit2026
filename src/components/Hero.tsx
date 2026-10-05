@@ -1,30 +1,25 @@
 'use client';
 
-import React from 'react';
-import Image from 'next/image';
+import React, { useLayoutEffect, useRef, useState } from 'react';
 import Link from 'next/link';
 import { useSearchParams } from 'next/navigation';
 import { HeroConfig } from '@/config/types';
-import { AnimatedGrid } from '@/components/AnimatedGrid';
-import { cmsIconClass } from '@/lib/cmsIcon';
+import { HERO_STAGE, HeroWaveField } from '@/components/HeroWaveField';
 
 const VIDEO_MAP: Record<string, string> = {
   globe: 'https://videocdn.cdnpk.net/videos/e3e04e12-b643-5f33-aba6-ed773d587c7f/horizontal/previews/watermarked/large.mp4',
 };
+
+const FONT = 'var(--font-inter), system-ui, sans-serif';
+
+/** Fallback until the fixed nav reports its unscaled height. */
+const NAV_SLOT = 48;
 
 type HeroButton = NonNullable<HeroConfig['buttons']>[number];
 
 function isWaitlistButton(btn: HeroButton): boolean {
   if (/^#waitlist$/i.test(btn.link)) return true;
   return /waitlist/i.test(btn.label) && (!btn.link || btn.link === '#' || btn.link === '#waitlist');
-}
-
-function heroButtonIcon(btn: HeroButton, index: number): string {
-  if (isWaitlistButton(btn)) return 'ri-calendar-check-line';
-  if (/speaker/i.test(btn.label) || /speak/i.test(btn.link)) return 'ri-download-line';
-  if (/sponsor/i.test(btn.label) || /sponsor/i.test(btn.link)) return 'ri-hand-heart-line';
-  const defaults = ['ri-download-line', 'ri-hand-heart-line', 'ri-calendar-check-line'];
-  return defaults[index] ?? 'ri-arrow-right-line';
 }
 
 function resolveHeroButtons(data: HeroConfig): HeroButton[] {
@@ -48,181 +43,263 @@ interface HeroProps {
   onOpenContact?: () => void;
   onOpenSpeakerApp?: () => void;
   onOpenWaitlist?: () => void;
+  /** Reports the stage scale so the fixed nav can match the design canvas. */
+  onScale?: (scale: number) => void;
+  /** Unscaled nav height reserved at the top of the stage. */
+  navSlot?: number;
+  /** Visual bottom of the fixed nav, in viewport pixels. */
+  navBottom?: number;
+  /** Fill the space above the logo scroller instead of the full viewport. */
+  contained?: boolean;
 }
 
-export const Hero: React.FC<HeroProps> = ({ data, onOpenContact, onOpenSpeakerApp, onOpenWaitlist }) => {
+const pillStyle: React.CSSProperties = {
+  background: '#fff',
+  padding: '12px 22px',
+  borderRadius: 999,
+  fontSize: 14,
+  color: '#0B1222',
+  boxShadow: '0 2px 10px rgba(0,0,0,.05)',
+  whiteSpace: 'nowrap',
+  fontFamily: FONT,
+};
+
+function buttonStyle(dark: boolean): React.CSSProperties {
+  return {
+    background: dark ? '#0B1222' : '#fff',
+    color: dark ? '#fff' : '#0B1222',
+    padding: '15px 28px',
+    borderRadius: 999,
+    fontSize: 14,
+    fontWeight: 600,
+    boxShadow: '0 2px 10px rgba(0,0,0,.05)',
+    whiteSpace: 'nowrap',
+    fontFamily: FONT,
+  };
+}
+
+export const Hero: React.FC<HeroProps> = ({ data, onOpenWaitlist, onScale, navSlot = NAV_SLOT, contained = false, navBottom = 0 }) => {
   const searchParams = useSearchParams();
   const videoKey = searchParams.get('video');
   const videoSrc = videoKey ? VIDEO_MAP[videoKey] : null;
+  const sectionRef = useRef<HTMLElement>(null);
+  const [scale, setScale] = useState(1);
+
+  useLayoutEffect(() => {
+    const el = sectionRef.current;
+    if (!el) return;
+    const fit = () => {
+      const next = Math.min(el.clientWidth / HERO_STAGE.width, el.clientHeight / HERO_STAGE.height);
+      const safe = next > 0 ? next : 1;
+      setScale(safe);
+      onScale?.(safe);
+    };
+    fit();
+    const observer = new ResizeObserver(fit);
+    observer.observe(el);
+    return () => observer.disconnect();
+  }, [onScale]);
+
+  const buttons = resolveHeroButtons(data);
+  const pills = data.textNodes?.length
+    ? data.textNodes
+    : [
+        { text: data.location },
+        { text: data.date },
+      ];
+
+  const renderButton = (btn: HeroButton, index: number) => {
+    const style = buttonStyle(index === 0);
+    const className = 'hover:brightness-95 transition-[filter]';
+
+    if (isWaitlistButton(btn)) {
+      return (
+        <button key={`${btn.label}-${index}`} type="button" onClick={onOpenWaitlist} className={className} style={style}>
+          {btn.label}
+        </button>
+      );
+    }
+
+    const href = btn.link?.trim() || '/contact';
+    if (href.startsWith('http')) {
+      return (
+        <a key={`${btn.label}-${index}`} href={href} target="_blank" rel="noopener noreferrer" className={className} style={style}>
+          {btn.label}
+        </a>
+      );
+    }
+
+    return (
+      <Link key={`${btn.label}-${index}`} href={href} className={className} style={style}>
+        {btn.label}
+      </Link>
+    );
+  };
+
+  const renderPill = (node: { text: string; link?: string }, index: number) => {
+    if (!node.link) {
+      return (
+        <span key={`${node.text}-${index}`} style={pillStyle}>
+          {node.text}
+        </span>
+      );
+    }
+    if (node.link.startsWith('http')) {
+      return (
+        <a key={`${node.text}-${index}`} href={node.link} target="_blank" rel="noopener noreferrer" style={pillStyle}>
+          {node.text}
+        </a>
+      );
+    }
+    return (
+      <Link key={`${node.text}-${index}`} href={node.link} style={pillStyle}>
+        {node.text}
+      </Link>
+    );
+  };
+
+  const copy = (
+    <>
+      <div
+        style={{
+          display: 'flex',
+          alignItems: 'center',
+          gap: 8,
+          background: '#fff',
+          padding: '7px 14px',
+          borderRadius: 999,
+          fontSize: 11,
+          fontWeight: 600,
+          letterSpacing: '0.18em',
+          color: '#0B1222',
+          boxShadow: '0 2px 10px rgba(0,0,0,.05)',
+          fontFamily: FONT,
+          textTransform: 'uppercase',
+        }}
+      >
+        <i style={{ width: 7, height: 7, borderRadius: '50%', background: '#08B5C6', display: 'block' }} />
+        {data.badge}
+      </div>
+      <h1
+        style={{
+          margin: 0,
+          fontSize: 96,
+          lineHeight: 1,
+          fontWeight: 800,
+          letterSpacing: '-0.05em',
+          color: '#0B1222',
+          fontFamily: FONT,
+        }}
+        dangerouslySetInnerHTML={{ __html: data.headline }}
+      />
+      <p
+        style={{
+          margin: 0,
+          maxWidth: 720,
+          fontSize: 20,
+          lineHeight: 1.6,
+          fontWeight: 600,
+          color: '#1366E8',
+          textWrap: 'balance',
+          fontFamily: FONT,
+        }}
+      >
+        {data.subheadline}
+      </p>
+      <div style={{ display: 'flex', gap: 12 }}>{pills.map(renderPill)}</div>
+      <div style={{ display: 'flex', gap: 12 }}>{buttons.map(renderButton)}</div>
+    </>
+  );
 
   return (
-    <section className={`relative w-full min-h-[85vh] flex flex-col items-center justify-center overflow-hidden pt-32 pb-8 md:pt-40 md:pb-6 ${videoSrc ? 'bg-[#050A1F]' : 'bg-[#F0F0EF]'}`}>
-
-      {/* --- HERO BACKGROUND START --- */}
-      <div className="absolute inset-0 z-0 w-full h-full">
+    <section
+      ref={sectionRef}
+      className={`relative w-full overflow-hidden bg-[#F0F0EE] ${contained ? 'h-full max-lg:min-h-[100vh] lg:min-h-0' : 'min-h-[100vh] lg:h-[100vh]'}`}
+    >
+      <div className="absolute inset-0 z-0">
         {videoSrc ? (
           <>
-            <video
-              autoPlay
-              muted
-              loop
-              playsInline
-              className="absolute inset-0 w-full h-full object-cover"
-            >
+            <video autoPlay muted loop playsInline className="absolute inset-0 h-full w-full object-cover">
               <source src={videoSrc} type="video/mp4" />
             </video>
             <div className="absolute inset-0 bg-[#050A1F]/60" />
           </>
         ) : (
-          <div className="absolute inset-0 bg-[#F0F0EF]" />
+          <HeroWaveField scale={scale} />
         )}
+      </div>
 
-        {/* Dark Grid Pattern */}
-        {!videoSrc && (
-          <div className="absolute inset-0 z-10 opacity-[0.03]"
+      <div
+        className="absolute left-1/2 top-0 z-10 hidden lg:block"
+        style={{
+          width: HERO_STAGE.width,
+          height: HERO_STAGE.height,
+          transformOrigin: '50% 0',
+          transform: `translateX(-50%) scale(${scale})`,
+        }}
+      >
+        <div
+          style={{
+            height: '100%',
+            display: 'flex',
+            flexDirection: 'column',
+            alignItems: 'center',
+            padding: '28px 40px 0',
+            lineHeight: 'normal',
+          }}
+        >
+          <div style={{ height: navSlot, width: '100%' }} />
+          <div
             style={{
-              backgroundImage: `linear-gradient(to right, #000 1px, transparent 1px), linear-gradient(to bottom, #000 1px, transparent 1px)`,
-              backgroundSize: '60px 60px',
-              maskImage: 'radial-gradient(circle at center, black 30%, transparent 80%)'
+              display: 'flex',
+              flexDirection: 'column',
+              alignItems: 'center',
+              gap: 24,
+              textAlign: 'center',
+              paddingTop: Math.max(72, navBottom > 0 && scale > 0 ? (navBottom + 88) / scale - 28 - navSlot : 72),
+              width: '100%',
             }}
-          />
-        )}
-        {/* Animated cell glow — hidden on mobile to prevent compositing issues */}
-        <div className="absolute inset-0 z-10 hidden md:block">
-          <AnimatedGrid variant={videoSrc ? 'dark' : 'light'} density={60} mouseTrail />
+          >
+            {copy}
+          </div>
         </div>
       </div>
-      {/* --- HERO BACKGROUND END --- */}
 
-      <div className="relative z-20 flex flex-col items-center text-center w-full max-w-[1440px] space-y-6 md:space-y-10 px-4 md:px-6" style={{ isolation: 'isolate' }}>
-
-        {/* Badge */}
-        <div className={`inline-flex items-center gap-2.5 px-4 py-2 md:px-5 md:py-2.5 rounded-full border backdrop-blur-md animate-fade-in-up ${videoSrc ? 'border-white/80 bg-white/90' : 'border-blue-200/50 bg-white/60'}`} style={{ boxShadow: '0 0 8px 1px rgba(14,111,235,0.10), 0 0 16px 2px rgba(14,111,235,0.05)' }}>
-          <span className="relative flex h-2.5 w-2.5 md:h-3 md:w-3">
-            <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-brand-cyan opacity-75"></span>
-            <span className="relative inline-flex rounded-full h-2.5 w-2.5 md:h-3 md:w-3 bg-brand-cyan"></span>
-          </span>
-          <span className="text-xs md:text-sm uppercase tracking-[0.2em] font-semibold text-slate-800">{data.badge}</span>
-        </div>
-
-        {/* Headline */}
-        <div className="space-y-4 md:space-y-6 animate-fade-in-up [animation-delay:200ms] opacity-0 fill-mode-forwards w-full">
+      <div
+        className="relative z-10 flex min-h-[100vh] flex-col items-center px-5 pb-16 text-center lg:hidden"
+        style={{ paddingTop: 'calc(var(--site-nav-bottom, 8rem) + 2.5rem)' }}
+      >
+        <div className="flex w-full max-w-[720px] flex-col items-center gap-6">
+          <div
+            className="inline-flex items-center gap-2 rounded-full bg-white px-3.5 py-1.5 text-[11px] font-semibold uppercase tracking-[0.18em] text-[#0B1222] shadow-[0_2px_10px_rgba(0,0,0,0.05)]"
+            style={{ fontFamily: FONT }}
+          >
+            <i className="block h-[7px] w-[7px] rounded-full bg-[#08B5C6]" />
+            {data.badge}
+          </div>
           <h1
-            className={`text-5xl sm:text-6xl md:text-8xl lg:text-9xl font-display font-bold tracking-tighter leading-[1.1] md:leading-[1.0] break-words ${videoSrc ? 'text-white' : 'text-slate-900'}`}
+            className="text-[clamp(40px,12vw,72px)] font-extrabold leading-none tracking-[-0.05em] text-[#0B1222]"
+            style={{ fontFamily: FONT }}
             dangerouslySetInnerHTML={{ __html: data.headline }}
           />
-
-          <p className={`text-xl md:text-3xl font-sans font-bold max-w-5xl mx-auto leading-relaxed tracking-wide px-2 ${videoSrc ? 'text-white drop-shadow-[0_0_20px_rgba(0,176,194,0.5)]' : 'text-[#0E6FEB]'}`}>
+          <p className="text-balance text-base font-semibold leading-relaxed text-[#1366E8]" style={{ fontFamily: FONT }}>
             {data.subheadline}
           </p>
+          <div className="flex flex-wrap justify-center gap-3">
+            {pills.map((node, index) => (
+              <span key={`${node.text}-${index}`} className="rounded-full bg-white px-5 py-3 text-sm text-[#0B1222] shadow-[0_2px_10px_rgba(0,0,0,0.05)]">
+                {node.text}
+              </span>
+            ))}
+          </div>
+          <div className="flex w-full flex-col items-center gap-3">
+            {buttons.map((btn, index) => (
+              <span key={`${btn.label}-m-${index}`} className="w-full max-w-xs [&_a]:flex [&_a]:w-full [&_a]:justify-center [&_button]:w-full [&_button]:justify-center">
+                {renderButton(btn, index)}
+              </span>
+            ))}
+          </div>
         </div>
-
-        {/* Meta Data Grid */}
-        <div className="flex flex-col sm:flex-row flex-wrap justify-center gap-3 md:gap-4 py-2 md:py-4 animate-fade-in-up [animation-delay:400ms] opacity-0 fill-mode-forwards font-sans w-full sm:w-auto">
-          {(data.textNodes ?? [
-            { icon: 'ri-map-pin-line', text: data.location },
-            { icon: 'ri-calendar-line', text: data.date },
-          ]).map((node, index) => {
-            const pillClass = `flex items-center justify-center gap-2.5 md:gap-3.5 px-5 py-2.5 md:px-8 md:py-4 rounded-full border backdrop-blur-sm hover:bg-white/80 transition-all duration-300 min-w-fit w-full sm:w-auto ${videoSrc ? 'border-white/80 bg-white/90 hover:bg-white' : 'border-blue-200/40 bg-white/60'} ${node.link ? 'cursor-pointer' : 'cursor-default'}`;
-            const pillStyle = { boxShadow: '0 0 8px 1px rgba(14,111,235,0.10), 0 0 16px 2px rgba(14,111,235,0.05)' };
-            const iconClass = `${cmsIconClass(node.icon, index === 0 ? 'ri-map-pin-line' : 'ri-calendar-line')} ${index % 2 === 0 ? 'text-brand-blue' : 'text-brand-cyan'} text-xl md:text-2xl`;
-            const label = (
-              <>
-                <i className={iconClass} />
-                <span className="text-base md:text-lg font-medium whitespace-nowrap text-slate-800">{node.text}</span>
-              </>
-            );
-            if (node.link) {
-              const isExternal = node.link.startsWith('http');
-              return isExternal ? (
-                <a key={`${node.text}-${index}`} href={node.link} target="_blank" rel="noopener noreferrer" className={pillClass} style={pillStyle}>
-                  {label}
-                </a>
-              ) : (
-                <Link key={`${node.text}-${index}`} href={node.link} className={pillClass} style={pillStyle}>
-                  {label}
-                </Link>
-              );
-            }
-            return (
-              <div key={`${node.text}-${index}`} className={pillClass} style={pillStyle}>
-                {label}
-              </div>
-            );
-          })}
-        </div>
-
-        {/* CTA Buttons */}
-        {(() => {
-          const btnClass = videoSrc
-            ? "px-8 py-4 md:px-10 md:py-5 rounded-full text-base md:text-lg font-bold text-slate-900 hover:text-brand-cyan hover:bg-white/80 transition-all duration-300 border border-white/80 bg-white/90 backdrop-blur-sm flex items-center justify-center gap-3 w-full sm:w-auto whitespace-nowrap"
-            : "px-8 py-4 md:px-10 md:py-5 rounded-full text-base md:text-lg font-bold text-slate-800 hover:text-brand-blue transition-all duration-300 border border-blue-200/40 hover:border-brand-blue/40 bg-white/50 hover:bg-white backdrop-blur-sm flex items-center justify-center gap-3 w-full sm:w-auto whitespace-nowrap";
-          const glowDefault = videoSrc
-            ? '0 0 15px 3px rgba(0,176,194,0.15), 0 0 30px 6px rgba(0,176,194,0.08)'
-            : '0 0 15px 3px rgba(14,111,235,0.10), 0 0 30px 6px rgba(14,111,235,0.05)';
-          const glowHover = videoSrc
-            ? '0 0 25px 6px rgba(0,176,194,0.25), 0 0 50px 12px rgba(0,176,194,0.12)'
-            : '0 0 25px 6px rgba(14,111,235,0.20), 0 0 50px 12px rgba(14,111,235,0.10)';
-          return (
-        <div className="flex flex-col sm:flex-row gap-4 md:gap-4 pt-4 md:pt-6 pb-10 md:pb-16 items-center w-full sm:w-auto animate-fade-in-up [animation-delay:600ms] opacity-0 fill-mode-forwards flex-wrap justify-center">
-          {resolveHeroButtons(data).map((btn, index) => {
-            const iconClass = `${heroButtonIcon(btn, index)} text-xl md:text-2xl`;
-
-            if (isWaitlistButton(btn)) {
-              return (
-                <button
-                  key={`${btn.label}-${index}`}
-                  type="button"
-                  onClick={onOpenWaitlist}
-                  className={btnClass}
-                  style={{ boxShadow: glowDefault }}
-                  onMouseEnter={(e) => { e.currentTarget.style.boxShadow = glowHover; }}
-                  onMouseLeave={(e) => { e.currentTarget.style.boxShadow = glowDefault; }}
-                >
-                  {btn.label}
-                  <i className={iconClass}></i>
-                </button>
-              );
-            }
-
-            const href = btn.link?.trim() || '/contact';
-            const isExternal = href.startsWith('http');
-
-            if (isExternal) {
-              return (
-                <a
-                  key={`${btn.label}-${index}`}
-                  href={href}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className={btnClass}
-                  style={{ boxShadow: glowDefault }}
-                  onMouseEnter={(e) => { e.currentTarget.style.boxShadow = glowHover; }}
-                  onMouseLeave={(e) => { e.currentTarget.style.boxShadow = glowDefault; }}
-                >
-                  {btn.label}
-                  <i className={iconClass}></i>
-                </a>
-              );
-            }
-
-            return (
-              <Link
-                key={`${btn.label}-${index}`}
-                href={href}
-                className={btnClass}
-                style={{ boxShadow: glowDefault }}
-                onMouseEnter={(e) => { e.currentTarget.style.boxShadow = glowHover; }}
-                onMouseLeave={(e) => { e.currentTarget.style.boxShadow = glowDefault; }}
-              >
-                {btn.label}
-                <i className={iconClass}></i>
-              </Link>
-            );
-          })}
-        </div>
-          );
-        })()}
       </div>
     </section>
   );
