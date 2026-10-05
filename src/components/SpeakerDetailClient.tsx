@@ -12,6 +12,7 @@ import { resolvePersonPhotoSrc, withPhotoCacheBuster } from '@/lib/personPhoto';
 import type { Member, Company, PersonSocials, NavigationAPIData } from '@/lib/api-types';
 import type { NavigationConfig } from '@/config/types';
 import { getCompanyPublicPath } from '@/lib/company-public-path';
+import { startPageLoader } from '@/components/NavigationLoader';
 
 interface SocialLinkData {
   key: string;
@@ -109,6 +110,7 @@ export const SpeakerDetailClient: React.FC<SpeakerDetailClientProps> = ({
         const ref = new URL(document.referrer);
         if (ref.origin === window.location.origin) {
           e.preventDefault();
+          startPageLoader();
           router.back();
           return;
         }

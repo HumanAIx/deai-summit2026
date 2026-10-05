@@ -8,6 +8,7 @@ import { DetailPageLayout } from '@/components/DetailPageLayout';
 import Markdown from '@/components/Markdown';
 import type { BlogPost, BlogContentBlock, BlogPublisher, NavigationAPIData } from '@/lib/api-types';
 import type { NavigationConfig } from '@/config/types';
+import { startPageLoader } from '@/components/NavigationLoader';
 
 interface SocialLinkData {
   key: string;
@@ -181,6 +182,7 @@ export function BlogDetailClient({
         const ref = new URL(document.referrer);
         if (ref.origin === window.location.origin) {
           e.preventDefault();
+          startPageLoader();
           router.back();
           return;
         }

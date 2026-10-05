@@ -38,18 +38,18 @@ export const AboutVideo: React.FC<AboutVideoProps> = ({ data }) => {
                 </div>
 
                 {/* Text Content */}
-                <div className="mt-12 md:mt-24 max-w-5xl mx-auto text-center space-y-6 md:space-y-8">
+                <div className="mt-12 md:mt-24 max-w-6xl mx-auto text-center space-y-6 md:space-y-8">
                     <h3
                         className="text-3xl md:text-4xl lg:text-5xl text-white font-bold leading-[1.2] tracking-tight px-2"
                         dangerouslySetInnerHTML={{ __html: data.mainStatement }}
                     />
-                    <p className="text-lg md:text-xl lg:text-2xl text-white/80 font-medium leading-relaxed max-w-4xl mx-auto px-4">
+                    <p className="text-lg md:text-xl lg:text-2xl text-white/80 font-medium leading-relaxed max-w-6xl mx-auto px-4">
                         {data.description}
                     </p>
 
                     {/* Bullet Points */}
                     {data.bulletPoints && (
-                        <div className="mt-12 grid gap-4 max-w-3xl mx-auto text-left px-4">
+                        <div className="mt-12 grid gap-4 max-w-6xl mx-auto text-left px-4">
                             {data.bulletPoints.map((point, index) => (
                                 <div key={index} className="flex items-start gap-4 p-5 rounded-lg bg-white/5 border border-white/10 hover:bg-white/10 transition-colors duration-300">
                                     <div className="flex-shrink-0 mt-1">

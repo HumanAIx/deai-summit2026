@@ -12,6 +12,7 @@ import type { CompanyPageSpeaker } from '@/lib/prefetch';
 import type { NavigationConfig } from '@/config/types';
 import { SpeakerCard } from '@/components/SpeakersListClient';
 import { getCompanyPublicPath } from '@/lib/company-public-path';
+import { startPageLoader } from '@/components/NavigationLoader';
 
 interface SocialLinkData {
   key: string;
@@ -175,6 +176,7 @@ export const CompanyDetailClient: React.FC<CompanyDetailClientProps> = ({
         const ref = new URL(document.referrer);
         if (ref.origin === window.location.origin) {
           e.preventDefault();
+          startPageLoader();
           router.back();
           return;
         }

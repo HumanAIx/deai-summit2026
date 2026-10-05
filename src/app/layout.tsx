@@ -3,6 +3,7 @@ import { Inter, Playfair_Display } from "next/font/google";
 import "./globals.css";
 import "remixicon/fonts/remixicon.css";
 import { ThirdPartyScripts } from "@/components/ThirdPartyScripts";
+import { NavigationLoader } from "@/components/NavigationLoader";
 import { prefetchPublicAnalyticsTags } from "@/lib/prefetch";
 import { resolveRedditBootstrapId } from "@/lib/analytics-tags";
 import { SEO_DEFAULTS, buildSocialMetadata } from "@/lib/seo-defaults";
@@ -81,6 +82,7 @@ export default async function RootLayout({
         ) : null}
 
         {children}
+        <NavigationLoader />
 
         <ThirdPartyScripts
           gtmId={gtmId || undefined}
