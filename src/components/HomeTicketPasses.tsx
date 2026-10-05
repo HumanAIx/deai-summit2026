@@ -38,8 +38,8 @@ function TicketBanner({ pass }: { pass: HomeTicketPass }) {
           </span>
         </div>
         <div className="text-right font-mono text-[11px] uppercase leading-relaxed tracking-[0.16em] text-white/80 sm:text-xs">
-          <div>25–26 Nov 2026</div>
-          <div>Valletta, Malta</div>
+          {pass.dateLine ? <div>{pass.dateLine}</div> : null}
+          {pass.placeLine ? <div>{pass.placeLine}</div> : null}
         </div>
       </div>
 
@@ -100,7 +100,7 @@ function TicketBanner({ pass }: { pass: HomeTicketPass }) {
       </div>
 
       <div className="mt-8 flex flex-wrap items-center justify-between gap-3 font-mono text-[11px] uppercase tracking-[0.18em] text-[#2CC7D9] sm:text-xs">
-        <span>Price increase from 15 October</span>
+        {pass.notice ? <span>{pass.notice}</span> : <span />}
         <span>deaisummit.org</span>
       </div>
     </article>
