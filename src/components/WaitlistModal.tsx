@@ -52,7 +52,7 @@ export const WaitlistModal: React.FC<WaitlistModalProps> = ({ isOpen, onClose })
                         <div className="w-14 h-14 rounded-full bg-brand-blue/10 flex items-center justify-center mx-auto">
                             <i className="ri-check-line text-2xl text-brand-blue"></i>
                         </div>
-                        <h2 className="text-2xl font-bold text-slate-900">You&apos;re on the list!</h2>
+                        <h2 className="text-2xl font-display font-bold text-slate-900">You&apos;re on the list!</h2>
                         <p className="text-slate-500 text-sm">We&apos;ll be in touch with updates about DeAI Summit 2026.</p>
                         <button
                             onClick={onClose}
@@ -64,7 +64,7 @@ export const WaitlistModal: React.FC<WaitlistModalProps> = ({ isOpen, onClose })
                 ) : (
                     <>
                         <div className="mb-6">
-                            <h2 className="text-2xl font-bold text-slate-900 mb-1">Join the Waitlist</h2>
+                            <h2 className="text-2xl font-display font-bold text-slate-900 mb-1">Join the Waitlist</h2>
                             <p className="text-slate-500 text-sm">Be first to know when tickets open for DeAI Summit 2026.</p>
                         </div>
 

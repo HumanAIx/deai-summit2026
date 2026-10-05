@@ -14,7 +14,8 @@ import { siteConfig } from '@/config/site';
 import { generateEventSchema, jsonLdSafe } from '@/lib/structured-data';
 import { extractHomeSections, buildHomeRenderPlan } from '@/lib/home-cms';
 import { parseCmsBlocks } from '@/lib/cmsBlocks';
-import { extractHomeTicketPasses, type HomeTicketPass } from '@/lib/home-ticket-passes';
+import { homeTicketPassesFromTickets, isHomepageTicketBlock, type HomeTicketPass } from '@/lib/home-ticket-passes';
+import { parseTicketsPage } from '@/lib/tickets-page';
 import { generatePageMetadata } from '@/lib/seo-defaults';
 import type { CMSBlock } from '@/lib/api-types';
 import type { OrganizerConfig } from '@/config/types';
@@ -61,10 +62,11 @@ export default async function Home() {
   try {
     const cmsPage = await prefetchCMSPage('home');
     if (cmsPage) {
-      const allBlocks = parseCmsBlocks(cmsPage, { includeUnpublished: true });
-      ticketPasses = extractHomeTicketPasses(allBlocks);
-      const ticketIds = new Set(ticketPasses.map((pass) => pass.id));
-      cmsBlocks = parseCmsBlocks(cmsPage).filter((block) => !ticketIds.has(block.id));
+      const ticketsPage = await prefetchCMSPage('tickets');
+      ticketPasses = ticketsPage
+        ? homeTicketPassesFromTickets(parseTicketsPage(parseCmsBlocks(ticketsPage)))
+        : [];
+      cmsBlocks = parseCmsBlocks(cmsPage).filter((block) => !isHomepageTicketBlock(block));
       cmsSections = extractHomeSections(cmsBlocks);
     }
   } catch (error) {

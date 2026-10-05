@@ -16,6 +16,7 @@
 .legal-prose h3,
 .legal-prose h4 {
   color: #0f172a;
+  font-family: var(--font-display);
   font-weight: 700;
   line-height: 1.25;
 }
@@ -66,7 +67,7 @@
 
 @theme {
   --font-sans: var(--font-inter), sans-serif;
-  --font-display: 'Helvetica', 'Arial', sans-serif;
+  --font-display: "Inter", "Inter Fallback", sans-serif;
   --font-serif: var(--font-playfair), serif;
 
   --color-brand-blue: #0E6FEB;
@@ -472,7 +473,7 @@
 
   .schedule-print-header h1 {
     margin: 0;
-    font-family: var(--font-display), "Helvetica", "Arial", sans-serif;
+    font-family: "Inter", "Inter Fallback", sans-serif;
     font-size: 22pt;
     font-weight: 700;
     letter-spacing: -0.012em;
@@ -520,7 +521,7 @@
     padding: 8pt 12pt;
     background: #050a1f;
     color: #ffffff;
-    font-family: var(--font-display), "Helvetica", "Arial", sans-serif;
+    font-family: "Inter", "Inter Fallback", sans-serif;
     font-size: 13pt;
     font-weight: 600;
     letter-spacing: -0.005em;
@@ -579,7 +580,7 @@
 
   .schedule-print-title {
     margin: 0 0 3pt;
-    font-family: var(--font-display), "Helvetica", "Arial", sans-serif;
+    font-family: "Inter", "Inter Fallback", sans-serif;
     font-size: 12pt;
     font-weight: 600;
     color: #050a1f;
@@ -641,7 +642,7 @@
   .schedule-print-description h2,
   .schedule-print-description h3,
   .schedule-print-description h4 {
-    font-family: var(--font-display), "Helvetica", "Arial", sans-serif;
+    font-family: "Inter", "Inter Fallback", sans-serif;
     font-size: 10pt;
     font-weight: 600;
     color: #050a1f;

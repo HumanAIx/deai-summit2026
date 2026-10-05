@@ -28,7 +28,7 @@ export const UnderConstruction: React.FC<UnderConstructionProps> = ({ onOpenCont
                     <div className="w-16 h-16 relative mb-4">
                         <img src="/icontransparent.png" alt="DeAI Summit" className="w-full h-full object-contain drop-shadow-[0_0_15px_rgba(0,176,194,0.5)]" />
                     </div>
-                    <h1 className="text-4xl md:text-6xl font-bold tracking-tight text-white mb-2">
+                    <h1 className="text-4xl md:text-6xl font-display font-bold tracking-tight text-white mb-2">
                         DeAI Summit
                     </h1>
                     <p className="text-sm md:text-base uppercase tracking-[0.3em] text-brand-cyan/80">
@@ -38,7 +38,7 @@ export const UnderConstruction: React.FC<UnderConstructionProps> = ({ onOpenCont
 
                 {/* Main Message */}
                 <div className="space-y-4">
-                    <h2 className="text-3xl md:text-5xl font-light text-white/90">
+                    <h2 className="text-3xl md:text-5xl font-display font-light text-white/90">
                         <span className="font-semibold text-brand-cyan">Under Construction</span>
                     </h2>
 
