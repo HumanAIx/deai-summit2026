@@ -10,8 +10,20 @@ interface StatsProps {
   data: StatsConfig;
 }
 
-// Accent colors for each stat card
-const statAccents = ['#00B0C2', '#0E6FEB', '#050A1F', '#00B0C2', '#0E6FEB'];
+// Accent ticks under each stat number, matching the section design.
+const statAccents = ['#00B0C2', '#00B0C2', '#050A1F', '#00B0C2', '#00B0C2'];
+
+function parseAudiences(body: string): { title: string; description: string }[] {
+  return body
+    .split(/\n{2,}/)
+    .map((part) => part.trim())
+    .filter(Boolean)
+    .map((part) => {
+      const [title, ...rest] = part.split('\n');
+      return { title: title.trim(), description: rest.join(' ').trim() };
+    })
+    .filter((item) => item.title);
+}
 
 function OrganizerTile({ organizer }: { organizer: OrganizerConfig }) {
   const role = organizer.role || 'Host';
@@ -87,113 +99,130 @@ function OrganizerTile({ organizer }: { organizer: OrganizerConfig }) {
 export const Stats: React.FC<StatsProps> = ({ data }) => {
   const organizers = data.organizers ?? [];
   const intro = data.intro?.trim();
-  const body = data.body?.trim();
-  const sectionCopy = Boolean(intro || body);
-  const paragraphs = body ? body.split(/\n{2,}/).map((part) => part.trim()).filter(Boolean) : [];
+  const audiences = data.audiences?.length
+    ? data.audiences
+    : data.body
+      ? parseAudiences(data.body)
+      : [];
+  const sectionCopy = audiences.length > 0;
 
   return (
-    <section className="relative w-full py-20 md:py-32 bg-white z-20 overflow-hidden">
-      <div className="max-w-[1440px] mx-auto px-6">
+    <section className="relative w-full py-14 sm:py-16 md:py-24 bg-white z-20 overflow-hidden">
+      <div className="w-full max-w-[1640px] mx-auto px-5 sm:px-6 md:px-8">
 
-        {/* Featured Quote + Hosts */}
-        <div className="mb-24 pb-12 border-b border-gray-100">
-          <h2 className="text-4xl md:text-5xl lg:text-6xl font-display font-bold text-[#050A1F] tracking-tight leading-[1.1] max-w-4xl">
-            {sectionCopy ? (
-              data.quote.text
-            ) : (
-              <>
-                <span className="text-brand-blue">&ldquo;</span>
+        {sectionCopy ? (
+          <div className="grid lg:grid-cols-2 gap-10 lg:gap-14 xl:gap-20 items-start">
+            <div>
+              <p className="text-[11px] font-semibold uppercase tracking-[0.22em] text-brand-blue mb-4 sm:mb-5">
+                Who it&apos;s for
+              </p>
+              <h2 className="text-[2rem] leading-[1.08] sm:text-4xl md:text-5xl xl:text-[3.35rem] font-display font-bold text-[#050A1F] tracking-tight max-w-xl">
                 {data.quote.text}
-                <span className="text-brand-blue">&rdquo;</span>
-              </>
-            )}
-          </h2>
-          {intro ? (
-            <p className="mt-6 max-w-3xl text-lg md:text-xl text-gray-600 leading-relaxed">
-              {intro}
-            </p>
-          ) : null}
-          {paragraphs.length > 0 ? (
-            <div className="mt-8 max-w-3xl space-y-5">
-              {paragraphs.map((paragraph) => (
-                <p key={paragraph} className="text-base md:text-lg text-gray-600 leading-relaxed whitespace-pre-line">
-                  {paragraph}
+              </h2>
+              {intro ? (
+                <p className="mt-5 sm:mt-6 max-w-md text-base md:text-[17px] text-[#5c6570] leading-relaxed">
+                  {intro}
                 </p>
-              ))}
+              ) : null}
             </div>
-          ) : null}
 
-          {organizers.length > 0 && (
-            <div className="mt-12">
-              <div className="flex items-center gap-2 mb-5">
-                <span className="h-[1px] w-6 bg-brand-cyan" />
-                <span className="text-[10px] font-mono uppercase tracking-[0.25em] text-brand-cyan">
-                  Hosted by
-                </span>
-              </div>
-
-              <div
-                className={`grid gap-6 w-full ${
-                  organizers.length > 1
-                    ? 'grid-cols-1 md:grid-cols-2'
-                    : 'grid-cols-1 max-w-xl'
-                }`}
-              >
-                {organizers.map((organizer) => (
-                  <OrganizerTile
-                    key={organizer.slug || organizer.name}
-                    organizer={organizer}
-                  />
+            <div className="border-t border-[#E4E4E4]">
+              <div className="grid md:grid-cols-2">
+                {audiences.map((item, i) => (
+                  <div
+                    key={item.title}
+                    className={[
+                      'py-6 md:py-7',
+                      i % 2 === 0 ? 'md:pr-8 xl:pr-10' : 'md:pl-6 xl:pl-8',
+                      i > 0 ? 'border-t border-[#E4E4E4] md:border-t-0' : '',
+                      i >= 2 ? 'md:border-t md:border-[#E4E4E4]' : '',
+                    ].filter(Boolean).join(' ')}
+                  >
+                    <span className="block w-8 h-[3px] rounded-full bg-brand-cyan mb-4" />
+                    <h3 className="font-display font-bold text-[#050A1F] text-lg leading-snug">
+                      {item.title}
+                    </h3>
+                    {item.description ? (
+                      <p className="mt-2 text-[15px] text-[#5c6570] leading-relaxed">
+                        {item.description}
+                      </p>
+                    ) : null}
+                  </div>
                 ))}
               </div>
             </div>
-          )}
-
-          <style jsx>{`
-            @keyframes host-dance {
-              0%   { transform: rotate(-8deg) translateY(0px) scale(1); }
-              25%  { transform: rotate(-3deg) translateY(-6px) scale(1.02); }
-              50%  { transform: rotate(-10deg) translateY(2px) scale(1); }
-              75%  { transform: rotate(-5deg) translateY(-4px) scale(1.03); }
-              100% { transform: rotate(-8deg) translateY(0px) scale(1); }
-            }
-            :global(.host-dance) {
-              animation: host-dance 6s ease-in-out infinite;
-              transform-origin: center;
-            }
-          `}</style>
+          </div>
+        ) : (
+        <div className="mb-24 pb-12 border-b border-gray-100">
+          <h2 className="text-4xl md:text-5xl lg:text-6xl font-display font-bold text-[#050A1F] tracking-tight leading-[1.1] max-w-4xl">
+            <span className="text-brand-blue">&ldquo;</span>
+            {data.quote.text}
+            <span className="text-brand-blue">&rdquo;</span>
+          </h2>
         </div>
+        )}
 
-        {/* Stats Grid */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+        {organizers.length > 0 && (
+          <div className="mt-12">
+            <div className="flex items-center gap-2 mb-5">
+              <span className="h-[1px] w-6 bg-brand-cyan" />
+              <span className="text-[10px] font-mono uppercase tracking-[0.25em] text-brand-cyan">
+                Hosted by
+              </span>
+            </div>
+
+            <div
+              className={`grid gap-6 w-full ${
+                organizers.length > 1
+                  ? 'grid-cols-1 md:grid-cols-2'
+                  : 'grid-cols-1 max-w-xl'
+              }`}
+            >
+              {organizers.map((organizer) => (
+                <OrganizerTile
+                  key={organizer.slug || organizer.name}
+                  organizer={organizer}
+                />
+              ))}
+            </div>
+
+            <style jsx>{`
+              @keyframes host-dance {
+                0%   { transform: rotate(-8deg) translateY(0px) scale(1); }
+                25%  { transform: rotate(-3deg) translateY(-6px) scale(1.02); }
+                50%  { transform: rotate(-10deg) translateY(2px) scale(1); }
+                75%  { transform: rotate(-5deg) translateY(-4px) scale(1.03); }
+                100% { transform: rotate(-8deg) translateY(0px) scale(1); }
+              }
+              :global(.host-dance) {
+                animation: host-dance 6s ease-in-out infinite;
+                transform-origin: center;
+              }
+            `}</style>
+          </div>
+        )}
+
+        <div className={`grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-5 gap-3 sm:gap-4 ${sectionCopy ? 'mt-12 md:mt-16 xl:mt-20' : ''}`}>
           {data.items.map((stat, idx) => {
             const accent = statAccents[idx % statAccents.length];
             return (
               <div
                 key={idx}
-                className="relative flex flex-col justify-between p-8 md:p-10 bg-[#F0F0EF] rounded-3xl min-h-[260px] hover:bg-[#E8E8E7] transition-all duration-300 group overflow-hidden"
+                className="bg-[#F3F3F2] rounded-[1.35rem] sm:rounded-[1.6rem] px-5 py-7 sm:px-6 sm:py-8"
               >
+                <AnimatedCounter
+                  value={stat.number.trim()}
+                  className="text-[2.75rem] sm:text-5xl xl:text-[3.15rem] font-display font-bold tracking-tight text-brand-blue leading-none"
+                  duration={2200}
+                  delay={idx * 150}
+                />
                 <div
-                  className="absolute -bottom-10 -right-10 w-40 h-40 rounded-full blur-3xl opacity-0 group-hover:opacity-15 transition-opacity duration-700"
+                  className="w-8 h-[3px] rounded-full mt-4 mb-4"
                   style={{ backgroundColor: accent }}
                 />
-
-                <p className="text-lg font-sans text-gray-600 leading-relaxed font-medium relative z-10">
+                <p className="text-sm text-[#5c6570] leading-relaxed">
                   {stat.label}
                 </p>
-
-                <div className="relative z-10 mt-8">
-                  <div
-                    className="w-8 h-[3px] rounded-full mb-4"
-                    style={{ backgroundColor: accent }}
-                  />
-                  <AnimatedCounter
-                    value={stat.number}
-                    className="text-6xl md:text-7xl font-display font-bold tracking-tighter text-[#0E6FEB] group-hover:scale-105 transition-transform duration-300 origin-left"
-                    duration={2200}
-                    delay={idx * 150}
-                  />
-                </div>
               </div>
             );
           })}

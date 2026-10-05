@@ -108,6 +108,8 @@ export interface StatsConfig {
     intro?: string;
     /** Body copy under the title (CMS description). */
     body?: string;
+    /** Audience groups shown beside the title. */
+    audiences?: { title: string; description: string }[];
 }
 
 export interface MarqueeItem {
