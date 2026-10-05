@@ -34,7 +34,7 @@ export function LegalPageShell({ title, children, navigationData, navigationAPID
     <main className="min-h-screen bg-white">
       <Navbar data={navigationData} socials={socials} onOpenContact={handleOpenContact} onShowToast={showToast} />
       <div className="pt-40 pb-32 px-6 md:px-16 max-w-4xl mx-auto text-slate-900">
-        <h1 className="text-4xl md:text-5xl font-bold mb-10 leading-tight">{title}</h1>
+        <h1 className="text-4xl md:text-5xl font-display font-bold mb-10 leading-tight">{title}</h1>
         <div className="legal-prose max-w-none">
           {children}
         </div>

@@ -40,7 +40,7 @@ export const AboutVideo: React.FC<AboutVideoProps> = ({ data }) => {
                 {/* Text Content */}
                 <div className="mt-12 md:mt-24 max-w-6xl mx-auto text-center space-y-6 md:space-y-8">
                     <h3
-                        className="text-3xl md:text-4xl lg:text-5xl text-white font-bold leading-[1.2] tracking-tight px-2"
+                        className="text-3xl md:text-4xl lg:text-5xl text-white font-display font-bold leading-[1.2] tracking-tight px-2"
                         dangerouslySetInnerHTML={{ __html: data.mainStatement }}
                     />
                     <p className="text-lg md:text-xl lg:text-2xl text-white/80 font-medium leading-relaxed max-w-6xl mx-auto px-4">

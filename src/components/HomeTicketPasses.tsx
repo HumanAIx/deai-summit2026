@@ -23,9 +23,7 @@ function TicketBanner({ pass }: { pass: HomeTicketPass }) {
         backgroundSize: '56px 56px',
       }}
     >
-      {pass.featured ? (
-        <div className="absolute inset-x-0 top-0 h-1 bg-gradient-to-r from-[#1E6BF0] to-[#08B5C6]" />
-      ) : null}
+      <div className="absolute inset-x-0 top-0 h-1 bg-gradient-to-r from-[#1E6BF0] to-[#08B5C6]" />
 
       <div className="flex items-start justify-between gap-6">
         <div className="flex items-center gap-2.5">
@@ -51,7 +49,7 @@ function TicketBanner({ pass }: { pass: HomeTicketPass }) {
               {pass.eyebrow}
             </div>
           ) : null}
-          <h2 className="m-0 text-[clamp(2.6rem,5vw,4.25rem)] font-medium leading-none tracking-[-0.03em]">
+          <h2 className="m-0 font-display text-[clamp(2.6rem,5vw,4.25rem)] font-medium leading-none tracking-[-0.03em]">
             {pass.featured && firstWord ? (
               <>
                 <span className="bg-gradient-to-r from-[#1E6BF0] to-[#08B5C6] bg-clip-text font-bold text-transparent">
@@ -63,14 +61,6 @@ function TicketBanner({ pass }: { pass: HomeTicketPass }) {
               pass.title
             )}
           </h2>
-          {pass.priceMajor ? (
-            <div className="mt-3 flex items-baseline font-semibold leading-none tracking-[-0.04em]">
-              <span className="text-[clamp(3.5rem,6vw,5.25rem)]">{pass.priceMajor}</span>
-              {pass.priceMinor ? (
-                <span className="text-[clamp(1.6rem,2.6vw,2.4rem)] text-[#9A9CA8]">{pass.priceMinor}</span>
-              ) : null}
-            </div>
-          ) : null}
           <Link
             href={pass.href}
             className="mt-7 inline-flex h-14 items-center gap-2 rounded-full bg-gradient-to-r from-[#1E6BF0] to-[#08B5C6] px-8 text-lg font-semibold text-white shadow-[0_12px_32px_-12px_rgba(8,181,198,0.7)] transition hover:brightness-110"

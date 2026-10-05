@@ -63,7 +63,7 @@ function PassCard({ pass }: { pass: TicketPass }) {
             {pass.eyebrow}
           </div>
         ) : null}
-        <h2 className="m-0 text-[clamp(2.5rem,4.4vw,3.5rem)] font-normal leading-none tracking-[-0.03em]">
+        <h2 className="m-0 font-display text-[clamp(2.5rem,4.4vw,3.5rem)] font-normal leading-none tracking-[-0.03em]">
           {pass.featured && firstWord ? (
             <>
               <span className="font-bold bg-gradient-to-r from-[#1E6BF0] to-[#08B5C6] bg-clip-text text-transparent">
@@ -136,7 +136,7 @@ export function TicketsPageView({ content }: { content: TicketsPageContent }) {
               <span className="h-0.5 w-11 bg-[#2CC7D9]" />
             </div>
           ) : null}
-          <h1 className="m-0 text-[clamp(2.75rem,6.5vw,5.25rem)] font-normal leading-none tracking-[-0.035em] text-balance">
+          <h1 className="m-0 font-display text-[clamp(2.75rem,6.5vw,5.25rem)] font-normal leading-none tracking-[-0.035em] text-balance">
             {content.titleLead}
             {content.accentWord ? (
               <>
@@ -170,7 +170,7 @@ export function TicketsPageView({ content }: { content: TicketsPageContent }) {
                   {content.notice}
                 </div>
               ) : null}
-              <h2 className="m-0 text-[clamp(1.75rem,3.2vw,2.5rem)] font-medium leading-[1.1] tracking-[-0.025em]">
+              <h2 className="m-0 font-display text-[clamp(1.75rem,3.2vw,2.5rem)] font-medium leading-[1.1] tracking-[-0.025em]">
                 {content.closingTitle}
               </h2>
             </div>
