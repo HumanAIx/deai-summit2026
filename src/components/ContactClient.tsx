@@ -222,11 +222,11 @@ export function ContactClient({ blocks, inquiryOptions, navigationData, navigati
             {hero.title || 'Get in touch'}
           </h1>
           {hero.subtitle && (
-            <p className="text-xl text-white/70 max-w-2xl mx-auto">{hero.subtitle}</p>
+            <p className="text-xl md:text-2xl font-semibold text-white/85 leading-relaxed max-w-6xl mx-auto">{hero.subtitle}</p>
           )}
           {hero.bodyHtml && (
             <div
-              className="prose prose-invert max-w-2xl mx-auto mt-6 text-white/80"
+              className="prose prose-invert max-w-6xl mx-auto mt-6 text-xl md:text-2xl font-semibold leading-relaxed text-white/85 prose-p:text-xl prose-p:md:text-2xl prose-p:font-semibold prose-p:text-white/85 prose-p:leading-relaxed"
               dangerouslySetInnerHTML={{ __html: hero.bodyHtml }}
             />
           )}

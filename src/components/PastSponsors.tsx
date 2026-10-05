@@ -26,7 +26,7 @@ function renderHeroTitle(cmsTitle?: string) {
 }
 
 const HOME_SPONSORS_PARTNERS_MAX = 15;
-const HOME_LOGO_HOLD = { width: 150, height: 55 };
+const HOME_LOGO_HOLD = { width: 200, height: 78 };
 
 /** Strip any HTML tags and `**markers**` from a CMS title for plain-text display. */
 function plainTitle(cmsTitle?: string): string {
@@ -50,13 +50,13 @@ export const PastSponsors: React.FC<PastSponsorsProps> = ({ data, onOpenContact,
         </div>
 
         <div className="relative z-10 max-w-[1440px] mx-auto text-center">
-          <p className="text-brand-cyan text-sm font-mono uppercase tracking-widest mb-4">
+          <p className="text-brand-cyan text-base md:text-lg font-mono font-bold uppercase tracking-[0.18em] mb-5">
             {heroBadge}
           </p>
           <h2 className="text-4xl md:text-5xl lg:text-6xl font-display font-bold tracking-tight leading-[1.1] mb-6">
             {renderHeroTitle(cmsTitle)}
           </h2>
-          <p className="text-white/50 text-lg max-w-2xl mx-auto mb-14">
+          <p className="text-white/85 text-xl md:text-2xl font-semibold max-w-3xl mx-auto mb-14 leading-relaxed">
             {heroSubtitle}
           </p>
 
@@ -101,9 +101,9 @@ export const PastSponsors: React.FC<PastSponsorsProps> = ({ data, onOpenContact,
                   {plainTitle(cmsTitle)}
                 </h3>
               </div>
-              <div className="flex flex-wrap justify-center gap-5">
+              <div className="flex flex-wrap justify-center gap-6">
                 {displayedItems.map((item, index) => (
-                  <div key={item.slug || index} className="w-[calc(50%-10px)] sm:w-[calc(33.333%-14px)] lg:w-[calc(25%-15px)] xl:w-[calc(20%-16px)]">
+                  <div key={item.slug || index} className="w-[calc(50%-12px)] sm:w-[calc(33.333%-16px)] lg:w-[calc(33.333%-16px)] xl:w-[calc(25%-18px)]">
                     <SponsorCard item={item} index={index} />
                   </div>
                 ))}
@@ -111,10 +111,10 @@ export const PastSponsors: React.FC<PastSponsorsProps> = ({ data, onOpenContact,
               <div className="flex justify-center mt-10">
                 <Link
                   href="/partners"
-                  className="group px-8 py-3 rounded-full border-2 border-[#050A1F] text-[#050A1F] hover:bg-[#050A1F] hover:text-white transition-all duration-300 text-sm font-bold flex items-center gap-2 no-underline"
+                  className="group px-10 py-4 rounded-full border-2 border-[#050A1F] text-[#050A1F] hover:bg-[#050A1F] hover:text-white transition-all duration-300 text-base md:text-lg font-bold flex items-center gap-2.5 no-underline"
                 >
                   View More
-                  <svg className="w-4 h-4 group-hover:translate-x-1 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <svg className="w-5 h-5 group-hover:translate-x-1 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
                   </svg>
                 </Link>
@@ -126,16 +126,16 @@ export const PastSponsors: React.FC<PastSponsorsProps> = ({ data, onOpenContact,
           <div className="flex flex-col sm:flex-row gap-5 items-center justify-center pt-8">
             <Link
               href="/contact?inquiry=Sponsorship+Opportunities"
-              className="group px-10 py-4 rounded-full bg-[#050A1F] text-white hover:bg-brand-cyan transition-all duration-300 text-sm font-bold shadow-lg hover:shadow-brand-cyan/20 hover:shadow-xl flex items-center gap-3"
+              className="group px-12 py-5 rounded-full bg-[#050A1F] text-white hover:bg-brand-cyan transition-all duration-300 text-base md:text-lg font-bold shadow-lg hover:shadow-brand-cyan/20 hover:shadow-xl flex items-center gap-3"
             >
-              <i className="ri-vip-diamond-line text-lg group-hover:scale-110 transition-transform"></i>
+              <i className="ri-vip-diamond-line text-xl md:text-2xl group-hover:scale-110 transition-transform"></i>
               Become a Sponsor
             </Link>
             <Link
               href="/contact?inquiry=Sponsorship+Opportunities"
-              className="group px-10 py-4 rounded-full border-2 border-[#050A1F] text-[#050A1F] hover:bg-[#050A1F] hover:text-white transition-all duration-300 text-sm font-bold flex items-center gap-3"
+              className="group px-12 py-5 rounded-full border-2 border-[#050A1F] text-[#050A1F] hover:bg-[#050A1F] hover:text-white transition-all duration-300 text-base md:text-lg font-bold flex items-center gap-3"
             >
-              <i className="ri-file-download-line text-lg group-hover:scale-110 transition-transform"></i>
+              <i className="ri-file-download-line text-xl md:text-2xl group-hover:scale-110 transition-transform"></i>
               Request Sponsorship Deck
             </Link>
           </div>
@@ -156,7 +156,7 @@ function SponsorCard({ item, index = 0 }: { item: PartnerItemData; index?: numbe
 
   const isDark = item.logoHasDarkBg;
   const card = (
-    <div className="group relative h-44 rounded-2xl overflow-hidden transition-all duration-500 hover:scale-[1.04]"
+    <div className="group relative h-56 rounded-2xl overflow-hidden transition-all duration-500 hover:scale-[1.04]"
       style={{
         background: isDark
           ? 'linear-gradient(135deg, #050A1F 0%, #0a1230 100%)'
@@ -188,7 +188,7 @@ function SponsorCard({ item, index = 0 }: { item: PartnerItemData; index?: numbe
 
         {/* Name + arrow */}
         <div className={`mt-auto pt-4 flex items-center justify-between w-full border-t ${isDark ? 'border-white/10' : 'border-gray-100'} group-hover:border-transparent transition-colors duration-500`}>
-          <p className={`text-[11px] font-semibold ${isDark ? 'text-white/60 group-hover:text-white' : 'text-gray-400 group-hover:text-gray-700'} transition-colors duration-500 truncate`}>
+          <p className={`text-sm md:text-base font-bold ${isDark ? 'text-white/85 group-hover:text-white' : 'text-gray-700 group-hover:text-gray-900'} transition-colors duration-500 truncate`}>
             {item.name}
           </p>
           <div

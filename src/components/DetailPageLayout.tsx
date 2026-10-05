@@ -21,9 +21,10 @@ interface DetailPageLayoutProps {
   navigationData?: NavigationConfig;
   navigationAPIData?: NavigationAPIData;
   socials?: SocialLinkData[];
+  navTone?: 'dark' | 'light';
 }
 
-export const DetailPageLayout: React.FC<DetailPageLayoutProps> = ({ children, navigationData, navigationAPIData, socials }) => {
+export const DetailPageLayout: React.FC<DetailPageLayoutProps> = ({ children, navigationData, navigationAPIData, socials, navTone = 'dark' }) => {
   const [isContactOpen, setIsContactOpen] = useState(false);
   const handleShowToast = () => {};
   const navData = navigationData || siteConfig.navigation;
@@ -35,6 +36,7 @@ export const DetailPageLayout: React.FC<DetailPageLayoutProps> = ({ children, na
         onOpenContact={() => setIsContactOpen(true)}
         data={navData}
         socials={socials}
+        tone={navTone}
       />
       <main className="w-full mx-auto pt-[140px]">
         {children}

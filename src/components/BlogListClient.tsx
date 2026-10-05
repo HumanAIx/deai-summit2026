@@ -274,7 +274,7 @@ export function BlogListClient({
           <div className="relative z-10 max-w-[1440px] mx-auto px-4 sm:px-6 py-12 sm:py-16 md:py-24">
             <div className="text-center mb-8 sm:mb-10 md:mb-14">
               {model.hero.subtitle && (
-                <p className="text-brand-cyan text-xs sm:text-sm font-mono uppercase tracking-[0.15em] sm:tracking-[0.2em] mb-3 sm:mb-4 px-2">
+                <p className="text-brand-cyan text-base md:text-lg font-mono font-bold uppercase tracking-[0.18em] mb-5 px-2">
                   {model.hero.subtitle}
                 </p>
               )}
@@ -285,7 +285,7 @@ export function BlogListClient({
                 />
               )}
               {model.hero.content && (
-                <div className="mt-5 sm:mt-6 max-w-2xl mx-auto px-2 text-left sm:text-center blog-hero-prose">
+                <div className="mt-5 sm:mt-6 max-w-6xl mx-auto px-2 text-center blog-hero-prose">
                   <Markdown content={model.hero.content} className="blog-hero-prose" />
                 </div>
               )}

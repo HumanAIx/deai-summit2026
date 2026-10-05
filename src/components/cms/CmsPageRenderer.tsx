@@ -53,8 +53,8 @@ function CtaButtons({ buttons }: { buttons?: CMSButton[] }) {
           href={buttonHref(btn)}
           className={
             i === 0
-              ? 'px-8 py-3 rounded-full border border-white bg-white text-[#050A1F] hover:bg-brand-cyan hover:text-white hover:border-brand-cyan transition-all duration-300 text-sm font-bold no-underline'
-              : 'px-8 py-3 rounded-full border border-white/30 text-white hover:bg-white/10 transition-all duration-300 text-sm font-bold no-underline'
+              ? 'px-10 py-4 rounded-full border border-white bg-white text-[#050A1F] hover:bg-brand-cyan hover:text-white hover:border-brand-cyan transition-all duration-300 text-base md:text-lg font-bold no-underline'
+              : 'px-10 py-4 rounded-full border border-white/40 text-white hover:bg-white/10 transition-all duration-300 text-base md:text-lg font-bold no-underline'
           }
         >
           {btn.label}
@@ -79,14 +79,14 @@ function HeroSection({ block }: { block: CMSBlock }) {
       </div>
       <div className="relative z-10 max-w-[1440px] mx-auto px-6 text-center">
         {badge ? (
-          <p className="text-brand-cyan text-sm font-mono uppercase tracking-widest mb-4">{badge}</p>
+          <p className="text-brand-cyan text-base md:text-lg font-mono font-bold uppercase tracking-[0.18em] mb-5">{badge}</p>
         ) : null}
         <h1
           className="text-4xl md:text-5xl lg:text-6xl font-display font-bold tracking-tight leading-[1.1] mb-6"
           dangerouslySetInnerHTML={{ __html: highlightTitle(title) }}
         />
         {subtitle ? (
-          <div className="text-white/60 text-lg max-w-2xl mx-auto mb-10 prose prose-invert prose-p:my-2">
+          <div className="text-white/85 text-xl md:text-2xl font-semibold max-w-3xl mx-auto mb-10 leading-relaxed prose prose-invert prose-p:my-2">
             <ReactMarkdown remarkPlugins={[remarkGfm]}>{subtitle}</ReactMarkdown>
           </div>
         ) : null}
@@ -154,17 +154,17 @@ function ContentSection({ block, dark = false }: { block: CMSBlock; dark?: boole
 
 function CtaSection({ block }: { block: CMSBlock }) {
   return (
-    <section className="bg-[#050A1F] py-16">
-      <div className="max-w-3xl mx-auto px-6 text-center">
+    <section className="bg-[#050A1F] py-20 md:py-24">
+      <div className="max-w-4xl mx-auto px-6 text-center">
         {block.title ? (
-          <h2 className="text-2xl md:text-3xl font-display font-bold text-white mb-4">{block.title}</h2>
+          <h2 className="text-3xl md:text-5xl font-display font-extrabold text-white mb-5">{block.title}</h2>
         ) : null}
         {(() => {
           const blurb =
             (typeof block.subtitle === 'string' && block.subtitle) ||
             (typeof block.description === 'string' && block.description) ||
             '';
-          return blurb ? <p className="text-white/60 mb-8">{blurb}</p> : null;
+          return blurb ? <p className="text-lg md:text-xl font-medium text-white/85 leading-relaxed mb-10">{blurb}</p> : null;
         })()}
         <CtaButtons buttons={block.buttons} />
       </div>
@@ -467,13 +467,13 @@ function DocumentsSection({
           <AnimatedGrid />
         </div>
         <div className="relative z-10 max-w-[1440px] mx-auto px-6 text-center">
-          <p className="text-brand-cyan text-sm font-mono uppercase tracking-widest mb-4">Resources</p>
+          <p className="text-brand-cyan text-base md:text-lg font-mono font-bold uppercase tracking-[0.18em] mb-5">Resources</p>
           <h1
             className="text-4xl md:text-5xl lg:text-6xl font-display font-bold tracking-tight leading-[1.1] mb-6"
             dangerouslySetInnerHTML={{ __html: highlightTitle(title) }}
           />
           {body ? (
-            <div className="text-white/65 text-lg max-w-2xl mx-auto prose prose-invert prose-p:my-2 prose-a:text-brand-cyan">
+            <div className="text-white/85 text-xl md:text-2xl font-semibold max-w-3xl mx-auto leading-relaxed prose prose-invert prose-p:my-2 prose-a:text-brand-cyan">
               <ReactMarkdown remarkPlugins={[remarkGfm]}>{body}</ReactMarkdown>
             </div>
           ) : null}

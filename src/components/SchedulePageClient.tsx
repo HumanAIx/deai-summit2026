@@ -56,7 +56,7 @@ export function SchedulePageClient({
         </div>
 
         <div className="relative z-10 max-w-[1440px] mx-auto px-6 text-center">
-          <p className="text-brand-cyan text-sm font-mono uppercase tracking-widest mb-4">
+          <p className="text-brand-cyan text-base md:text-lg font-mono font-bold uppercase tracking-[0.18em] mb-5">
             {heroSubtitle || 'Programme'}
           </p>
           <h1
@@ -64,7 +64,7 @@ export function SchedulePageClient({
             dangerouslySetInnerHTML={{ __html: highlightTitle(heroTitle) }}
           />
           {heroDescription && (
-            <p className="text-white/60 text-lg max-w-2xl mx-auto mb-12">{heroDescription}</p>
+            <p className="text-white/85 text-xl md:text-2xl font-semibold max-w-3xl mx-auto mb-12 leading-relaxed">{heroDescription}</p>
           )}
         </div>
         <div className="h-[1px] bg-gradient-to-r from-transparent via-brand-cyan/40 to-transparent max-w-[1440px] mx-auto mt-8" />

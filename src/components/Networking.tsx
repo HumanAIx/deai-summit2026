@@ -60,7 +60,7 @@ export const Networking: React.FC<NetworkingProps> = ({ data, heading }) => {
                 <div className="absolute inset-0 bg-[linear-gradient(rgba(255,255,255,0.02)_1px,transparent_1px),linear-gradient(90deg,rgba(255,255,255,0.02)_1px,transparent_1px)] bg-[size:60px_60px] [mask-image:radial-gradient(circle_at_center,black_40%,transparent_100%)]"></div>
             </div>
 
-            <div className="relative z-10 max-w-[1440px] mx-auto flex flex-col items-center">
+            <div className="relative z-10 max-w-[1720px] mx-auto flex flex-col items-center">
 
                 {/* Header */}
                 <div className="text-center max-w-5xl mb-20 space-y-6">
@@ -78,7 +78,7 @@ export const Networking: React.FC<NetworkingProps> = ({ data, heading }) => {
                 </div>
 
                 {/* Cards Grid */}
-                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 w-full">
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 lg:gap-7 w-full">
                     {data.map((item, index) => {
                         const accent = cardAccents[index % cardAccents.length];
                         const isActive = (hoveredTab !== null ? hoveredTab : activeTab) === index;
@@ -89,7 +89,7 @@ export const Networking: React.FC<NetworkingProps> = ({ data, heading }) => {
                                 onClick={() => handleTabClick(index)}
                                 onMouseEnter={() => { setHoveredTab(index); setIsAutoPlaying(false); }}
                                 onMouseLeave={() => setHoveredTab(null)}
-                                className="group relative flex flex-col text-left p-8 rounded-2xl border transition-all duration-500 overflow-hidden"
+                                className="group relative flex flex-col text-left p-8 md:p-10 rounded-[1.35rem] border transition-all duration-500 overflow-hidden min-h-[280px]"
                                 style={{
                                     backgroundColor: isActive ? accent + '15' : 'rgba(255,255,255,0.03)',
                                     borderColor: isActive ? accent + '40' : 'rgba(255,255,255,0.08)',
@@ -107,8 +107,8 @@ export const Networking: React.FC<NetworkingProps> = ({ data, heading }) => {
 
                                 {/* Number */}
                                 <span
-                                    className="text-5xl font-display font-bold mb-6 transition-colors duration-500"
-                                    style={{ color: isActive ? accent : 'rgba(255,255,255,0.15)' }}
+                                    className="text-6xl font-display font-extrabold mb-6 transition-colors duration-500"
+                                    style={{ color: isActive ? accent : 'rgba(255,255,255,0.4)' }}
                                 >
                                     {String(index + 1).padStart(2, '0')}
                                 </span>
@@ -123,12 +123,12 @@ export const Networking: React.FC<NetworkingProps> = ({ data, heading }) => {
                                 ></i>
 
                                 {/* Title */}
-                                <h3 className="text-xl font-display font-bold text-white mb-4 leading-tight">
+                                <h3 className="text-2xl font-display font-extrabold text-white mb-4 leading-tight">
                                     {item.title}
                                 </h3>
 
                                 {/* Description */}
-                                <p className="text-base text-white/50 leading-relaxed group-hover:text-white/70 transition-colors duration-300">
+                                <p className="text-lg font-medium text-white/80 leading-relaxed group-hover:text-white transition-colors duration-300">
                                     {item.description}
                                 </p>
 

@@ -97,12 +97,12 @@ export const Hero: React.FC<HeroProps> = ({ data, onOpenContact, onOpenSpeakerAp
       <div className="relative z-20 flex flex-col items-center text-center w-full max-w-[1440px] space-y-6 md:space-y-10 px-4 md:px-6" style={{ isolation: 'isolate' }}>
 
         {/* Badge */}
-        <div className={`inline-flex items-center gap-2 px-3 py-1.5 md:px-4 md:py-2 rounded-full border backdrop-blur-md animate-fade-in-up ${videoSrc ? 'border-white/80 bg-white/90' : 'border-blue-200/50 bg-white/60'}`} style={{ boxShadow: '0 0 8px 1px rgba(14,111,235,0.10), 0 0 16px 2px rgba(14,111,235,0.05)' }}>
-          <span className="relative flex h-2 w-2 md:h-2.5 md:w-2.5">
+        <div className={`inline-flex items-center gap-2.5 px-4 py-2 md:px-5 md:py-2.5 rounded-full border backdrop-blur-md animate-fade-in-up ${videoSrc ? 'border-white/80 bg-white/90' : 'border-blue-200/50 bg-white/60'}`} style={{ boxShadow: '0 0 8px 1px rgba(14,111,235,0.10), 0 0 16px 2px rgba(14,111,235,0.05)' }}>
+          <span className="relative flex h-2.5 w-2.5 md:h-3 md:w-3">
             <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-brand-cyan opacity-75"></span>
-            <span className="relative inline-flex rounded-full h-2 w-2 md:h-2.5 md:w-2.5 bg-brand-cyan"></span>
+            <span className="relative inline-flex rounded-full h-2.5 w-2.5 md:h-3 md:w-3 bg-brand-cyan"></span>
           </span>
-          <span className="text-[0.6rem] md:text-[0.7rem] uppercase tracking-[0.2em] font-semibold text-slate-800">{data.badge}</span>
+          <span className="text-xs md:text-sm uppercase tracking-[0.2em] font-semibold text-slate-800">{data.badge}</span>
         </div>
 
         {/* Headline */}
@@ -123,13 +123,13 @@ export const Hero: React.FC<HeroProps> = ({ data, onOpenContact, onOpenSpeakerAp
             { icon: 'ri-map-pin-line', text: data.location },
             { icon: 'ri-calendar-line', text: data.date },
           ]).map((node, index) => {
-            const pillClass = `flex items-center justify-center gap-2 md:gap-3 px-4 py-2 md:px-6 md:py-3 rounded-full border backdrop-blur-sm hover:bg-white/80 transition-all duration-300 min-w-fit w-full sm:w-auto ${videoSrc ? 'border-white/80 bg-white/90 hover:bg-white' : 'border-blue-200/40 bg-white/60'} ${node.link ? 'cursor-pointer' : 'cursor-default'}`;
+            const pillClass = `flex items-center justify-center gap-2.5 md:gap-3.5 px-5 py-2.5 md:px-8 md:py-4 rounded-full border backdrop-blur-sm hover:bg-white/80 transition-all duration-300 min-w-fit w-full sm:w-auto ${videoSrc ? 'border-white/80 bg-white/90 hover:bg-white' : 'border-blue-200/40 bg-white/60'} ${node.link ? 'cursor-pointer' : 'cursor-default'}`;
             const pillStyle = { boxShadow: '0 0 8px 1px rgba(14,111,235,0.10), 0 0 16px 2px rgba(14,111,235,0.05)' };
-            const iconClass = `${cmsIconClass(node.icon, index === 0 ? 'ri-map-pin-line' : 'ri-calendar-line')} ${index % 2 === 0 ? 'text-brand-blue' : 'text-brand-cyan'} text-lg md:text-xl`;
+            const iconClass = `${cmsIconClass(node.icon, index === 0 ? 'ri-map-pin-line' : 'ri-calendar-line')} ${index % 2 === 0 ? 'text-brand-blue' : 'text-brand-cyan'} text-xl md:text-2xl`;
             const label = (
               <>
                 <i className={iconClass} />
-                <span className="text-sm md:text-base font-medium whitespace-nowrap text-slate-800">{node.text}</span>
+                <span className="text-base md:text-lg font-medium whitespace-nowrap text-slate-800">{node.text}</span>
               </>
             );
             if (node.link) {
@@ -155,8 +155,8 @@ export const Hero: React.FC<HeroProps> = ({ data, onOpenContact, onOpenSpeakerAp
         {/* CTA Buttons */}
         {(() => {
           const btnClass = videoSrc
-            ? "px-6 py-3 md:px-8 md:py-4 rounded-full text-sm md:text-base font-bold text-slate-900 hover:text-brand-cyan hover:bg-white/80 transition-all duration-300 border border-white/80 bg-white/90 backdrop-blur-sm flex items-center justify-center gap-3 w-full sm:w-auto whitespace-nowrap"
-            : "px-6 py-3 md:px-8 md:py-4 rounded-full text-sm md:text-base font-bold text-slate-800 hover:text-brand-blue transition-all duration-300 border border-blue-200/40 hover:border-brand-blue/40 bg-white/50 hover:bg-white backdrop-blur-sm flex items-center justify-center gap-3 w-full sm:w-auto whitespace-nowrap";
+            ? "px-8 py-4 md:px-10 md:py-5 rounded-full text-base md:text-lg font-bold text-slate-900 hover:text-brand-cyan hover:bg-white/80 transition-all duration-300 border border-white/80 bg-white/90 backdrop-blur-sm flex items-center justify-center gap-3 w-full sm:w-auto whitespace-nowrap"
+            : "px-8 py-4 md:px-10 md:py-5 rounded-full text-base md:text-lg font-bold text-slate-800 hover:text-brand-blue transition-all duration-300 border border-blue-200/40 hover:border-brand-blue/40 bg-white/50 hover:bg-white backdrop-blur-sm flex items-center justify-center gap-3 w-full sm:w-auto whitespace-nowrap";
           const glowDefault = videoSrc
             ? '0 0 15px 3px rgba(0,176,194,0.15), 0 0 30px 6px rgba(0,176,194,0.08)'
             : '0 0 15px 3px rgba(14,111,235,0.10), 0 0 30px 6px rgba(14,111,235,0.05)';
@@ -166,7 +166,7 @@ export const Hero: React.FC<HeroProps> = ({ data, onOpenContact, onOpenSpeakerAp
           return (
         <div className="flex flex-col sm:flex-row gap-4 md:gap-4 pt-4 md:pt-6 pb-10 md:pb-16 items-center w-full sm:w-auto animate-fade-in-up [animation-delay:600ms] opacity-0 fill-mode-forwards flex-wrap justify-center">
           {resolveHeroButtons(data).map((btn, index) => {
-            const iconClass = `${heroButtonIcon(btn, index)} text-lg md:text-xl`;
+            const iconClass = `${heroButtonIcon(btn, index)} text-xl md:text-2xl`;
 
             if (isWaitlistButton(btn)) {
               return (

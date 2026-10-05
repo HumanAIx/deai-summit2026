@@ -733,13 +733,14 @@
 
 /* Blog overview hero intro (dark background) */
 .blog-hero-prose {
-  font-size: 1rem;
-  line-height: 1.75;
-  color: rgba(255, 255, 255, 0.65);
+  font-size: 1.25rem;
+  font-weight: 600;
+  line-height: 1.6;
+  color: rgba(255, 255, 255, 0.85);
 }
-@media (min-width: 640px) {
+@media (min-width: 768px) {
   .blog-hero-prose {
-    font-size: 1.125rem;
+    font-size: 1.5rem;
   }
 }
 .blog-hero-prose > * + * {

@@ -175,7 +175,7 @@ export function HotelsListClient({
         </div>
 
         <div className="relative z-10 max-w-[1440px] mx-auto px-6 text-center">
-          <p className="text-brand-cyan text-sm font-mono uppercase tracking-[0.28em] mb-4">
+          <p className="text-brand-cyan text-base md:text-lg font-mono font-bold uppercase tracking-[0.18em] mb-5">
             {heroBadge || 'Stay with us'}
           </p>
           <h1
@@ -186,7 +186,7 @@ export function HotelsListClient({
                 : 'Partner <span class="text-brand-cyan">Hotels</span>',
             }}
           />
-          <p className="text-white/60 text-lg max-w-2xl mx-auto mb-12">
+          <p className="text-white/85 text-xl md:text-2xl font-semibold max-w-3xl mx-auto mb-12 leading-relaxed">
             {heroSubtitle ||
               'Curated stays for DeAI Summit 2026 — refined rooms, harbour views, and easy access to the programme.'}
           </p>
@@ -231,12 +231,12 @@ export function HotelsListClient({
         </section>
       )}
 
-      <section className="bg-[#050A1F] py-16 border-t border-white/5">
-        <div className="max-w-3xl mx-auto px-6 text-center">
-          <h2 className="text-2xl md:text-3xl font-display font-bold text-white mb-4">
+      <section className="bg-[#050A1F] py-20 md:py-24 border-t border-white/5">
+        <div className="max-w-4xl mx-auto px-6 text-center">
+          <h2 className="text-3xl md:text-5xl font-display font-extrabold text-white mb-5">
             {ctaTitle || 'Need a room recommendation?'}
           </h2>
-          <p className="text-white/60 mb-8">
+          <p className="text-lg md:text-xl font-medium text-white/85 leading-relaxed mb-10">
             {ctaSubtitle || 'Reach out and we will help you find the right stay for DeAI Summit 2026.'}
           </p>
           <div className="flex flex-col sm:flex-row gap-4 justify-center">
@@ -247,8 +247,8 @@ export function HotelsListClient({
                   href={btn.link || '#'}
                   className={
                     i === 0
-                      ? 'px-8 py-3 rounded-full border border-white bg-white text-[#050A1F] hover:bg-brand-cyan hover:text-white hover:border-brand-cyan transition-all duration-300 text-sm font-bold no-underline'
-                      : 'px-8 py-3 rounded-full border border-white/30 text-white hover:bg-white/10 transition-all duration-300 text-sm font-bold no-underline'
+                      ? 'px-10 py-4 rounded-full border border-white bg-white text-[#050A1F] hover:bg-brand-cyan hover:text-white hover:border-brand-cyan transition-all duration-300 text-base md:text-lg font-bold no-underline'
+                      : 'px-10 py-4 rounded-full border border-white/40 text-white hover:bg-white/10 transition-all duration-300 text-base md:text-lg font-bold no-underline'
                   }
                 >
                   {btn.label}
@@ -257,7 +257,7 @@ export function HotelsListClient({
             ) : (
               <Link
                 href="/contact"
-                className="px-8 py-3 rounded-full border border-white bg-white text-[#050A1F] hover:bg-brand-cyan hover:text-white hover:border-brand-cyan transition-all duration-300 text-sm font-bold no-underline"
+                className="px-10 py-4 rounded-full border border-white bg-white text-[#050A1F] hover:bg-brand-cyan hover:text-white hover:border-brand-cyan transition-all duration-300 text-base md:text-lg font-bold no-underline"
               >
                 Contact us
               </Link>

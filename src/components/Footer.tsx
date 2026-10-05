@@ -271,7 +271,7 @@ export const Footer: React.FC<FooterProps> = ({ navData, navigationAPIData, onSh
     const target = isExternal && w.linkTarget === '_blank' ? '_blank' : undefined;
     const rel = target ? 'noopener noreferrer' : undefined;
     const btnClass = 'inline-block px-6 py-3 rounded-full border border-white/20 bg-white/5 hover:bg-white/10 text-sm font-semibold text-white transition-all';
-    const linkClass = 'text-base text-white/60 hover:text-brand-cyan transition-colors';
+    const linkClass = 'text-lg font-semibold text-white/90 hover:text-brand-cyan transition-colors';
     const cls = w.linkStyle === 'button' ? btnClass : linkClass;
 
     if (isExternal) {
@@ -353,7 +353,7 @@ export const Footer: React.FC<FooterProps> = ({ navData, navigationAPIData, onSh
     return (
       <footer className="relative w-full bg-[#050A1F] text-white overflow-hidden">
         <div className="w-full h-[2px] bg-gradient-to-r from-brand-blue via-brand-cyan to-brand-teal" />
-        <div className="max-w-[1440px] mx-auto px-6 md:px-12 pt-20 pb-12">
+        <div className="max-w-[1600px] mx-auto px-6 md:px-12 pt-20 pb-12">
           <div className="flex flex-col lg:flex-row justify-between gap-16 mb-20">
             <div className="lg:max-w-md">
               <Link href="/" className="flex items-center group mb-6">
@@ -405,7 +405,7 @@ export const Footer: React.FC<FooterProps> = ({ navData, navigationAPIData, onSh
               >
                 <path d="M10.08 10.86c.05-.33.16-.62.3-.87s.34-.46.59-.62c.24-.15.54-.22.91-.23.23.01.44.05.63.13.2.09.38.21.52.36s.25.33.34.53.13.42.14.64h1.79c-.02-.47-.11-.9-.28-1.29s-.4-.73-.7-1.01-.66-.5-1.08-.66-.88-.23-1.39-.23c-.65 0-1.22.11-1.7.34s-.88.53-1.2.92-.56.84-.71 1.36S8 11.29 8 11.87v.27c0 .58.08 1.12.23 1.64s.39.97.71 1.35.72.69 1.2.91 1.05.34 1.7.34c.47 0 .91-.08 1.32-.23s.77-.36 1.08-.63.56-.58.74-.94.29-.74.3-1.15h-1.79c-.01.21-.06.4-.15.58s-.21.33-.36.46-.32.23-.52.3c-.19.07-.39.09-.6.1-.36-.01-.66-.08-.89-.23-.25-.16-.45-.37-.59-.62s-.25-.55-.3-.88-.08-.67-.08-1v-.27c0-.35.03-.68.08-1.01zM12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm0 18c-4.41 0-8-3.59-8-8s3.59-8 8-8 8 3.59 8 8-3.59 8-8 8z"/>
               </svg>
-              <span className="footer-link-group text-white/55 text-[12px] uppercase tracking-[0.05em]">
+              <span className="footer-link-group text-white/80 text-sm font-semibold uppercase tracking-[0.08em]">
                 <strong><GlitchText interval={5000} duration={1200}>{String(new Date().getFullYear())}</GlitchText></strong>{' '}
                 DeAI Summit
               </span>
@@ -423,7 +423,7 @@ export const Footer: React.FC<FooterProps> = ({ navData, navigationAPIData, onSh
       <div className="w-full h-[2px] bg-gradient-to-r from-brand-blue via-brand-cyan to-brand-teal" />
 
       {/* Main content */}
-      <div className="max-w-[1440px] mx-auto px-6 md:px-12 pt-20 pb-12">
+      <div className="max-w-[1600px] mx-auto px-6 md:px-12 pt-20 pb-12">
 
         {/* Top section: Brand (left) + CTA & Newsletter (right) */}
         <div className="flex flex-col lg:flex-row justify-between gap-16 mb-20">
@@ -433,17 +433,17 @@ export const Footer: React.FC<FooterProps> = ({ navData, navigationAPIData, onSh
             {[1, 2].map(tc => topWidgets(tc).map((w: any) => {
               if (w.type === 'logo') return (
                 <Link key={w.id} href="/" className="flex items-center group mb-2">
-                  <div className="w-11 h-11 relative flex-shrink-0 mr-2">
-                    <Image src="/icontransparent.png" alt="DeAI Summit" fill sizes="40px" className="object-contain" />
+                  <div className="w-14 h-14 relative flex-shrink-0 mr-2">
+                    <Image src="/icontransparent.png" alt="DeAI Summit" fill sizes="56px" className="object-contain" />
                   </div>
                   <div className="flex flex-col leading-none justify-center">
-                    <span className="font-bold tracking-tight text-white text-[2rem] leading-none">DeAI</span>
-                    <span className="text-[0.65rem] uppercase tracking-[0.35em] text-white/50 leading-none mt-[3px] ml-[1px] group-hover:text-brand-cyan transition-colors">Summit</span>
+                    <span className="font-bold tracking-tight text-white text-[2.5rem] leading-none">DeAI</span>
+                    <span className="text-xs uppercase tracking-[0.35em] text-white/80 leading-none mt-[4px] ml-[1px] font-semibold group-hover:text-brand-cyan transition-colors">Summit</span>
                   </div>
                 </Link>
               );
               if (w.type === 'description') return description ? (
-                <p key={w.id} className="text-base text-white/50 leading-relaxed">{description}</p>
+                <p key={w.id} className="text-lg md:text-xl font-medium text-white/85 leading-relaxed">{description}</p>
               ) : null;
               if (w.type === 'collection') {
                 if (collectionItems.length === 0) return null;
@@ -471,8 +471,8 @@ export const Footer: React.FC<FooterProps> = ({ navData, navigationAPIData, onSh
                 <div key={w.id} className="flex flex-wrap gap-4">
                   {socialLinks.map((s) => (
                     <a key={s.key} href={s.url} target="_blank" rel="noopener noreferrer"
-                      className="text-white/40 hover:text-brand-cyan transition-colors" title={s.label}>
-                      <i className={`${s.icon} text-2xl`}></i>
+                      className="text-white/80 hover:text-brand-cyan transition-colors" title={s.label}>
+                      <i className={`${s.icon} text-3xl`}></i>
                     </a>
                   ))}
                 </div>
@@ -489,31 +489,35 @@ export const Footer: React.FC<FooterProps> = ({ navData, navigationAPIData, onSh
             <div className="flex flex-col sm:flex-row gap-5">
               <Link
                 href="/contact?inquiry=Sponsorship+Opportunities"
-                className="group relative p-8 rounded-2xl border border-white/10 bg-white/5 hover:bg-white/10 backdrop-blur-sm transition-all duration-300 overflow-hidden w-full sm:w-56 text-left"
+                className="group relative p-7 sm:p-8 rounded-2xl border border-brand-blue/40 bg-gradient-to-br from-brand-blue/25 via-[#0E6FEB]/10 to-transparent shadow-[0_16px_40px_-20px_rgba(14,111,235,0.8)] hover:border-brand-blue hover:shadow-[0_20px_50px_-16px_rgba(14,111,235,0.95)] transition-all duration-300 overflow-hidden w-full sm:w-64 text-left"
               >
-                <div className="absolute top-0 left-0 w-full h-[2px] bg-gradient-to-r from-brand-blue to-brand-cyan opacity-0 group-hover:opacity-100 transition-opacity" />
-                <i className="ri-vip-diamond-line text-3xl text-brand-blue mb-4 block group-hover:scale-110 transition-transform origin-left"></i>
-                <span className="text-base font-semibold text-white block mb-1">Become a Sponsor</span>
-                <span className="text-sm text-white/40 group-hover:text-white/60 transition-colors">Partner with us</span>
-                <i className="ri-arrow-right-up-line text-lg text-white/30 group-hover:text-brand-cyan absolute top-6 right-6 transition-colors"></i>
+                <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-brand-blue to-brand-cyan" />
+                <span className="mb-5 flex h-12 w-12 items-center justify-center rounded-xl bg-brand-blue/20 text-brand-blue ring-1 ring-brand-blue/40">
+                  <i className="ri-vip-diamond-fill text-2xl group-hover:scale-110 transition-transform"></i>
+                </span>
+                <span className="text-xl font-bold text-white block mb-1">Become a Sponsor</span>
+                <span className="text-base font-medium text-white/80">Partner with us</span>
+                <i className="ri-arrow-right-up-line text-xl text-brand-cyan absolute top-6 right-6"></i>
               </Link>
 
               <Link
                 href="/contact"
-                className="group relative p-8 rounded-2xl border border-white/10 bg-white/5 hover:bg-white/10 backdrop-blur-sm transition-all duration-300 overflow-hidden w-full sm:w-56 text-left"
+                className="group relative p-7 sm:p-8 rounded-2xl border border-brand-cyan/40 bg-gradient-to-br from-brand-cyan/20 via-[#00B0C2]/10 to-transparent shadow-[0_16px_40px_-20px_rgba(0,176,194,0.75)] hover:border-brand-cyan hover:shadow-[0_20px_50px_-16px_rgba(0,176,194,0.9)] transition-all duration-300 overflow-hidden w-full sm:w-64 text-left"
               >
-                <div className="absolute top-0 left-0 w-full h-[2px] bg-gradient-to-r from-brand-cyan to-brand-teal opacity-0 group-hover:opacity-100 transition-opacity" />
-                <i className="ri-mail-send-line text-3xl text-brand-cyan mb-4 block group-hover:scale-110 transition-transform origin-left"></i>
-                <span className="text-base font-semibold text-white block mb-1">Contact Us</span>
-                <span className="text-sm text-white/40 group-hover:text-white/60 transition-colors">Get in touch</span>
-                <i className="ri-arrow-right-up-line text-lg text-white/30 group-hover:text-brand-cyan absolute top-6 right-6 transition-colors"></i>
+                <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-brand-cyan to-brand-blue" />
+                <span className="mb-5 flex h-12 w-12 items-center justify-center rounded-xl bg-brand-cyan/15 text-brand-cyan ring-1 ring-brand-cyan/40">
+                  <i className="ri-mail-send-fill text-2xl group-hover:scale-110 transition-transform"></i>
+                </span>
+                <span className="text-xl font-bold text-white block mb-1">Contact Us</span>
+                <span className="text-base font-medium text-white/80">Get in touch</span>
+                <i className="ri-arrow-right-up-line text-xl text-brand-cyan absolute top-6 right-6"></i>
               </Link>
             </div>
 
             {/* Newsletter (below CTA cards) */}
             {topWidgets(3).some((w: any) => w.type === 'newsletter') && (
               <div className="flex flex-col gap-4 mt-8">
-                <h4 className="text-sm font-semibold uppercase tracking-widest text-white/30">Newsletter</h4>
+                <h4 className="text-base font-bold uppercase tracking-[0.18em] text-white/80">Newsletter</h4>
                 <div className="flex flex-col sm:flex-row gap-3">
                   <input
                     type="email" value={email}
@@ -521,10 +525,10 @@ export const Footer: React.FC<FooterProps> = ({ navData, navigationAPIData, onSh
                     onKeyDown={e => { if (e.key === 'Enter') { e.preventDefault(); handleSubscribe(); } }}
                     placeholder="Enter your email"
                     disabled={isSubmitting}
-                    className="flex-1 bg-transparent text-white border-b border-white/30 pb-2 outline-none placeholder:text-white/40 text-sm focus:border-brand-cyan transition-colors"
+                    className="flex-1 bg-transparent text-white border-b-2 border-white/40 pb-2 outline-none placeholder:text-white/55 text-base font-medium focus:border-brand-cyan transition-colors"
                   />
                   <button onClick={handleSubscribe} disabled={isSubmitting}
-                    className="px-5 py-2 border border-white/30 text-white text-sm font-semibold hover:bg-white hover:text-[#050A1F] transition-all disabled:opacity-50">
+                    className="px-6 py-2.5 border-2 border-white/70 text-white text-base font-bold hover:bg-white hover:text-[#050A1F] transition-all disabled:opacity-50">
                     {isSubmitting ? 'Subscribing...' : 'Subscribe'}
                   </button>
                 </div>
@@ -542,8 +546,8 @@ export const Footer: React.FC<FooterProps> = ({ navData, navigationAPIData, onSh
                 <div key={w.id} className="flex flex-wrap gap-4 mt-2">
                   {socialLinks.map((s) => (
                     <a key={s.key} href={s.url} target="_blank" rel="noopener noreferrer"
-                      className="text-white/40 hover:text-brand-cyan transition-colors" title={s.label}>
-                      <i className={`${s.icon} text-2xl`}></i>
+                      className="text-white/80 hover:text-brand-cyan transition-colors" title={s.label}>
+                      <i className={`${s.icon} text-3xl`}></i>
                     </a>
                   ))}
                 </div>
@@ -569,14 +573,14 @@ export const Footer: React.FC<FooterProps> = ({ navData, navigationAPIData, onSh
             return (
               <div key={col.key}>
                 {label && (
-                  <h4 className="text-sm font-semibold uppercase tracking-widest text-white/30 mb-5">{label}</h4>
+                  <h4 className="text-sm md:text-base font-bold uppercase tracking-[0.18em] text-white/75 mb-5">{label}</h4>
                 )}
                 <ul className="flex flex-col gap-3">
                   {publishedItems.map((item) => {
                     if (item.slug === 'contact') {
                       return (
                         <li key={item.slug}>
-                          <button onClick={handleContactClick} className="text-base text-white/60 hover:text-brand-cyan transition-colors">
+                          <button onClick={handleContactClick} className="text-lg font-semibold text-white/90 hover:text-brand-cyan transition-colors">
                             {item.label}
                           </button>
                         </li>
@@ -585,7 +589,7 @@ export const Footer: React.FC<FooterProps> = ({ navData, navigationAPIData, onSh
                     const href = SLUG_TO_ROUTE[item.slug] || `/${item.slug}`;
                     return (
                       <li key={item.slug}>
-                        <Link href={href} className="text-base text-white/60 hover:text-brand-cyan transition-colors">
+                        <Link href={href} className="text-lg font-semibold text-white/90 hover:text-brand-cyan transition-colors">
                           {item.label}
                         </Link>
                       </li>
@@ -642,7 +646,7 @@ export const Footer: React.FC<FooterProps> = ({ navData, navigationAPIData, onSh
           {/* Social links column — only if not already handled by a column label or socials widget */}
           {socialLinks.length > 0 && !footerCols.some(c => footerColLabels[c.key]?.toLowerCase() === 'connect') && !widgets.some((w: any) => w.type === 'socials' && w.column) && (
             <div>
-              <h4 className="text-sm font-semibold uppercase tracking-widest text-white/30 mb-5">Connect</h4>
+              <h4 className="text-sm md:text-base font-bold uppercase tracking-[0.18em] text-white/75 mb-5">Connect</h4>
               <ul className="flex flex-col gap-3">
                 {socialLinks.map((s) => (
                   <li key={s.key}>
@@ -686,8 +690,8 @@ export const Footer: React.FC<FooterProps> = ({ navData, navigationAPIData, onSh
             <div className="flex gap-4 items-center">
               {socialLinks.map((s) => (
                 <a key={s.key} href={s.url} target="_blank" rel="noopener noreferrer"
-                  className="text-white/30 hover:text-brand-cyan transition-colors" title={s.label}>
-                  <i className={`${s.icon} text-xl`}></i>
+                  className="text-white/75 hover:text-brand-cyan transition-colors" title={s.label}>
+                  <i className={`${s.icon} text-2xl`}></i>
                 </a>
               ))}
             </div>
@@ -701,7 +705,7 @@ export const Footer: React.FC<FooterProps> = ({ navData, navigationAPIData, onSh
               >
                 <path d="M10.08 10.86c.05-.33.16-.62.3-.87s.34-.46.59-.62c.24-.15.54-.22.91-.23.23.01.44.05.63.13.2.09.38.21.52.36s.25.33.34.53.13.42.14.64h1.79c-.02-.47-.11-.9-.28-1.29s-.4-.73-.7-1.01-.66-.5-1.08-.66-.88-.23-1.39-.23c-.65 0-1.22.11-1.7.34s-.88.53-1.2.92-.56.84-.71 1.36S8 11.29 8 11.87v.27c0 .58.08 1.12.23 1.64s.39.97.71 1.35.72.69 1.2.91 1.05.34 1.7.34c.47 0 .91-.08 1.32-.23s.77-.36 1.08-.63.56-.58.74-.94.29-.74.3-1.15h-1.79c-.01.21-.06.4-.15.58s-.21.33-.36.46-.32.23-.52.3c-.19.07-.39.09-.6.1-.36-.01-.66-.08-.89-.23-.25-.16-.45-.37-.59-.62s-.25-.55-.3-.88-.08-.67-.08-1v-.27c0-.35.03-.68.08-1.01zM12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm0 18c-4.41 0-8-3.59-8-8s3.59-8 8-8 8 3.59 8 8-3.59 8-8 8z"/>
               </svg>
-              <span className="footer-link-group text-white/55 text-[12px] uppercase tracking-[0.05em]">
+              <span className="footer-link-group text-white/80 text-sm font-semibold uppercase tracking-[0.08em]">
                 <strong><GlitchText interval={5000} duration={1200}>{String(new Date().getFullYear())}</GlitchText></strong>{' '}
                 DeAI Summit
               </span>
