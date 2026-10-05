@@ -655,15 +655,20 @@ export function mapNavigationData(apiNav: NavigationAPIData): NavigationConfig {
     }));
 
   const headerLink = apiNav.footerBuilder?.headerCustomLinks?.[0];
+  const headerLabel = headerLink?.label || 'Tickets';
+  const headerUrl = headerLink?.url || '#';
+  // The header Tickets control opens the CMS tickets page. Buy buttons on that
+  // page keep the external checkout URL from each ticket block.
+  const openTicketsPage = /ticket/i.test(headerLabel) && (/^https?:\/\//i.test(headerUrl) || headerUrl === '#' || headerUrl === '');
 
   return {
     main: mainItems,
     legal: legalItems,
     actionButton: {
-      label: headerLink?.label || 'Tickets',
-      link: headerLink?.url || '#',
-      title: headerLink?.label || 'Tickets',
-      target: headerLink?.target || undefined,
+      label: headerLabel,
+      link: openTicketsPage ? '/tickets' : headerUrl,
+      title: headerLabel,
+      target: openTicketsPage ? undefined : headerLink?.target || undefined,
     },
     contactEmail: 'contact@deaisummit.org',
     socials: {
