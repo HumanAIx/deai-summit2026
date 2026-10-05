@@ -195,6 +195,15 @@ function extractStats(blocks: CMSBlock[]): Partial<StatsConfig> | undefined {
   const items = (block as Record<string, unknown>).collectionItems as Array<{ title: string; description: string }> | undefined;
   if (!items || items.length === 0) return undefined;
 
+  // Stat numbers and audience groups share one CMS list. A short value that
+  // contains a digit is a stat; the rest are the "who it's for" groups.
+  const isStatNumber = (title: string) => {
+    const value = title.trim();
+    return value.length > 0 && value.length <= 16 && /\d/.test(value) && !/[a-zA-Z]{4,}/.test(value);
+  };
+  const statItems = items.filter((item) => isStatNumber(item.title || ''));
+  const audienceItems = items.filter((item) => (item.title || '').trim() && !isStatNumber(item.title || ''));
+
   // Dashboard content blocks store the quote in `title` (primary field).
   // Keep content/description as secondary fallbacks for older block shapes.
   const quoteText =
@@ -216,6 +225,7 @@ function extractStats(blocks: CMSBlock[]): Partial<StatsConfig> | undefined {
 
   const intro = ((block.subtitle as string) || '').trim();
   const body = ((block.description as string) || '').trim();
+  const bodyHasText = body.replace(/\s/g, '').length > 0;
 
   const addon = typeof block.addon === 'string' ? block.addon.trim() : '';
   const listType =
@@ -259,8 +269,19 @@ function extractStats(blocks: CMSBlock[]): Partial<StatsConfig> | undefined {
     quote: quote as unknown as Partial<StatsConfig>['quote'],
     ...(organizers && organizers.length > 0 ? { organizers } : {}),
     ...(intro ? { intro } : {}),
-    ...(body ? { body } : {}),
-    items: items.map((i) => ({ number: i.title, label: i.description })),
+    ...(bodyHasText ? { body } : {}),
+    ...(audienceItems.length > 0
+      ? {
+          audiences: audienceItems.map((item) => ({
+            title: item.title.trim(),
+            description: (item.description || '').trim(),
+          })),
+        }
+      : {}),
+    items: (statItems.length > 0 ? statItems : items).map((i) => ({
+      number: i.title,
+      label: i.description,
+    })),
   } as Partial<StatsConfig>;
 }
 

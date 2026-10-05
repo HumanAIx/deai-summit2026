@@ -207,6 +207,7 @@ export default async function Home() {
       : siteConfig.stats.items,
     ...(cmsSections.stats?.intro ? { intro: cmsSections.stats.intro } : {}),
     ...(cmsSections.stats?.body ? { body: cmsSections.stats.body } : {}),
+    ...(cmsSections.stats?.audiences?.length ? { audiences: cmsSections.stats.audiences } : {}),
     ...(resolvedOrganizers ? { organizers: resolvedOrganizers } : {}),
   };
   const aboutData = { ...siteConfig.about, ...(cmsSections.about ?? {}) };
