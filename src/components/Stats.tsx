@@ -107,20 +107,20 @@ export const Stats: React.FC<StatsProps> = ({ data }) => {
   const sectionCopy = audiences.length > 0;
 
   return (
-    <section className="relative w-full py-14 sm:py-16 md:py-24 bg-white z-20 overflow-hidden">
-      <div className="w-full max-w-[1640px] mx-auto px-5 sm:px-6 md:px-8">
+    <section className="relative w-full py-16 sm:py-20 md:py-28 bg-white z-20 overflow-hidden">
+      <div className="w-full max-w-[1840px] mx-auto px-5 sm:px-8 md:px-10">
 
         {sectionCopy ? (
-          <div className="grid lg:grid-cols-2 gap-10 lg:gap-14 xl:gap-20 items-start">
+          <div className="grid lg:grid-cols-2 gap-12 lg:gap-16 xl:gap-24 items-start">
             <div>
-              <p className="text-[11px] font-semibold uppercase tracking-[0.22em] text-brand-blue mb-4 sm:mb-5">
+              <p className="text-xs sm:text-[13px] font-semibold uppercase tracking-[0.22em] text-brand-blue mb-5 sm:mb-6">
                 Who it&apos;s for
               </p>
-              <h2 className="text-[2rem] leading-[1.08] sm:text-4xl md:text-5xl xl:text-[3.35rem] font-display font-bold text-[#050A1F] tracking-tight max-w-xl">
+              <h2 className="text-[2.35rem] leading-[1.08] sm:text-5xl md:text-6xl xl:text-[4.25rem] font-display font-bold text-[#050A1F] tracking-tight max-w-3xl">
                 {data.quote.text}
               </h2>
               {intro ? (
-                <p className="mt-5 sm:mt-6 max-w-md text-base md:text-[17px] text-[#5c6570] leading-relaxed">
+                <p className="mt-6 sm:mt-8 max-w-xl text-lg md:text-xl text-[#5c6570] leading-relaxed">
                   {intro}
                 </p>
               ) : null}
@@ -132,18 +132,18 @@ export const Stats: React.FC<StatsProps> = ({ data }) => {
                   <div
                     key={item.title}
                     className={[
-                      'py-6 md:py-7',
-                      i % 2 === 0 ? 'md:pr-8 xl:pr-10' : 'md:pl-6 xl:pl-8',
+                      'py-7 md:py-8',
+                      i % 2 === 0 ? 'md:pr-8 xl:pr-12' : 'md:pl-8 xl:pl-12',
                       i > 0 ? 'border-t border-[#E4E4E4] md:border-t-0' : '',
                       i >= 2 ? 'md:border-t md:border-[#E4E4E4]' : '',
                     ].filter(Boolean).join(' ')}
                   >
-                    <span className="block w-8 h-[3px] rounded-full bg-brand-cyan mb-4" />
-                    <h3 className="font-display font-bold text-[#050A1F] text-lg leading-snug">
+                    <span className="block w-10 h-[3px] rounded-full bg-brand-cyan mb-5" />
+                    <h3 className="font-display font-bold text-[#050A1F] text-xl md:text-2xl leading-snug">
                       {item.title}
                     </h3>
                     {item.description ? (
-                      <p className="mt-2 text-[15px] text-[#5c6570] leading-relaxed">
+                      <p className="mt-3 text-base md:text-lg text-[#5c6570] leading-relaxed">
                         {item.description}
                       </p>
                     ) : null}
@@ -202,25 +202,25 @@ export const Stats: React.FC<StatsProps> = ({ data }) => {
           </div>
         )}
 
-        <div className={`grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-5 gap-3 sm:gap-4 ${sectionCopy ? 'mt-12 md:mt-16 xl:mt-20' : ''}`}>
+        <div className={`grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-5 gap-4 sm:gap-5 ${sectionCopy ? 'mt-14 md:mt-20 xl:mt-24' : ''}`}>
           {data.items.map((stat, idx) => {
             const accent = statAccents[idx % statAccents.length];
             return (
               <div
                 key={idx}
-                className="bg-[#F3F3F2] rounded-[1.35rem] sm:rounded-[1.6rem] px-5 py-7 sm:px-6 sm:py-8"
+                className="bg-[#F3F3F2] rounded-[1.5rem] sm:rounded-[1.75rem] px-6 py-8 sm:px-7 sm:py-10"
               >
                 <AnimatedCounter
                   value={stat.number.trim()}
-                  className="text-[2.75rem] sm:text-5xl xl:text-[3.15rem] font-display font-bold tracking-tight text-brand-blue leading-none"
+                  className="text-5xl sm:text-6xl xl:text-[4rem] font-display font-bold tracking-tight text-brand-blue leading-none"
                   duration={2200}
                   delay={idx * 150}
                 />
                 <div
-                  className="w-8 h-[3px] rounded-full mt-4 mb-4"
+                  className="w-10 h-[3px] rounded-full mt-5 mb-5"
                   style={{ backgroundColor: accent }}
                 />
-                <p className="text-sm text-[#5c6570] leading-relaxed">
+                <p className="text-base md:text-lg text-[#5c6570] leading-relaxed">
                   {stat.label}
                 </p>
               </div>
