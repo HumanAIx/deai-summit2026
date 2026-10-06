@@ -24,7 +24,7 @@ interface DetailPageLayoutProps {
   navTone?: 'dark' | 'light';
 }
 
-export const DetailPageLayout: React.FC<DetailPageLayoutProps> = ({ children, navigationData, navigationAPIData, socials, navTone = 'dark' }) => {
+export const DetailPageLayout: React.FC<DetailPageLayoutProps> = ({ children, navigationData, navigationAPIData, socials, navTone = 'light' }) => {
   const [isContactOpen, setIsContactOpen] = useState(false);
   const handleShowToast = () => {};
   const navData = navigationData || siteConfig.navigation;
