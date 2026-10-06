@@ -12,13 +12,34 @@ interface MarqueeProps {
 /** Pixels per second. The old logo strip moved about 60px/s. */
 const SCROLL_SPEED = 85;
 
+/** Fluid type and padding. Width grows the strip; short screens cap it by height. */
+const TYPE_MIN = 18;
+const TYPE_VW = 0.0255;
+const TYPE_VH = 0.0315;
+const TYPE_MAX = 38;
+const PAD_MIN = 18;
+const PAD_VW = 0.024;
+const PAD_VH = 0.0285;
+const PAD_MAX = 38;
+
+function fluid(min: number, vw: number, vh: number, max: number, width: number, height: number): number {
+  return Math.min(max, Math.max(min, Math.min(width * vw, height * vh)));
+}
+
+export function logoScrollerHeight(viewportWidth: number, viewportHeight: number): number {
+  const type = fluid(TYPE_MIN, TYPE_VW, TYPE_VH, TYPE_MAX, viewportWidth, viewportHeight);
+  const pad = fluid(PAD_MIN, PAD_VW, PAD_VH, PAD_MAX, viewportWidth, viewportHeight);
+  return Math.ceil(type + pad * 2);
+}
+
 const MarqueeItem: React.FC<{
   item: MarqueeItemData;
   onHover: (hovering: boolean) => void;
 }> = ({ item, onHover }) => {
   const wordmark = (
     <div
-      className="flex items-center gap-8 md:gap-10 pl-8 md:pl-10"
+      className="flex items-center"
+      style={{ gap: 'clamp(16px, min(2.2vw, 2.6vh), 40px)', paddingLeft: 'clamp(16px, min(2.2vw, 2.6vh), 40px)' }}
       onMouseEnter={() => onHover(true)}
       onMouseLeave={() => onHover(false)}
     >
@@ -26,10 +47,13 @@ const MarqueeItem: React.FC<{
         src="/icontransparent.png"
         alt=""
         aria-hidden
-        className="h-5 w-5 shrink-0 object-contain"
-        style={{ filter: 'brightness(0) invert(1)' }}
+        className="shrink-0 object-contain"
+        style={{ width: 'clamp(14px, min(1.7vw, 2vh), 26px)', height: 'clamp(14px, min(1.7vw, 2vh), 26px)', filter: 'brightness(0) invert(1)' }}
       />
-      <span className="whitespace-nowrap font-display text-[1.6875rem] md:text-[1.875rem] font-bold uppercase tracking-[0.16em] text-[#E7E4DE]">
+      <span
+        className="whitespace-nowrap font-display font-bold uppercase leading-none tracking-[0.14em] text-[#E7E4DE]"
+        style={{ fontSize: 'clamp(18px, min(2.55vw, 3.15vh), 38px)' }}
+      >
         {item.label}
       </span>
     </div>
@@ -89,7 +113,10 @@ export const Marquee: React.FC<MarqueeProps> = ({ data }) => {
   const duration = distance > 0 ? distance / SCROLL_SPEED : 40;
 
   return (
-    <section className={`sponsor-scroller w-full z-20 relative overflow-hidden py-8 md:py-10 bg-gradient-to-r from-[#0A1428] via-[#12243F] to-[#1A3A66] ${hasVideo ? 'sponsor-scroller--video' : ''}`}>
+    <section
+      className={`sponsor-scroller w-full z-20 relative overflow-hidden bg-gradient-to-r from-[#0A1428] via-[#12243F] to-[#1A3A66] ${hasVideo ? 'sponsor-scroller--video' : ''}`}
+      style={{ paddingBlock: 'clamp(18px, min(2.4vw, 2.85vh), 38px)' }}
+    >
       <style
         dangerouslySetInnerHTML={{
           __html: `

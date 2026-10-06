@@ -6,6 +6,7 @@ import { useRouter, usePathname } from 'next/navigation';
 import { NavigationConfig } from '@/config/types';
 import { normalizePublicSocialLinks, type PublicSocialLink } from '@/lib/socialIcons';
 import { startPageLoader } from '@/components/NavigationLoader';
+import { logoScrollerHeight } from '@/components/Marquee';
 
 interface NavbarProps {
   onShowToast: (message: string) => void;
@@ -92,28 +93,42 @@ export const Navbar: React.FC<NavbarProps> = ({ onShowToast, onOpenContact, data
             href={item.href}
             onClick={(e) => handleNavClick(e, item.href)}
             aria-current={active ? 'page' : undefined}
-            className="whitespace-nowrap text-white hover:text-white/80"
+            className={`whitespace-nowrap ${
+              light
+                ? active ? 'text-[#1366E8]' : 'text-[#2A3142] hover:text-[#1366E8]'
+                : 'text-white hover:text-white/80'
+            }`}
           >
             {item.label}
           </a>
         );
       })}
-      <Link href="/contact" onClick={() => setIsMenuOpen(false)} className="whitespace-nowrap text-white hover:text-white/80">
+      <Link
+        href="/contact"
+        onClick={() => setIsMenuOpen(false)}
+        className={`whitespace-nowrap ${
+          light
+            ? isActive('/contact') ? 'text-[#1366E8]' : 'text-[#2A3142] hover:text-[#1366E8]'
+            : 'text-white hover:text-white/80'
+        }`}
+      >
         Contact Us
       </Link>
     </>
   );
 
-  const ticketsClass = 'whitespace-nowrap bg-white text-[#0B1222] hover:bg-white';
+  const ticketsClass = light
+    ? 'whitespace-nowrap bg-[#0B1222] text-white hover:bg-[#1366E8]'
+    : 'whitespace-nowrap bg-white text-[#0B1222] hover:bg-white';
 
-  // Homepage hero sits above a 125px logo scroller inside the first screen.
+  // Homepage hero sits above the logo scroller inside the first screen.
   // Size the bar from that same band on every page so it doesn't jump.
   const [menuScale, setMenuScale] = useState(heroScale > 0 ? heroScale : 1);
   useLayoutEffect(() => {
     const fit = () => {
       const width = document.documentElement.clientWidth || window.innerWidth;
       const height = window.innerHeight;
-      const band = Math.max(height - 125, 1);
+      const band = Math.max(height - logoScrollerHeight(width, height), 1);
       const next = Math.min(width / 1440, band / 860);
       setMenuScale(next > 0 ? next : 1);
     };
@@ -162,13 +177,13 @@ export const Navbar: React.FC<NavbarProps> = ({ onShowToast, onOpenContact, data
       ref={heroNavRef}
       className="fixed z-50 hidden items-center justify-between lg:flex"
       style={{
-        top: 28 * k,
+        top: 22 * k,
         left: '50%',
-        width: 720,
-        padding: '8px 8px 8px 22px',
+        width: 1040,
+        padding: '12px 12px 12px 26px',
         borderRadius: 999,
-        background: 'linear-gradient(90deg,#0B1530,#1B3A66)',
-        boxShadow: '0 14px 34px -14px rgba(11,21,48,.6)',
+        background: light ? '#F0F0EE' : 'linear-gradient(90deg,#0B1530,#1B3A66)',
+        boxShadow: light ? '0 20px 50px -20px rgba(0,0,0,.6)' : '0 14px 34px -14px rgba(11,21,48,.6)',
         transform: `translateX(-50%) scale(${k})`,
         transformOrigin: 'center top',
         fontFamily: 'var(--font-inter), system-ui, sans-serif',
@@ -176,15 +191,15 @@ export const Navbar: React.FC<NavbarProps> = ({ onShowToast, onOpenContact, data
       }}
     >
       <Link href="/" className="flex items-center" style={{ gap: 6 }}>
-        <span className="relative block h-6 w-6 shrink-0">
-          <Image src="/icontransparent.png" alt="" fill sizes="24px" className="object-contain" />
+        <span className="relative block h-8 w-8 shrink-0">
+          <Image src="/icontransparent.png" alt="" fill sizes="32px" className="object-contain" />
         </span>
         <span style={{ display: 'flex', flexDirection: 'column', lineHeight: 1 }}>
-          <b style={{ fontSize: 17, fontWeight: 700, color: '#fff', letterSpacing: '-0.03em', lineHeight: 1 }}>DeAI</b>
-          <small style={{ fontSize: 6, letterSpacing: '0.3em', color: '#B8BDC8', margin: '2px 0 0', lineHeight: 1 }}>SUMMIT</small>
+          <b style={{ fontSize: 22, fontWeight: 700, color: light ? '#141A2A' : '#fff', letterSpacing: '-0.03em', lineHeight: 1 }}>DeAI</b>
+          <small style={{ fontSize: 8, letterSpacing: '0.28em', color: light ? '#5A6273' : '#B8BDC8', margin: '3px 0 0', lineHeight: 1 }}>SUMMIT</small>
         </span>
       </Link>
-      <div style={{ display: 'flex', gap: 22, fontSize: 12, fontWeight: 500, color: '#fff' }}>{links}</div>
+      <div style={{ display: 'flex', gap: 28, fontSize: 16, fontWeight: 500, color: light ? '#2A3142' : '#fff' }}>{links}</div>
       {actionExternal ? (
         <a
           href={data.actionButton.link}
@@ -192,7 +207,7 @@ export const Navbar: React.FC<NavbarProps> = ({ onShowToast, onOpenContact, data
           target={data.actionButton.target || undefined}
           rel={data.actionButton.target === '_blank' ? 'noopener noreferrer' : undefined}
           className={ticketsClass}
-          style={{ fontSize: 11, fontWeight: 600, padding: '9px 22px', borderRadius: 999 }}
+          style={{ fontSize: 15, fontWeight: 600, padding: '12px 26px', borderRadius: 999 }}
         >
           {data.actionButton.label}
         </a>
@@ -201,7 +216,7 @@ export const Navbar: React.FC<NavbarProps> = ({ onShowToast, onOpenContact, data
           href={data.actionButton.link}
           title={data.actionButton.title}
           className={ticketsClass}
-          style={{ fontSize: 11, fontWeight: 600, padding: '9px 22px', borderRadius: 999 }}
+          style={{ fontSize: 15, fontWeight: 600, padding: '12px 26px', borderRadius: 999 }}
         >
           {data.actionButton.label}
         </Link>

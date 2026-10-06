@@ -5,6 +5,17 @@ import { useEffect, useRef } from 'react';
 /** Design canvas from the wave-field hero. Content is laid out at this size and scaled to the viewport. */
 export const HERO_STAGE = { width: 1440, height: 860 };
 
+/**
+ * Resting Y of the top wave, in the same canvas units as the field.
+ * Short screens keep the original 66% line. Taller screens drop the wave
+ * toward the logo scroller so the copy can sit in the open band above it.
+ */
+export function heroWaveBase(canvasHeight: number): number {
+  const classic = canvasHeight * 0.78;
+  const bottomAnchored = canvasHeight - 250;
+  return canvasHeight > 980 ? Math.max(classic, bottomAnchored) : classic;
+}
+
 const CELL = 42;
 const WAVE_COUNT = 34;
 
@@ -25,10 +36,12 @@ interface LitCell {
   color: string;
 }
 
-export function HeroWaveField({ scale }: { scale: number }) {
+export function HeroWaveField({ scale, crest = 0 }: { scale: number; crest?: number }) {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const scaleRef = useRef(scale);
+  const crestRef = useRef(crest);
   scaleRef.current = scale;
+  crestRef.current = crest;
 
   useEffect(() => {
     const canvas = canvasRef.current;
@@ -168,7 +181,10 @@ export function HeroWaveField({ scale }: { scale: number }) {
 
       for (let i = WAVE_COUNT - 1; i >= 0; i--) {
         const blend = i / WAVE_COUNT;
-        const base = H * 0.66 + i * 8.5;
+        const k = scaleRef.current || 1;
+        const crestVisual = crestRef.current;
+        const base0 = crestVisual > 0 ? crestVisual / k : heroWaveBase(H);
+        const base = base0 + i * 8.5;
         const amp = 46 * (1 - blend * 0.55);
         const r = Math.round(19 - 11 * blend);
         const g = Math.round(102 + 79 * blend);
