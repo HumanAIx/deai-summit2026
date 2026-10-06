@@ -83,22 +83,55 @@ export const Hero: React.FC<HeroProps> = ({ data, onOpenWaitlist, onScale, navSl
   const videoKey = searchParams.get('video');
   const videoSrc = videoKey ? VIDEO_MAP[videoKey] : null;
   const sectionRef = useRef<HTMLElement>(null);
+  const copyStackRef = useRef<HTMLDivElement>(null);
   const [scale, setScale] = useState(1);
+  const [copyTop, setCopyTop] = useState(140);
+  const [waveCrest, setWaveCrest] = useState(0);
 
   useLayoutEffect(() => {
     const el = sectionRef.current;
+    const copyEl = copyStackRef.current;
     if (!el) return;
     const fit = () => {
-      const next = Math.min(el.clientWidth / HERO_STAGE.width, el.clientHeight / HERO_STAGE.height);
-      const safe = next > 0 ? next : 1;
-      setScale(safe);
-      onScale?.(safe);
+      const height = el.clientHeight;
+      const widthScale = el.clientWidth / HERO_STAGE.width;
+      const heightScale = height / HERO_STAGE.height;
+      const safe = Math.min(widthScale, heightScale);
+      const usedBase = safe > 0 ? safe : 1;
+
+      const copyH = copyEl?.offsetHeight ?? 0;
+      if (copyH <= 0 || height <= 0) {
+        setScale(usedBase);
+        onScale?.(usedBase);
+        setWaveCrest(0);
+        return;
+      }
+      const sectionTop = el.getBoundingClientRect().top;
+      const navClear = navBottom > 0 ? Math.max(0, navBottom - sectionTop) : navSlot * usedBase;
+      const bandTop = navClear + 32;
+      const bandBottom = height - 24;
+      const band = Math.max(0, bandBottom - bandTop);
+      const waveSlice = Math.min(220, Math.max(140, height * 0.16));
+      const fitLimit = band - waveSlice;
+      const used = fitLimit > 200 && copyH * usedBase > fitLimit ? fitLimit / copyH : usedBase;
+      setScale(used);
+      onScale?.(used);
+      const copyVisual = copyH * used;
+      const centered = bandTop + Math.max(0, (band - copyVisual) / 2);
+      const lift = Math.min(48, height * 0.045);
+      const top = Math.max(bandTop, centered - lift);
+      setCopyTop(top);
+      const rise = 56 * used + 36;
+      const contentBottom = top + copyVisual;
+      const resting = Math.max(contentBottom + rise, height - waveSlice);
+      setWaveCrest(Math.max(resting - height * 0.15, contentBottom + rise));
     };
     fit();
     const observer = new ResizeObserver(fit);
     observer.observe(el);
+    if (copyEl) observer.observe(copyEl);
     return () => observer.disconnect();
-  }, [onScale]);
+  }, [onScale, navBottom, navSlot]);
 
   const buttons = resolveHeroButtons(data);
   const pills = data.textNodes?.length
@@ -214,7 +247,7 @@ export const Hero: React.FC<HeroProps> = ({ data, onOpenWaitlist, onScale, navSl
   return (
     <section
       ref={sectionRef}
-      className={`relative w-full overflow-hidden bg-[#F0F0EE] ${contained ? 'h-full max-lg:min-h-[100vh] lg:min-h-0' : 'min-h-[100vh] lg:h-[100vh]'}`}
+      className={`relative w-full overflow-hidden bg-[#F0F0EE] ${contained ? 'max-lg:min-h-[100svh] lg:h-full lg:min-h-0' : 'min-h-[100svh] lg:h-[100svh]'}`}
       style={{ containerType: 'size' }}
     >
       <div className="absolute inset-0 z-0">
@@ -226,51 +259,40 @@ export const Hero: React.FC<HeroProps> = ({ data, onOpenWaitlist, onScale, navSl
             <div className="absolute inset-0 bg-[#050A1F]/60" />
           </>
         ) : (
-          <HeroWaveField scale={scale} />
+          <HeroWaveField scale={scale} crest={waveCrest} />
         )}
       </div>
 
       <div
-        className="absolute left-1/2 top-0 z-10 hidden lg:block"
+        className="absolute left-1/2 z-10 hidden lg:block"
         style={{
+          top: copyTop,
           width: HERO_STAGE.width,
-          height: HERO_STAGE.height,
-          transformOrigin: '50% 0',
-          transform: `translateX(-50%) scale(min(100cqw / ${HERO_STAGE.width}px, 100cqh / ${HERO_STAGE.height}px))`,
+          transformOrigin: 'top center',
+          transform: `translateX(-50%) scale(${scale})`,
         }}
       >
         <div
+          ref={copyStackRef}
           style={{
-            height: '100%',
             display: 'flex',
             flexDirection: 'column',
             alignItems: 'center',
-            padding: '28px 40px 0',
+            gap: 36,
+            textAlign: 'center',
+            width: '100%',
             lineHeight: 'normal',
           }}
         >
-          <div style={{ height: navSlot, width: '100%' }} />
-          <div
-            style={{
-              display: 'flex',
-              flexDirection: 'column',
-              alignItems: 'center',
-              gap: 24,
-              textAlign: 'center',
-              paddingTop: Math.max(72, navBottom > 0 && scale > 0 ? (navBottom + 88) / scale - 28 - navSlot : 72),
-              width: '100%',
-            }}
-          >
-            {copy}
-          </div>
+          {copy}
         </div>
       </div>
 
       <div
-        className="relative z-10 flex min-h-[100vh] flex-col items-center px-5 pb-16 text-center lg:hidden"
-        style={{ paddingTop: 'calc(var(--site-nav-bottom, 8rem) + 2.5rem)' }}
+        className="relative z-10 flex min-h-[100svh] flex-col items-center px-5 pb-28 text-center lg:hidden"
+        style={{ paddingTop: 'calc(var(--site-nav-bottom, 6.5rem) + 1.5rem)' }}
       >
-        <div className="flex w-full max-w-[720px] flex-col items-center gap-6">
+        <div className="flex w-full max-w-[720px] flex-col items-center gap-5 sm:gap-6">
           <div
             className="inline-flex items-center gap-2 rounded-full bg-white px-3.5 py-1.5 text-[11px] font-semibold uppercase tracking-[0.18em] text-[#0B1222] shadow-[0_2px_10px_rgba(0,0,0,0.05)]"
             style={{ fontFamily: FONT }}
@@ -279,7 +301,7 @@ export const Hero: React.FC<HeroProps> = ({ data, onOpenWaitlist, onScale, navSl
             {data.badge}
           </div>
           <h1
-            className="text-[clamp(40px,12vw,72px)] font-extrabold leading-none tracking-[-0.05em] text-[#0B1222]"
+            className="text-balance text-[clamp(40px,10vw,68px)] font-extrabold leading-none tracking-[-0.05em] text-[#0B1222]"
             style={{ fontFamily: FONT }}
             dangerouslySetInnerHTML={{ __html: data.headline }}
           />
