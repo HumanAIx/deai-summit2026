@@ -93,11 +93,7 @@ export const Navbar: React.FC<NavbarProps> = ({ onShowToast, onOpenContact, data
             href={item.href}
             onClick={(e) => handleNavClick(e, item.href)}
             aria-current={active ? 'page' : undefined}
-            className={`whitespace-nowrap ${
-              light
-                ? active ? 'text-[#1366E8]' : 'text-[#2A3142] hover:text-[#1366E8]'
-                : 'text-white hover:text-white/80'
-            }`}
+            className="whitespace-nowrap text-white hover:text-white/80"
           >
             {item.label}
           </a>
@@ -106,20 +102,17 @@ export const Navbar: React.FC<NavbarProps> = ({ onShowToast, onOpenContact, data
       <Link
         href="/contact"
         onClick={() => setIsMenuOpen(false)}
-        className={`whitespace-nowrap ${
-          light
-            ? isActive('/contact') ? 'text-[#1366E8]' : 'text-[#2A3142] hover:text-[#1366E8]'
-            : 'text-white hover:text-white/80'
-        }`}
+        className="whitespace-nowrap text-white hover:text-white/80"
       >
         Contact Us
       </Link>
     </>
   );
 
-  const ticketsClass = light
-    ? 'whitespace-nowrap bg-[#0B1222] text-white hover:bg-[#1366E8]'
-    : 'whitespace-nowrap bg-white text-[#0B1222] hover:bg-white';
+  const ticketsClass = 'whitespace-nowrap bg-white text-[#0B1222] hover:bg-white';
+  const menuShadow = light
+    ? '0 0 24px rgba(255,255,255,0.55), 0 14px 34px -14px rgba(11,21,48,.6)'
+    : '0 14px 34px -14px rgba(11,21,48,.6)';
 
   // Homepage hero sits above the logo scroller inside the first screen.
   // The scale is a CSS variable set before first paint, then kept on resize.
@@ -170,8 +163,8 @@ export const Navbar: React.FC<NavbarProps> = ({ onShowToast, onOpenContact, data
         width: 1040,
         padding: '12px 12px 12px 26px',
         borderRadius: 999,
-        background: light ? '#F0F0EE' : 'linear-gradient(90deg,#0B1530,#1B3A66)',
-        boxShadow: light ? '0 20px 50px -20px rgba(0,0,0,.6)' : '0 14px 34px -14px rgba(11,21,48,.6)',
+        background: 'linear-gradient(90deg,#0B1530,#1B3A66)',
+        boxShadow: menuShadow,
         transform: 'translateX(-50%) scale(var(--hero-menu-scale, 1))',
         transformOrigin: 'center top',
         fontFamily: 'var(--font-inter), system-ui, sans-serif',
@@ -183,11 +176,11 @@ export const Navbar: React.FC<NavbarProps> = ({ onShowToast, onOpenContact, data
           <Image src="/icontransparent.png" alt="" fill sizes="32px" className="object-contain" />
         </span>
         <span style={{ display: 'flex', flexDirection: 'column', lineHeight: 1 }}>
-          <b style={{ fontSize: 22, fontWeight: 700, color: light ? '#141A2A' : '#fff', letterSpacing: '-0.03em', lineHeight: 1 }}>DeAI</b>
-          <small style={{ fontSize: 8, letterSpacing: '0.28em', color: light ? '#5A6273' : '#B8BDC8', margin: '3px 0 0', lineHeight: 1 }}>SUMMIT</small>
+          <b style={{ fontSize: 22, fontWeight: 700, color: '#fff', letterSpacing: '-0.03em', lineHeight: 1 }}>DeAI</b>
+          <small style={{ fontSize: 8, letterSpacing: '0.28em', color: '#B8BDC8', margin: '3px 0 0', lineHeight: 1 }}>SUMMIT</small>
         </span>
       </Link>
-      <div style={{ display: 'flex', gap: 28, fontSize: 16, fontWeight: 500, color: light ? '#2A3142' : '#fff' }}>{links}</div>
+      <div style={{ display: 'flex', gap: 28, fontSize: 16, fontWeight: 500, color: '#fff' }}>{links}</div>
       {actionExternal ? (
         <a
           href={data.actionButton.link}
@@ -219,11 +212,8 @@ export const Navbar: React.FC<NavbarProps> = ({ onShowToast, onOpenContact, data
       {heroNav}
       <nav
         ref={barRef}
-        className={`fixed left-1/2 -translate-x-1/2 top-6 md:top-10 z-50 flex lg:hidden items-center justify-between w-[95%] max-w-5xl rounded-full px-5 py-3 md:px-6 md:py-3.5 transition-all duration-300 ${
-          light
-            ? 'border border-transparent bg-[#F0F0EE]/95 shadow-[0_20px_50px_-20px_rgba(0,0,0,0.6)]'
-            : 'border border-white/10 bg-gradient-to-r from-[#0A1428] via-[#12243F] to-[#1A3A66] shadow-[0_16px_36px_-18px_rgba(10,30,70,0.55)]'
-        }`}
+        className="fixed left-1/2 -translate-x-1/2 top-6 md:top-10 z-50 flex lg:hidden items-center justify-between w-[95%] max-w-5xl rounded-full border border-white/10 bg-gradient-to-r from-[#0A1428] via-[#12243F] to-[#1A3A66] px-5 py-3 md:px-6 md:py-3.5"
+        style={{ boxShadow: light ? '0 0 24px rgba(255,255,255,0.55), 0 16px 36px -18px rgba(10,30,70,0.55)' : '0 16px 36px -18px rgba(10,30,70,0.55)' }}
       >
 
         {/* Logo */}
@@ -232,8 +222,8 @@ export const Navbar: React.FC<NavbarProps> = ({ onShowToast, onOpenContact, data
             <Image src="/icontransparent.png" alt="DeAI Summit" fill sizes="36px" className="object-contain" />
           </div>
           <div className="flex flex-col leading-none justify-center">
-            <span className={`font-bold tracking-tight text-[1.65rem] leading-none ${light ? 'text-[#141A2A]' : 'text-white'}`}>DeAI</span>
-            <span className={`text-[0.55rem] uppercase tracking-[0.32em] font-semibold leading-none mt-[2px] ml-[1px] ${light ? 'text-[#5A6273]' : 'text-white/80'}`}>Summit</span>
+            <span className="font-bold tracking-tight text-[1.65rem] leading-none text-white">DeAI</span>
+            <span className="text-[0.55rem] uppercase tracking-[0.32em] font-semibold leading-none mt-[2px] ml-[1px] text-white/80">Summit</span>
           </div>
         </Link>
 
@@ -248,11 +238,7 @@ export const Navbar: React.FC<NavbarProps> = ({ onShowToast, onOpenContact, data
                   href={item.href}
                   onClick={(e) => handleNavClick(e, item.href)}
                   aria-current={active ? 'page' : undefined}
-                  className={`text-lg font-semibold transition-colors ${
-                    light
-                      ? active ? 'text-[#1366E8]' : 'text-[#2A3142] hover:text-[#1366E8]'
-                      : active ? 'text-white' : 'text-white hover:text-white/80'
-                  }`}
+                  className={`text-lg font-semibold transition-colors ${active ? 'text-white' : 'text-white hover:text-white/80'}`}
                 >
                   {item.label}
                 </a>
@@ -266,11 +252,7 @@ export const Navbar: React.FC<NavbarProps> = ({ onShowToast, onOpenContact, data
                   href="/contact"
                   onClick={() => setIsMenuOpen(false)}
                   aria-current={active ? 'page' : undefined}
-                  className={`text-lg font-semibold transition-colors ${
-                    light
-                      ? active ? 'text-[#1366E8]' : 'text-[#2A3142] hover:text-[#1366E8]'
-                      : active ? 'text-white' : 'text-white hover:text-white/80'
-                  }`}
+                  className={`text-lg font-semibold transition-colors ${active ? 'text-white' : 'text-white hover:text-white/80'}`}
                 >
                   Contact Us
                 </Link>
@@ -288,9 +270,7 @@ export const Navbar: React.FC<NavbarProps> = ({ onShowToast, onOpenContact, data
               title={data.actionButton.title}
               target={data.actionButton.target || undefined}
               rel={data.actionButton.target === '_blank' ? 'noopener noreferrer' : undefined}
-              className={`hidden md:flex text-base font-bold transition-all rounded-full px-8 py-3 ${
-                light ? 'bg-[#0B1222] text-white hover:bg-[#1366E8]' : 'text-[#050A1F] bg-white hover:bg-[#E7F7F9]'
-              }`}
+              className="hidden md:flex text-base font-bold rounded-full px-8 py-3 text-[#050A1F] bg-white hover:bg-[#E7F7F9]"
             >
               {data.actionButton.label}
             </a>
@@ -298,16 +278,14 @@ export const Navbar: React.FC<NavbarProps> = ({ onShowToast, onOpenContact, data
             <Link
               href={data.actionButton.link}
               title={data.actionButton.title}
-              className={`hidden md:flex text-base font-bold transition-all rounded-full px-8 py-3 ${
-                light ? 'bg-[#0B1222] text-white hover:bg-[#1366E8]' : 'text-[#050A1F] bg-white hover:bg-[#E7F7F9]'
-              }`}
+              className="hidden md:flex text-base font-bold rounded-full px-8 py-3 text-[#050A1F] bg-white hover:bg-[#E7F7F9]"
             >
               {data.actionButton.label}
             </Link>
           )}
           <button
             onClick={() => setIsMenuOpen(!isMenuOpen)}
-            className={`lg:hidden p-2 transition-colors ${light ? 'text-[#2A3142] hover:text-[#1366E8]' : 'text-white/70 hover:text-white'}`}
+            className="lg:hidden p-2 transition-colors text-white/70 hover:text-white"
             aria-label={isMenuOpen ? 'Close menu' : 'Open menu'}
           >
             <i className={isMenuOpen ? "ri-close-line text-2xl" : "ri-menu-line text-2xl"}></i>
@@ -318,7 +296,7 @@ export const Navbar: React.FC<NavbarProps> = ({ onShowToast, onOpenContact, data
       {/* Mobile Menu Overlay */}
       {isMenuOpen && (
         <div
-          className={`fixed inset-0 z-40 overflow-y-auto backdrop-blur-xl px-6 lg:hidden flex flex-col items-center gap-8 animate-in fade-in slide-in-from-top-5 duration-200 ${light ? 'bg-[#F0F0EE]/95' : 'bg-[#050A1F]/95'}`}
+          className="fixed inset-0 z-40 overflow-y-auto backdrop-blur-xl px-6 lg:hidden flex flex-col items-center gap-8 animate-in fade-in slide-in-from-top-5 duration-200 bg-[#050A1F]/95"
           style={{ paddingTop: 'calc(var(--site-nav-bottom, 8rem) + 2.5rem)' }}
         >
           <div className="flex flex-col items-center gap-6 w-full max-w-sm">
@@ -330,11 +308,7 @@ export const Navbar: React.FC<NavbarProps> = ({ onShowToast, onOpenContact, data
                   href={item.href}
                   onClick={(e) => handleNavClick(e, item.href)}
                   aria-current={active ? 'page' : undefined}
-                  className={`text-2xl font-medium transition-colors w-full text-center py-2 ${
-                    light
-                      ? active ? 'text-[#1366E8]' : 'text-[#2A3142] hover:text-[#1366E8]'
-                      : active ? 'text-white' : 'text-white/90 hover:text-white'
-                  }`}
+                  className={`text-2xl font-medium transition-colors w-full text-center py-2 ${active ? 'text-white' : 'text-white/90 hover:text-white'}`}
                 >
                   {item.label}
                 </a>
@@ -348,11 +322,7 @@ export const Navbar: React.FC<NavbarProps> = ({ onShowToast, onOpenContact, data
                   href="/contact"
                   onClick={() => setIsMenuOpen(false)}
                   aria-current={active ? 'page' : undefined}
-                  className={`text-2xl font-medium transition-colors w-full text-center py-2 ${
-                    light
-                      ? active ? 'text-[#1366E8]' : 'text-[#2A3142] hover:text-[#1366E8]'
-                      : active ? 'text-white' : 'text-white/90 hover:text-white'
-                  }`}
+                  className={`text-2xl font-medium transition-colors w-full text-center py-2 ${active ? 'text-white' : 'text-white/90 hover:text-white'}`}
                 >
                   Contact Us
                 </Link>
@@ -367,7 +337,7 @@ export const Navbar: React.FC<NavbarProps> = ({ onShowToast, onOpenContact, data
                     href={s.url}
                     target="_blank"
                     rel="noopener noreferrer"
-                    className={`transition-colors ${light ? 'text-[#5A6273] hover:text-[#1366E8]' : 'text-white/60 hover:text-brand-cyan'}`}
+                    className="transition-colors text-white/60 hover:text-brand-cyan"
                     title={s.label}
                     aria-label={s.label}
                     onClick={() => setIsMenuOpen(false)}
@@ -385,9 +355,7 @@ export const Navbar: React.FC<NavbarProps> = ({ onShowToast, onOpenContact, data
                 target={data.actionButton.target || undefined}
                 rel={data.actionButton.target === '_blank' ? 'noopener noreferrer' : undefined}
                 onClick={() => setIsMenuOpen(false)}
-                className={`mt-4 flex w-full justify-center text-sm font-semibold transition-all rounded-full px-8 py-3 ${
-                  light ? 'bg-[#0B1222] text-white hover:bg-[#1366E8]' : 'text-[#050A1F] bg-white hover:bg-white/90'
-                }`}
+                className="mt-4 flex w-full justify-center text-sm font-semibold rounded-full px-8 py-3 text-[#050A1F] bg-white hover:bg-white/90"
               >
                 Get {data.actionButton.label}
               </a>
@@ -396,9 +364,7 @@ export const Navbar: React.FC<NavbarProps> = ({ onShowToast, onOpenContact, data
                 href={data.actionButton.link}
                 title={data.actionButton.title}
                 onClick={() => setIsMenuOpen(false)}
-                className={`mt-4 flex w-full justify-center text-sm font-semibold transition-all rounded-full px-8 py-3 ${
-                  light ? 'bg-[#0B1222] text-white hover:bg-[#1366E8]' : 'text-[#050A1F] bg-white hover:bg-white/90'
-                }`}
+                className="mt-4 flex w-full justify-center text-sm font-semibold rounded-full px-8 py-3 text-[#050A1F] bg-white hover:bg-white/90"
               >
                 Get {data.actionButton.label}
               </Link>
