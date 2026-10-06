@@ -215,6 +215,7 @@ export const Hero: React.FC<HeroProps> = ({ data, onOpenWaitlist, onScale, navSl
     <section
       ref={sectionRef}
       className={`relative w-full overflow-hidden bg-[#F0F0EE] ${contained ? 'h-full max-lg:min-h-[100vh] lg:min-h-0' : 'min-h-[100vh] lg:h-[100vh]'}`}
+      style={{ containerType: 'size' }}
     >
       <div className="absolute inset-0 z-0">
         {videoSrc ? (
@@ -235,7 +236,7 @@ export const Hero: React.FC<HeroProps> = ({ data, onOpenWaitlist, onScale, navSl
           width: HERO_STAGE.width,
           height: HERO_STAGE.height,
           transformOrigin: '50% 0',
-          transform: `translateX(-50%) scale(${scale})`,
+          transform: `translateX(-50%) scale(min(100cqw / ${HERO_STAGE.width}px, 100cqh / ${HERO_STAGE.height}px))`,
         }}
       >
         <div
