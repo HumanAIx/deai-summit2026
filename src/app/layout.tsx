@@ -7,6 +7,7 @@ import { NavigationLoader } from "@/components/NavigationLoader";
 import { prefetchPublicAnalyticsTags } from "@/lib/prefetch";
 import { resolveRedditBootstrapId } from "@/lib/analytics-tags";
 import { SEO_DEFAULTS, buildSocialMetadata } from "@/lib/seo-defaults";
+import { heroMenuScaleBoot } from "@/lib/heroMenuScale";
 
 const inter = Inter({
   variable: "--font-inter",
@@ -53,6 +54,9 @@ export default async function RootLayout({
 
   return (
     <html lang="en" suppressHydrationWarning>
+      <head>
+        <script dangerouslySetInnerHTML={{ __html: heroMenuScaleBoot }} />
+      </head>
       <body
         className={`${inter.variable} ${playfair.variable} antialiased`}
         suppressHydrationWarning

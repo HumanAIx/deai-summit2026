@@ -12,26 +12,6 @@ interface MarqueeProps {
 /** Pixels per second. The old logo strip moved about 60px/s. */
 const SCROLL_SPEED = 85;
 
-/** Fluid type and padding. Width grows the strip; short screens cap it by height. */
-const TYPE_MIN = 18;
-const TYPE_VW = 0.0255;
-const TYPE_VH = 0.0315;
-const TYPE_MAX = 38;
-const PAD_MIN = 18;
-const PAD_VW = 0.024;
-const PAD_VH = 0.0285;
-const PAD_MAX = 38;
-
-function fluid(min: number, vw: number, vh: number, max: number, width: number, height: number): number {
-  return Math.min(max, Math.max(min, Math.min(width * vw, height * vh)));
-}
-
-export function logoScrollerHeight(viewportWidth: number, viewportHeight: number): number {
-  const type = fluid(TYPE_MIN, TYPE_VW, TYPE_VH, TYPE_MAX, viewportWidth, viewportHeight);
-  const pad = fluid(PAD_MIN, PAD_VW, PAD_VH, PAD_MAX, viewportWidth, viewportHeight);
-  return Math.ceil(type + pad * 2);
-}
-
 const MarqueeItem: React.FC<{
   item: MarqueeItemData;
   onHover: (hovering: boolean) => void;
