@@ -1,7 +1,7 @@
 import type { Metadata } from 'next';
 import { prefetchCMSPage, prefetchSponsors, prefetchPartners, prefetchNavigation, mapNavigationData, prefetchSocials } from '@/lib/prefetch';
 import { generatePageMetadata } from '@/lib/seo-defaults';
-import { PartnersListClient } from '@/components/PartnersListClient';
+import { PartnersListClient, type MediaPartnerLink } from '@/components/PartnersListClient';
 import type { NormalizedSponsor, CMSBlock, CMSCompanyItem } from '@/lib/api-types';
 import { resolveGeneralLogoSrc, resolvePublicCardHasDarkBg } from '@/lib/companyLogo';
 
@@ -19,6 +19,46 @@ function normalizeCMSCompany(item: CMSCompanyItem, isSponsor: boolean, isPartner
     isPartner,
     logoHasDarkBg: resolvePublicCardHasDarkBg(item),
   };
+}
+
+function mediaPartnerName(title: string | undefined, href: string): string {
+  const trimmed = title?.trim();
+  if (trimmed) return trimmed;
+  try {
+    const host = new URL(href).hostname.replace(/^www\./, '');
+    const stem = host.split('.')[0] || host;
+    return stem ? stem.charAt(0).toUpperCase() + stem.slice(1) : 'Media partner';
+  } catch {
+    return 'Media partner';
+  }
+}
+
+function logoNeedsDarkBg(image: string): boolean {
+  const file = image.split('/').pop()?.toLowerCase() ?? '';
+  return /(?:^|[-_])white(?:[-_.]|$)/.test(file);
+}
+
+function extractMediaPartners(blocks: CMSBlock[]): MediaPartnerLink[] {
+  const block = blocks.find((b) => (b.title || '').trim().toLowerCase() === 'media partners');
+  if (!block) return [];
+  const raw = (block as { collectionItems?: unknown }).collectionItems;
+  if (!Array.isArray(raw)) return [];
+
+  const partners: MediaPartnerLink[] = [];
+  for (const item of raw) {
+    if (!item || typeof item !== 'object') continue;
+    const rec = item as { title?: string; image?: string; link?: string };
+    const image = typeof rec.image === 'string' ? rec.image.trim() : '';
+    const href = typeof rec.link === 'string' ? rec.link.trim() : '';
+    if (!image || !href) continue;
+    partners.push({
+      name: mediaPartnerName(rec.title, href),
+      image,
+      href,
+      darkBg: logoNeedsDarkBg(image),
+    });
+  }
+  return partners;
 }
 
 function extractCompaniesFromBlocks(blocks: CMSBlock[]): {
@@ -156,6 +196,7 @@ export async function generateMetadata(): Promise<Metadata> {
 export default async function PartnersPage() {
   let sponsors: NormalizedSponsor[] = [];
   let partners: NormalizedSponsor[] = [];
+  let mediaPartners: MediaPartnerLink[] = [];
   let heroData: { badge?: string; title?: string; subtitle?: string } = {};
   let ctaData: { title?: string; subtitle?: string; buttons?: { label: string; link?: string }[] } = {};
 
@@ -173,6 +214,7 @@ export default async function PartnersPage() {
       const extracted = extractCompaniesFromBlocks(blocks);
       sponsors = extracted.sponsors;
       partners = extracted.partners;
+      mediaPartners = extractMediaPartners(blocks);
       heroData = extractHeroFromBlocks(blocks);
       ctaData = extractCtaFromBlocks(blocks);
     }
@@ -198,6 +240,7 @@ export default async function PartnersPage() {
     <PartnersListClient
       sponsors={sponsors}
       partners={partners}
+      mediaPartners={mediaPartners}
       heroTitle={heroData.title}
       heroSubtitle={heroData.subtitle}
       heroBadge={heroData.badge}

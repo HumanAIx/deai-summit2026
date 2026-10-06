@@ -8,10 +8,10 @@ import { DetailPageLayout } from '@/components/DetailPageLayout';
 import { AnimatedGrid } from '@/components/AnimatedGrid';
 import type { NormalizedSponsor, NavigationAPIData } from '@/lib/api-types';
 import type { NavigationConfig } from '@/config/types';
-
 interface PartnersListClientProps {
   sponsors: NormalizedSponsor[];
   partners: NormalizedSponsor[];
+  mediaPartners?: MediaPartnerLink[];
   heroTitle?: string;
   heroSubtitle?: string;
   heroBadge?: string;
@@ -36,6 +36,13 @@ function highlightTitle(text: string): string {
 }
 
 const FOOTER_COLORS = ['#00B0C2', '#0E6FEB'] as const;
+
+export interface MediaPartnerLink {
+  name: string;
+  image: string;
+  href: string;
+  darkBg: boolean;
+}
 
 function CompanyCard({ company, type, bgColor }: { company: NormalizedSponsor; type: 'sponsor' | 'partner'; bgColor: string }) {
   const href = type === 'sponsor' ? `/sponsors/${company.slug}` : `/partners/${company.slug}`;
@@ -85,6 +92,34 @@ function CompanyCard({ company, type, bgColor }: { company: NormalizedSponsor; t
   );
 }
 
+function MediaPartnerGrid({ partners }: { partners: MediaPartnerLink[] }) {
+  return (
+    <div className="flex flex-wrap justify-center gap-6">
+      {partners.map((partner) => (
+        <a
+          key={partner.href}
+          href={partner.href}
+          target="_blank"
+          rel="noopener noreferrer"
+          className="group block w-full sm:w-[calc(50%-12px)] lg:w-[calc(33.333%-16px)] xl:w-[calc(25%-18px)] overflow-hidden rounded-2xl bg-white border border-gray-200 hover:border-gray-300 hover:scale-[1.02] hover:shadow-xl transition-all duration-300 no-underline"
+        >
+          <div className={`relative h-[160px] overflow-hidden ${partner.darkBg ? 'bg-[#050A1F]' : 'bg-white'}`}>
+            <div className="absolute inset-0 p-8">
+              <FittedCompanyLogo src={partner.image} alt={partner.name} />
+            </div>
+          </div>
+          <div className="px-5 py-4 flex items-center justify-between gap-3">
+            <span className="text-[#050A1F] text-sm font-display font-bold leading-tight">{partner.name}</span>
+            <span className="text-[#0E6FEB] text-xs font-bold font-mono uppercase tracking-widest shrink-0 group-hover:underline">
+              Visit
+            </span>
+          </div>
+        </a>
+      ))}
+    </div>
+  );
+}
+
 function CompanyGrid({ companies, type }: { companies: NormalizedSponsor[]; type: 'sponsor' | 'partner' }) {
   const colors = companies.map((_, index) => FOOTER_COLORS[index % FOOTER_COLORS.length]);
   return (
@@ -98,7 +133,7 @@ function CompanyGrid({ companies, type }: { companies: NormalizedSponsor[]; type
   );
 }
 
-export function PartnersListClient({ sponsors, partners, heroTitle, heroSubtitle, heroBadge, ctaTitle, ctaSubtitle, ctaButtons, navigationData, navigationAPIData, socials }: PartnersListClientProps) {
+export function PartnersListClient({ sponsors, partners, mediaPartners = [], heroTitle, heroSubtitle, heroBadge, ctaTitle, ctaSubtitle, ctaButtons, navigationData, navigationAPIData, socials }: PartnersListClientProps) {
   const sponsorIds = new Set(sponsors.map(s => s.id));
   const partnerCompanies = partners.filter(p => p.isPartner && !sponsorIds.has(p.id));
   const totalCompanies = sponsors.length + partnerCompanies.length;
@@ -140,7 +175,7 @@ export function PartnersListClient({ sponsors, partners, heroTitle, heroSubtitle
                   </p>
                   <div className="w-12 h-[3px] mx-auto mb-3 rounded-full bg-brand-cyan" />
                   <p className="text-white/50 text-sm font-mono uppercase tracking-widest">
-                    Sponsors
+                    Sponsors & Supporters
                   </p>
                 </div>
               )}
@@ -155,7 +190,7 @@ export function PartnersListClient({ sponsors, partners, heroTitle, heroSubtitle
                   </p>
                   <div className="w-12 h-[3px] mx-auto mb-3 rounded-full bg-brand-blue" />
                   <p className="text-white/50 text-sm font-mono uppercase tracking-widest">
-                    Partners
+                    Speakers & Partners Organizations
                   </p>
                 </div>
               )}
@@ -166,7 +201,7 @@ export function PartnersListClient({ sponsors, partners, heroTitle, heroSubtitle
       </section>
 
       {/* Sponsors & Partners — separate sections */}
-      {totalCompanies > 0 && (
+      {(totalCompanies > 0 || mediaPartners.length > 0) && (
         <section className="bg-[#F0F0EF] pt-16 pb-[100px]">
           <div className="max-w-[1440px] mx-auto px-6 space-y-16">
             {sponsors.length > 0 && (
@@ -174,7 +209,7 @@ export function PartnersListClient({ sponsors, partners, heroTitle, heroSubtitle
                 <div className="flex items-center gap-4 mb-10">
                   <div className="w-1 h-8 bg-brand-cyan rounded-full" />
                   <h2 className="text-2xl md:text-3xl font-display font-bold text-[#050A1F]">
-                    Sponsors
+                    Sponsors & Supporters
                   </h2>
                 </div>
                 <CompanyGrid companies={sponsors} type="sponsor" />
@@ -185,10 +220,21 @@ export function PartnersListClient({ sponsors, partners, heroTitle, heroSubtitle
                 <div className="flex items-center gap-4 mb-10">
                   <div className="w-1 h-8 bg-brand-blue rounded-full" />
                   <h2 className="text-2xl md:text-3xl font-display font-bold text-[#050A1F]">
-                    Partners
+                    Speakers & Partners Organizations
                   </h2>
                 </div>
                 <CompanyGrid companies={partnerCompanies} type="partner" />
+              </div>
+            )}
+            {mediaPartners.length > 0 && (
+              <div>
+                <div className="flex items-center gap-4 mb-10">
+                  <div className="w-1 h-8 bg-brand-cyan rounded-full" />
+                  <h2 className="text-2xl md:text-3xl font-display font-bold text-[#050A1F]">
+                    Media Partners
+                  </h2>
+                </div>
+                <MediaPartnerGrid partners={mediaPartners} />
               </div>
             )}
           </div>
@@ -196,7 +242,7 @@ export function PartnersListClient({ sponsors, partners, heroTitle, heroSubtitle
       )}
 
       {/* Empty state */}
-      {totalCompanies === 0 && (
+      {totalCompanies === 0 && mediaPartners.length === 0 && (
         <section className="bg-[#F0F0EF] py-24">
           <div className="max-w-[1440px] mx-auto px-6 text-center">
             <p className="text-gray-500 text-lg">
