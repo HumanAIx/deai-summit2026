@@ -4,7 +4,6 @@ import React, { useState, Suspense } from 'react';
 import Link from 'next/link';
 import { Navbar } from '@/components/Navbar';
 import { Hero } from '@/components/Hero';
-import { Marquee } from '@/components/Marquee';
 import { Stats } from '@/components/Stats';
 import { AboutVideo } from '@/components/AboutVideo';
 import { LeadingVoices } from '@/components/LeadingVoices';
@@ -93,7 +92,6 @@ interface LandingPageProps {
 
 export const LandingPage: React.FC<LandingPageProps> = ({
     speakers,
-    marqueeItems,
     partnerItems,
     socials,
     navigationData,
@@ -164,7 +162,7 @@ export const LandingPage: React.FC<LandingPageProps> = ({
                     { type: 'builtin' as const, slot: 'speakerCta' as const },
                     { type: 'builtin' as const, slot: 'networking' as const },
                     { type: 'builtin' as const, slot: 'sponsors' as const },
-                ]).map((node, index, plan) => {
+                ]).map((node, index) => {
                     if (node.type === 'block') {
                         return (
                             <CmsPageRenderer
@@ -175,42 +173,15 @@ export const LandingPage: React.FC<LandingPageProps> = ({
                         );
                     }
 
-                    const next = plan[index + 1];
-                    const marqueeFollowsHero = next?.type === 'builtin' && next.slot === 'marquee';
-                    const previous = plan[index - 1];
-                    if (
-                        node.slot === 'marquee' &&
-                        previous?.type === 'builtin' &&
-                        previous.slot === 'hero'
-                    ) {
-                        return null;
-                    }
-
                     switch (node.slot) {
-                        case 'hero': {
-                            const hero = (
+                        case 'hero':
+                            return (
                                 <Suspense key="hero">
-                                    <Hero data={heroData || siteConfig.hero} onOpenContact={handleOpenContact} onOpenSpeakerApp={handleOpenSpeakerApp} onOpenWaitlist={() => setIsWaitlistOpen(true)} onScale={setHeroScale} navSlot={navSlot} navBottom={navBottom} contained={marqueeFollowsHero} />
+                                    <Hero data={heroData || siteConfig.hero} onOpenContact={handleOpenContact} onOpenSpeakerApp={handleOpenSpeakerApp} onOpenWaitlist={() => setIsWaitlistOpen(true)} onScale={setHeroScale} navSlot={navSlot} navBottom={navBottom} />
                                 </Suspense>
                             );
-                            if (!marqueeFollowsHero) return hero;
-                            return (
-                                <div key="hero-fold" className="flex flex-col lg:h-[100dvh]">
-                                    <div className="lg:min-h-0 lg:flex-1">{hero}</div>
-                                    <div className="lg:shrink-0">
-                                        <Suspense key="marquee">
-                                            <Marquee data={marqueeItems} />
-                                        </Suspense>
-                                    </div>
-                                </div>
-                            );
-                        }
                         case 'marquee':
-                            return (
-                                <Suspense key="marquee">
-                                    <Marquee data={marqueeItems} />
-                                </Suspense>
-                            );
+                            return null;
                         case 'stats':
                             return <Stats key="stats" data={statsData || siteConfig.stats} />;
                         case 'about':

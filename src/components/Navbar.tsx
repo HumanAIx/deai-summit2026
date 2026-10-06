@@ -6,7 +6,7 @@ import { useRouter, usePathname } from 'next/navigation';
 import { NavigationConfig } from '@/config/types';
 import { normalizePublicSocialLinks, type PublicSocialLink } from '@/lib/socialIcons';
 import { startPageLoader } from '@/components/NavigationLoader';
-import { logoScrollerHeight } from '@/components/Marquee';
+import { heroMenuScale } from '@/lib/heroMenuScale';
 
 interface NavbarProps {
   onShowToast: (message: string) => void;
@@ -25,7 +25,7 @@ interface NavbarProps {
   onNavBottom?: (bottom: number) => void;
 }
 
-export const Navbar: React.FC<NavbarProps> = ({ onShowToast, onOpenContact, data, socials, tone = 'dark', layout = 'default', heroScale = 1, onNavHeight, onNavBottom }) => {
+export const Navbar: React.FC<NavbarProps> = ({ onShowToast, onOpenContact, data, socials, tone = 'dark', layout = 'default', onNavHeight, onNavBottom }) => {
   const heroNavRef = useRef<HTMLElement>(null);
   const barRef = useRef<HTMLElement>(null);
   const [isMenuOpen, setIsMenuOpen] = useState(false);
@@ -122,35 +122,24 @@ export const Navbar: React.FC<NavbarProps> = ({ onShowToast, onOpenContact, data
     : 'whitespace-nowrap bg-white text-[#0B1222] hover:bg-white';
 
   // Homepage hero sits above the logo scroller inside the first screen.
-  // Size the bar from that same band on every page so it doesn't jump.
-  const [menuScale, setMenuScale] = useState(heroScale > 0 ? heroScale : 1);
+  // The scale is a CSS variable set before first paint, then kept on resize.
   useLayoutEffect(() => {
     const fit = () => {
-      const width = document.documentElement.clientWidth || window.innerWidth;
+      const width = window.innerWidth;
       const height = window.innerHeight;
-      const band = Math.max(height - logoScrollerHeight(width, height), 1);
-      const next = Math.min(width / 1440, band / 860);
-      setMenuScale(next > 0 ? next : 1);
-    };
-    fit();
-    window.addEventListener('resize', fit);
-    return () => window.removeEventListener('resize', fit);
-  }, []);
-
-  useLayoutEffect(() => {
-    if (layout !== 'hero') return;
-    const el = heroNavRef.current;
-    if (!el) return;
-    const report = () => {
+      document.documentElement.style.setProperty('--hero-menu-scale', String(heroMenuScale(width, height)));
+      if (layout !== 'hero') return;
+      const el = heroNavRef.current;
+      if (!el) return;
       if (el.offsetHeight > 0) onNavHeight?.(el.offsetHeight);
       const bottom = el.getBoundingClientRect().bottom;
       if (bottom > 0) onNavBottom?.(Math.ceil(bottom));
     };
-    report();
-    document.fonts?.ready.then(report);
-    window.addEventListener('resize', report);
-    return () => window.removeEventListener('resize', report);
-  }, [layout, heroScale, menuScale, onNavHeight, onNavBottom, data]);
+    fit();
+    document.fonts?.ready.then(fit);
+    window.addEventListener('resize', fit);
+    return () => window.removeEventListener('resize', fit);
+  }, [layout, onNavHeight, onNavBottom]);
 
   useLayoutEffect(() => {
     if (layout === 'hero') return;
@@ -171,20 +160,19 @@ export const Navbar: React.FC<NavbarProps> = ({ onShowToast, onOpenContact, data
     };
   }, [layout, isMenuOpen]);
 
-  const k = menuScale;
   const heroNav = (
     <nav
       ref={heroNavRef}
       className="fixed z-50 hidden items-center justify-between lg:flex"
       style={{
-        top: 22 * k,
+        top: 'calc(22px * var(--hero-menu-scale, 1))',
         left: '50%',
         width: 1040,
         padding: '12px 12px 12px 26px',
         borderRadius: 999,
         background: light ? '#F0F0EE' : 'linear-gradient(90deg,#0B1530,#1B3A66)',
         boxShadow: light ? '0 20px 50px -20px rgba(0,0,0,.6)' : '0 14px 34px -14px rgba(11,21,48,.6)',
-        transform: `translateX(-50%) scale(${k})`,
+        transform: 'translateX(-50%) scale(var(--hero-menu-scale, 1))',
         transformOrigin: 'center top',
         fontFamily: 'var(--font-inter), system-ui, sans-serif',
         lineHeight: 'normal',
