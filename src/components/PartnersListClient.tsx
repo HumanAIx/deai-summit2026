@@ -37,10 +37,6 @@ function highlightTitle(text: string): string {
 
 const FOOTER_COLORS = ['#00B0C2', '#0E6FEB'] as const;
 
-function byName(a: { name: string }, b: { name: string }): number {
-  return a.name.localeCompare(b.name, 'en', { sensitivity: 'base' });
-}
-
 export interface MediaPartnerLink {
   name: string;
   image: string;
@@ -139,10 +135,8 @@ function CompanyGrid({ companies, type }: { companies: NormalizedSponsor[]; type
 
 export function PartnersListClient({ sponsors, partners, mediaPartners = [], heroTitle, heroSubtitle, heroBadge, ctaTitle, ctaSubtitle, ctaButtons, navigationData, navigationAPIData, socials }: PartnersListClientProps) {
   const sponsorIds = new Set(sponsors.map(s => s.id));
-  const sortedSponsors = [...sponsors].sort(byName);
-  const partnerCompanies = partners.filter(p => p.isPartner && !sponsorIds.has(p.id)).sort(byName);
-  const sortedMediaPartners = [...mediaPartners].sort(byName);
-  const totalCompanies = sortedSponsors.length + partnerCompanies.length;
+  const partnerCompanies = partners.filter(p => p.isPartner && !sponsorIds.has(p.id));
+  const totalCompanies = sponsors.length + partnerCompanies.length;
 
   return (
     <DetailPageLayout navigationData={navigationData} navigationAPIData={navigationAPIData} socials={socials}>
@@ -173,11 +167,11 @@ export function PartnersListClient({ sponsors, partners, mediaPartners = [], her
         {totalCompanies > 0 && (
           <div className="relative z-10 max-w-[1440px] mx-auto px-6 pt-12 pb-12">
             <div className="flex items-center justify-center gap-20 md:gap-28 mb-16">
-              {sortedSponsors.length > 0 && (
+              {sponsors.length > 0 && (
                 <div className="text-center relative">
                   <div className="absolute inset-0 blur-3xl opacity-15 rounded-full scale-150 bg-brand-cyan" />
                   <p className="text-brand-cyan text-6xl md:text-7xl font-display font-bold mb-3 relative">
-                    <AnimatedCounter value={String(sortedSponsors.length)} duration={2200} />
+                    <AnimatedCounter value={String(sponsors.length)} duration={2200} />
                   </p>
                   <div className="w-12 h-[3px] mx-auto mb-3 rounded-full bg-brand-cyan" />
                   <p className="text-white/50 text-sm font-mono uppercase tracking-widest">
@@ -185,7 +179,7 @@ export function PartnersListClient({ sponsors, partners, mediaPartners = [], her
                   </p>
                 </div>
               )}
-              {sortedSponsors.length > 0 && partnerCompanies.length > 0 && (
+              {sponsors.length > 0 && partnerCompanies.length > 0 && (
                 <div className="w-[1px] h-20 bg-white/10" />
               )}
               {partnerCompanies.length > 0 && (
@@ -207,10 +201,10 @@ export function PartnersListClient({ sponsors, partners, mediaPartners = [], her
       </section>
 
       {/* Sponsors & Partners — separate sections */}
-      {(totalCompanies > 0 || sortedMediaPartners.length > 0) && (
+      {(totalCompanies > 0 || mediaPartners.length > 0) && (
         <section className="bg-[#F0F0EF] pt-16 pb-[100px]">
           <div className="max-w-[1440px] mx-auto px-6 space-y-16">
-            {sortedSponsors.length > 0 && (
+            {sponsors.length > 0 && (
               <div>
                 <div className="flex items-center gap-4 mb-10">
                   <div className="w-1 h-8 bg-brand-cyan rounded-full" />
@@ -218,7 +212,7 @@ export function PartnersListClient({ sponsors, partners, mediaPartners = [], her
                     Sponsors & Supporters
                   </h2>
                 </div>
-                <CompanyGrid companies={sortedSponsors} type="sponsor" />
+                <CompanyGrid companies={sponsors} type="sponsor" />
               </div>
             )}
             {partnerCompanies.length > 0 && (
@@ -232,7 +226,7 @@ export function PartnersListClient({ sponsors, partners, mediaPartners = [], her
                 <CompanyGrid companies={partnerCompanies} type="partner" />
               </div>
             )}
-            {sortedMediaPartners.length > 0 && (
+            {mediaPartners.length > 0 && (
               <div>
                 <div className="flex items-center gap-4 mb-10">
                   <div className="w-1 h-8 bg-brand-cyan rounded-full" />
@@ -240,7 +234,7 @@ export function PartnersListClient({ sponsors, partners, mediaPartners = [], her
                     Media Partners
                   </h2>
                 </div>
-                <MediaPartnerGrid partners={sortedMediaPartners} />
+                <MediaPartnerGrid partners={mediaPartners} />
               </div>
             )}
           </div>
@@ -248,7 +242,7 @@ export function PartnersListClient({ sponsors, partners, mediaPartners = [], her
       )}
 
       {/* Empty state */}
-      {totalCompanies === 0 && sortedMediaPartners.length === 0 && (
+      {totalCompanies === 0 && mediaPartners.length === 0 && (
         <section className="bg-[#F0F0EF] py-24">
           <div className="max-w-[1440px] mx-auto px-6 text-center">
             <p className="text-gray-500 text-lg">
