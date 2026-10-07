@@ -194,19 +194,6 @@ export default async function TeamPage() {
         };
       });
 
-      // Sort the CMS snapshot members using the live CRM database sort order
-      if (apiTeam.status === 'fulfilled') {
-        const orderMap = new Map<string, number>();
-        apiTeam.value.forEach((m, index) => {
-          if (m.slug) orderMap.set(m.slug, index);
-        });
-        members.sort((a, b) => {
-          const orderA = a.slug ? orderMap.get(a.slug) ?? 9999 : 9999;
-          const orderB = b.slug ? orderMap.get(b.slug) ?? 9999 : 9999;
-          return orderA - orderB;
-        });
-      }
-
       heroData = extractHeroFromBlocks(blocks);
       stats = extractStatsFromBlocks(blocks);
       ctaData = extractCtaFromBlocks(blocks);
@@ -220,6 +207,9 @@ export default async function TeamPage() {
   if (members.length === 0 && apiTeam.status === 'fulfilled') {
     members = apiTeam.value;
   }
+
+  // Display name is "first surname", so this is A–Z by first name.
+  members.sort((a, b) => a.name.localeCompare(b.name, 'en', { sensitivity: 'base' }));
 
   return (
     <SpeakersListClient
