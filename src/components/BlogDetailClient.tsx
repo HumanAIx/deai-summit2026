@@ -2,6 +2,7 @@
 
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import Image from 'next/image';
+import { remoteImageProps } from '@/lib/remoteImage';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { DetailPageLayout } from '@/components/DetailPageLayout';
@@ -118,7 +119,7 @@ function PublisherAvatar({ publisher, accentColor }: { publisher: BlogPublisher;
   if (publisher.image) {
     return (
       <div className="relative w-10 h-10 rounded-full overflow-hidden border-2 flex-shrink-0" style={{ borderColor: accentColor }}>
-        <Image src={publisher.image} alt={publisher.name} fill className="object-cover" />
+        <Image src={publisher.image} alt={publisher.name} fill className="object-cover" {...remoteImageProps(publisher.image)} />
       </div>
     );
   }
@@ -218,6 +219,7 @@ export function BlogDetailClient({
               priority
               className="object-cover object-center"
               sizes="100vw"
+              {...remoteImageProps(post.featured_image)}
             />
             <div className="absolute inset-0 bg-gradient-to-t from-[#050A1F] via-[#050A1F]/40 to-[#050A1F]/20" />
             <div className="absolute inset-x-0 top-0 h-36 bg-gradient-to-b from-[#050A1F]/75 to-transparent pointer-events-none" />

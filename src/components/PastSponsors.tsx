@@ -183,6 +183,7 @@ function SponsorCard({ item, index = 0 }: { item: PartnerItemData; index?: numbe
             src={item.logo}
             alt={item.name}
             holdBox={HOME_LOGO_HOLD}
+            colorScheme={isDark ? 'dark' : 'light'}
           />
         </div>
 

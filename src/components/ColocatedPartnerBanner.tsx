@@ -1,4 +1,5 @@
 import Image from 'next/image';
+import { remoteImageProps } from '@/lib/remoteImage';
 import Link from 'next/link';
 import type { HighlightsHotspotBanner } from '@/config/types';
 import { sponsorScrollerUsesSilhouetteFilter } from '@/lib/logoDisplay';
@@ -33,7 +34,7 @@ export function ColocatedPartnerBanner({ banner, className = 'mt-5 ml-1 max-w-[2
                 width={48}
                 height={32}
                 className={`max-h-full w-auto object-contain ${logoSilhouette ? 'brightness-0 opacity-90' : ''}`}
-                unoptimized={banner.logo.startsWith('http')}
+                {...remoteImageProps(banner.logo)}
               />
             </div>
           ) : (

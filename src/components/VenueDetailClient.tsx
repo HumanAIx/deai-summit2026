@@ -2,6 +2,7 @@
 
 import React from 'react';
 import Image from 'next/image';
+import { remoteImageProps } from '@/lib/remoteImage';
 import Link from 'next/link';
 import { DetailPageLayout } from '@/components/DetailPageLayout';
 import { AnimatedGrid } from '@/components/AnimatedGrid';
@@ -104,6 +105,7 @@ export const VenueDetailClient: React.FC<VenueDetailClientProps> = ({ company, c
               fill
               className="object-cover"
               priority
+              {...remoteImageProps(company.venue_photo)}
             />
             <div className="absolute inset-0 bg-gradient-to-b from-[#050A1F]/70 via-[#050A1F]/50 to-[#050A1F]" />
           </div>
@@ -121,6 +123,7 @@ export const VenueDetailClient: React.FC<VenueDetailClientProps> = ({ company, c
                     alt={company.company_name}
                     fill
                     className="object-contain p-2"
+                    {...remoteImageProps(company.company_logo)}
                   />
                 </div>
               </div>
@@ -226,6 +229,7 @@ export const VenueDetailClient: React.FC<VenueDetailClientProps> = ({ company, c
                 alt={`${company.company_name} venue`}
                 fill
                 className="object-cover"
+                {...remoteImageProps(company.venue_photo)}
               />
             </div>
           </div>

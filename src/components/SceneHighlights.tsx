@@ -1,5 +1,6 @@
 import React from 'react';
 import Image from 'next/image';
+import { remoteImageProps } from '@/lib/remoteImage';
 import Link from 'next/link';
 import { HighlightsConfig } from '@/config/types';
 import { ColocatedPartnerBanner } from '@/components/ColocatedPartnerBanner';
@@ -19,6 +20,7 @@ export const SceneHighlights: React.FC<SceneHighlightsProps> = ({ data }) => {
                     alt="Conference Hall"
                     fill
                     className="object-cover opacity-60"
+                    {...remoteImageProps(data.backgroundImage)}
                 />
                 <div className="absolute inset-0 bg-gradient-to-t from-[#050A1F] via-transparent to-[#050A1F]/40"></div>
                 {/* Subtle brand tint */}

@@ -2,6 +2,7 @@
 
 import React from 'react';
 import Image from 'next/image';
+import { remoteImageProps } from '@/lib/remoteImage';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { DetailPageLayout } from '@/components/DetailPageLayout';
@@ -217,6 +218,7 @@ export const CompanyDetailClient: React.FC<CompanyDetailClientProps> = ({
                     priority
                     sizes="(max-width:1024px) 100vw, 50vw"
                     className="object-cover"
+                    {...remoteImageProps(cover)}
                   />
                 ) : (
                   <div className="absolute inset-0 bg-white/5" />
@@ -336,7 +338,7 @@ export const CompanyDetailClient: React.FC<CompanyDetailClientProps> = ({
                       className="aspect-video rounded-3xl overflow-hidden border border-white/10 shadow-[0_30px_80px_-40px_rgba(0,0,0,0.8)] relative bg-black"
                     >
                       {thumb ? (
-                        <Image src={thumb} alt="" fill sizes="1000px" className="object-cover opacity-30" />
+                        <Image src={thumb} alt="" fill sizes="1000px" className="object-cover opacity-30" {...remoteImageProps(thumb)} />
                       ) : null}
                       <iframe
                         src={embed}
@@ -371,7 +373,7 @@ export const CompanyDetailClient: React.FC<CompanyDetailClientProps> = ({
             {company.company_logo && (
               <div className="flex-shrink-0">
                 <div
-                  className={`relative w-48 h-48 md:w-64 md:h-64 rounded-2xl overflow-hidden border-2 border-white/10 shadow-2xl shadow-brand-cyan/10 flex items-center justify-center ${company.logo_background_white ? 'bg-white' : 'bg-white/5'} p-6`}
+                  className={`relative w-48 h-48 md:w-64 md:h-64 rounded-2xl overflow-hidden border-2 border-white/10 shadow-2xl shadow-brand-cyan/10 flex items-center justify-center ${company.logo_background_white ? 'bg-white' : 'bg-[#050A1F]'} p-6`}
                 >
                   <Image
                     src={company.company_logo}
@@ -379,6 +381,8 @@ export const CompanyDetailClient: React.FC<CompanyDetailClientProps> = ({
                     fill
                     className="object-contain p-4"
                     priority
+                    {...remoteImageProps(company.company_logo)}
+                    style={{ colorScheme: company.logo_background_white ? 'light' : 'dark' }}
                   />
                 </div>
               </div>

@@ -64,7 +64,11 @@ function CompanyCard({ company, type, bgColor }: { company: NormalizedSponsor; t
       >
         {company.logo ? (
           <div className="absolute inset-0 p-8">
-            <FittedCompanyLogo src={company.logo} alt={company.name} />
+            <FittedCompanyLogo
+              src={company.logo}
+              alt={company.name}
+              colorScheme={company.logoHasDarkBg ? 'dark' : 'light'}
+            />
           </div>
         ) : (
           <div className="w-full h-full flex items-center justify-center">
@@ -109,7 +113,11 @@ function MediaPartnerGrid({ partners }: { partners: MediaPartnerLink[] }) {
         >
           <div className={`relative h-[160px] overflow-hidden ${partner.darkBg ? 'bg-[#050A1F]' : 'bg-white'}`}>
             <div className="absolute inset-0 p-8">
-              <FittedCompanyLogo src={partner.image} alt={partner.name} />
+              <FittedCompanyLogo
+                src={partner.image}
+                alt={partner.name}
+                colorScheme={partner.darkBg ? 'dark' : 'light'}
+              />
             </div>
           </div>
           <div className="px-5 py-4 flex items-center justify-between gap-3">
