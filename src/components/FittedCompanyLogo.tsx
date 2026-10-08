@@ -132,17 +132,27 @@ export function FittedCompanyLogo({
   alt,
   unoptimized = false,
   holdBox,
+  colorScheme,
 }: {
   src: string;
   alt: string;
   unoptimized?: boolean;
   /** Pixel size of the previous slot. Logos that already fill it are not enlarged. */
   holdBox?: { width: number; height: number };
+  /**
+   * Some SVGs switch fill with `prefers-color-scheme`. Pin the scheme to the
+   * plate so a dark mark stays dark on white and a light mark stays light on navy.
+   */
+  colorScheme?: 'light' | 'dark';
 }) {
   const frameRef = useRef<HTMLDivElement>(null);
   const inkRef = useRef<InkBox | null>(null);
   const [placement, setPlacement] = useState<Placement>({ scale: 1, x: 0, y: 0 });
   const [ready, setReady] = useState(false);
+  // Remote logos are already small files. Sending them through the host image
+  // optimizer fails closed (402) once that quota is used up, which drops the
+  // mark on production while local builds still show it.
+  const skipOptimizer = unoptimized || /^https?:\/\//.test(src);
 
   useEffect(() => {
     const frame = frameRef.current;
@@ -200,9 +210,10 @@ export function FittedCompanyLogo({
         alt={alt}
         fill
         sizes="280px"
-        unoptimized={unoptimized}
+        unoptimized={skipOptimizer}
         className="object-contain"
         style={{
+          colorScheme,
           opacity: ready ? 1 : 0,
           transform:
             Math.abs(placement.scale - 1) > 0.02

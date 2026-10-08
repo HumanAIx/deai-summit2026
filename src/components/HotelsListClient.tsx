@@ -3,6 +3,7 @@
 import React from 'react';
 import { AnimatedCounter } from '@/components/AnimatedCounter';
 import Image from 'next/image';
+import { remoteImageProps } from '@/lib/remoteImage';
 import Link from 'next/link';
 import { DetailPageLayout } from '@/components/DetailPageLayout';
 import { AnimatedGrid } from '@/components/AnimatedGrid';
@@ -75,6 +76,7 @@ function HotelCard({ hotel }: { hotel: NormalizedSponsor }) {
             fill
             sizes="(max-width:768px) 100vw, 33vw"
             className="object-cover transition-transform duration-700 group-hover:scale-105"
+            {...remoteImageProps(cover)}
           />
         ) : (
           <div className="absolute inset-0 bg-[#050A1F] flex items-center justify-center text-white/30 font-display text-2xl font-bold">
@@ -85,7 +87,7 @@ function HotelCard({ hotel }: { hotel: NormalizedSponsor }) {
         {thumb ? (
           <div className="absolute top-4 right-4 flex items-center gap-2 rounded-full bg-black/55 backdrop-blur-md border border-white/15 px-3 py-1.5 text-white text-[10px] font-mono uppercase tracking-[0.18em]">
             <span className="relative w-5 h-5 rounded-full overflow-hidden border border-white/30">
-              <Image src={thumb} alt="" fill sizes="20px" className="object-cover" />
+              <Image src={thumb} alt="" fill sizes="20px" className="object-cover" {...remoteImageProps(thumb)} />
             </span>
             Video
           </div>

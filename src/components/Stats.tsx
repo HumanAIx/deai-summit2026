@@ -2,6 +2,7 @@
 
 import React from 'react';
 import Image from 'next/image';
+import { remoteImageProps } from '@/lib/remoteImage';
 import Link from 'next/link';
 import { OrganizerConfig, StatsConfig } from '@/config/types';
 import { AnimatedCounter } from '@/components/AnimatedCounter';
@@ -58,6 +59,7 @@ function OrganizerTile({ organizer }: { organizer: OrganizerConfig }) {
               filter: 'brightness(1.6) saturate(1.2) drop-shadow(0 0 18px rgba(0,176,194,0.45))',
             }}
             aria-hidden
+            {...remoteImageProps(image)}
           />
         </div>
 
@@ -69,6 +71,7 @@ function OrganizerTile({ organizer }: { organizer: OrganizerConfig }) {
                 alt={organizer.name}
                 fill
                 className="object-contain p-2"
+                {...remoteImageProps(image)}
               />
             </div>
             <div className="flex flex-col min-w-0">

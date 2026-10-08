@@ -2,6 +2,7 @@
 
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import Image from 'next/image';
+import { remoteImageProps } from '@/lib/remoteImage';
 import Link from 'next/link';
 import { DetailPageLayout } from '@/components/DetailPageLayout';
 import { AnimatedGrid } from '@/components/AnimatedGrid';
@@ -101,7 +102,7 @@ function BlogCarousel({ posts }: { posts: BlogPost[] }) {
           style={{ opacity: index === activeIndex ? 1 : 0, zIndex: index === activeIndex ? 1 : 0 }}
         >
           {post.featured_image ? (
-            <Image src={post.featured_image} alt={post.title} fill className="object-cover" sizes="100vw" priority={index === 0} />
+            <Image src={post.featured_image} alt={post.title} fill className="object-cover" sizes="100vw" priority={index === 0} {...remoteImageProps(post.featured_image)} />
           ) : (
             <div
               className="w-full h-full"
@@ -203,6 +204,7 @@ function BlogCard({ post, index, featured = false }: { post: BlogPost; index: nu
               fill
               className="object-cover group-hover:scale-105 transition-transform duration-700"
               sizes={featured ? '(max-width: 640px) 100vw, 55vw' : '(max-width: 640px) 100vw, 33vw'}
+              {...remoteImageProps(post.featured_image)}
             />
           ) : (
             <div

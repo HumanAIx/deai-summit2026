@@ -1,6 +1,7 @@
 'use client';
 
 import Image from 'next/image';
+import { remoteImageProps } from '@/lib/remoteImage';
 import { FittedCompanyLogo } from '@/components/FittedCompanyLogo';
 import Link from 'next/link';
 import { useLayoutEffect, useRef, useState } from 'react';
@@ -263,10 +264,15 @@ function CompaniesGridSection({ block }: { block: CMSBlock }) {
                         fill
                         sizes="280px"
                         className="object-cover"
+                        {...remoteImageProps(item.venue_photo || item.company_thumbnail || item.company_logo)}
                       />
                     ) : item.company_logo ? (
                       <div className="absolute inset-0 p-8">
-                        <FittedCompanyLogo src={item.company_logo} alt={item.company_name} />
+                        <FittedCompanyLogo
+                          src={item.company_logo}
+                          alt={item.company_name}
+                          colorScheme={darkLogoPlate ? 'dark' : 'light'}
+                        />
                       </div>
                     ) : (
                       <span className="absolute inset-0 flex items-center justify-center text-gray-300 font-display font-bold">
@@ -359,7 +365,7 @@ function MembersGridSection({ block }: { block: CMSBlock }) {
                 >
                   <div className="relative h-[220px] bg-[#050A1F]">
                     {photo ? (
-                      <Image src={photo} alt={name} fill sizes="280px" className="object-cover object-top" />
+                      <Image src={photo} alt={name} fill sizes="280px" className="object-cover object-top" {...remoteImageProps(photo)} />
                     ) : (
                       <div className="absolute inset-0 flex items-center justify-center text-white/40 font-display text-3xl font-bold">
                         {name.slice(0, 1)}

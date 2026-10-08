@@ -246,7 +246,11 @@ export const SpeakerDetailClient: React.FC<SpeakerDetailClientProps> = ({
                     <div className={`relative h-[160px] overflow-hidden ${darkLogoPlate ? 'bg-[#050A1F]' : 'bg-white'}`}>
                       {logo ? (
                         <div className="absolute inset-0 p-8">
-                          <FittedCompanyLogo src={logo} alt={company.company_name} />
+                          <FittedCompanyLogo
+                            src={logo}
+                            alt={company.company_name}
+                            colorScheme={darkLogoPlate ? 'dark' : 'light'}
+                          />
                         </div>
                       ) : (
                         <span className="absolute inset-0 flex items-center justify-center text-gray-300 text-lg font-display font-bold">{company.company_name}</span>

@@ -1,6 +1,7 @@
 'use client';
 import React, { useEffect, useState } from 'react';
 import Image from 'next/image';
+import { remoteImageProps } from '@/lib/remoteImage';
 import { Speaker, PartnerItem } from '@/config/types';
 
 interface SpeakersProps {
@@ -16,6 +17,7 @@ const LogoItem: React.FC<{ name: string, logo: string }> = ({ name, logo }) => (
             width={120}
             height={60}
             className="max-h-12 w-auto max-w-full opacity-40 grayscale group-hover:grayscale-0 group-hover:opacity-100 transition-all duration-300 mix-blend-multiply"
+            {...remoteImageProps(logo)}
         />
     </div>
 );
