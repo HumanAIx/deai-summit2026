@@ -20,11 +20,11 @@ export async function generateMetadata({ params }: { params: Promise<{ slug: str
 
   const baseName = `${member.person_firstname} ${member.person_surname}`.trim();
   const name = formatPersonName(member.person_title, baseName);
-  const firstCompany = member.person_companies?.[0];
+  const companyName = member.person_companies?.[0]?.company_name?.trim();
   const bio = member.speaker_bio || member.person_bio || '';
 
   const seo = member.seo;
-  const title = seo?.meta_title || `${name}${firstCompany?.company_name ? ` - ${firstCompany.company_name}` : ''} | ${SEO_DEFAULTS.siteName}`;
+  const title = seo?.meta_title || `${name}${companyName ? ` - ${companyName}` : ''} | ${SEO_DEFAULTS.siteName}`;
   const description = seo?.meta_description || bio.replace(/<[^>]*>/g, '').slice(0, 160) || `${name} speaking at DeAI Summit 2026`;
   const canonical = seo?.canonical_url || `${BASE_URL}/speakers/${member.person_slug}`;
 
@@ -77,7 +77,11 @@ export default async function SpeakerDetailPage({
   const navigationData = apiNav ? mapNavigationData(apiNav) : undefined;
   const back = companyBackLink(from, companies);
 
-  const schema = generatePersonSchema(member, BASE_URL, 'speakers');
+  const linkedCompanies = (member.person_companies ?? []).map((company) => ({
+    id: company.company_id,
+    company_name: company.company_name,
+  }));
+  const schema = generatePersonSchema(member, BASE_URL, 'speakers', linkedCompanies);
   const seoOverrides = member.seo?.structured_data;
   const finalSchema = schema && seoOverrides && Object.keys(seoOverrides).length > 0
     ? { ...schema, ...seoOverrides }

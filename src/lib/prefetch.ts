@@ -1,5 +1,6 @@
 import { Member, Company, SEOSettings, NormalizedSpeaker, NormalizedSponsor, CMSPageData, NavigationAPIData, BlogPost, BlogPublisher, CMSBlock, CMSFormConfig } from './api-types';
 import { resolveGeneralLogoSrc, resolveScrollerLogoHasDarkBg, resolveScrollerLogoSrc } from './companyLogo';
+import { currentLinkedCompany, liveCompanyMap } from './personCompany';
 import type { NavigationConfig } from '@/config/types';
 import {
   resolveAnalyticsTagsFromApi,
@@ -90,9 +91,12 @@ async function fetchFromAPI<T>(
 
 // --- Normalization ---
 
-export function normalizeSpeaker(member: Member): NormalizedSpeaker {
+export function normalizeSpeaker(
+  member: Member,
+  liveById?: ReadonlyMap<string, { company_name?: string | null }>,
+): NormalizedSpeaker {
   const name = `${member.person_firstname || ''} ${member.person_surname || ''}`.trim();
-  const firstCompany = member.person_companies?.[0];
+  const current = currentLinkedCompany(member.person_companies, liveById ?? new Map());
 
   // Render contract: activeEnhancedUrl (AI-baked) → person_photo_nobg → person_photo.
   const image =
@@ -106,8 +110,8 @@ export function normalizeSpeaker(member: Member): NormalizedSpeaker {
     name,
     title: member.person_title || undefined,
     slug: member.person_slug,
-    role: firstCompany?.person_job_title || '',
-    company: firstCompany?.company_name || '',
+    role: current?.link.person_job_title || current?.link.member_job_title || '',
+    company: current?.companyName || '',
     image,
     person_photo: member.person_photo ?? null,
     person_photo_nobg: member.person_photo_nobg ?? null,
@@ -152,7 +156,10 @@ function getSpeakerContentScore(member: Member): number {
 export async function prefetchSpeakers(): Promise<NormalizedSpeaker[]> {
   // cacheDuration: 0 — same rule as companies/sponsors below: publish/draft
   // flag flips must propagate immediately, no Next data-cache window.
-  const members = await fetchFromAPI<Member[]>('/members?is_speaker=true&limit=100', { cacheDuration: 0 });
+  const [members, liveById] = await Promise.all([
+    fetchFromAPI<Member[]>('/members?is_speaker=true&limit=100', { cacheDuration: 0 }),
+    existingCompanyNames(),
+  ]);
   if (!members) return [];
   return members
     .filter(m => m.is_speaker_published)
@@ -166,7 +173,7 @@ export async function prefetchSpeakers(): Promise<NormalizedSpeaker[]> {
       if (ao !== bo) return ao - bo;
       return getSpeakerContentScore(b) - getSpeakerContentScore(a);
     })
-    .map(normalizeSpeaker);
+    .map((member) => normalizeSpeaker(member, liveById));
 }
 
 export interface CompanyPageSpeaker {
@@ -184,7 +191,7 @@ export async function prefetchCompanySpeakers(companyId: string, companyName?: s
     tiles.push({
       speaker: {
         ...speaker,
-        company: link.company_name || companyName || speaker.company,
+        company: companyName || link.company_name || speaker.company,
         role: link.person_job_title || link.member_job_title || speaker.role,
       },
       colorIndex,
@@ -200,9 +207,17 @@ export async function prefetchSpeakerBySlug(slug: string): Promise<Member | null
 export async function prefetchTeam(): Promise<NormalizedSpeaker[]> {
   // Same cacheDuration: 0 rule as speakers — publish/draft flips and Photo
   // Studio saves should propagate immediately.
-  const members = await fetchFromAPI<Member[]>('/members?type=team&limit=100', { cacheDuration: 0 });
+  const [members, liveById] = await Promise.all([
+    fetchFromAPI<Member[]>('/members?type=team&limit=100', { cacheDuration: 0 }),
+    existingCompanyNames(),
+  ]);
   if (!members) return [];
-  return members.filter(m => m.is_published).map(normalizeSpeaker);
+  return members.filter(m => m.is_published).map((member) => normalizeSpeaker(member, liveById));
+}
+
+async function existingCompanyNames(): Promise<Map<string, { company_name: string }>> {
+  const companies = await fetchFromAPI<Company[]>('/companies?limit=500', { cacheDuration: 0 });
+  return liveCompanyMap((companies ?? []).filter((company) => company.company_name?.trim()));
 }
 
 // Publish/draft flips must propagate immediately on production — pass
@@ -451,25 +466,34 @@ export async function prefetchHomePageData() {
 }
 
 export async function prefetchSpeakerDetailPageData(slug: string) {
-  const [member, allSpeakers] = await Promise.all([
+  const [member, allSpeakers, liveById] = await Promise.all([
     prefetchSpeakerBySlug(slug),
     prefetchSpeakers(),
+    existingCompanyNames(),
   ]);
 
   if (!member) return { member: null, speaker: null, companies: [], colorIndex: 0 };
 
-  // Resolve associated companies
-  const companyIds = member.person_companies?.map(c => c.company_id) ?? [];
+  // Drop links whose company record is gone, and use the company's current name.
+  const personCompanies = (member.person_companies ?? []).flatMap((link) => {
+    const companyName = liveById.get(link.company_id)?.company_name?.trim();
+    if (!companyName) return [];
+    return [{ ...link, company_name: companyName }];
+  });
+  const memberForPage = { ...member, person_companies: personCompanies };
+
+  // Organization cards are only for companies that have a public page.
+  const companyIds = personCompanies.map(c => c.company_id);
   const companies = companyIds.length > 0
     ? (await Promise.all(companyIds.map(cid => prefetchCompanyBySlug(cid))))
         .filter((c): c is Company => c != null && c.company_published)
     : [];
 
-  const speaker = normalizeSpeaker(member);
+  const speaker = normalizeSpeaker(memberForPage, liveById);
   const colorIndex = allSpeakers.findIndex(s => s.id === member.id);
 
   return {
-    member,
+    member: memberForPage,
     speaker,
     companies,
     colorIndex: colorIndex >= 0 ? colorIndex : 0,

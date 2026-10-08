@@ -88,6 +88,8 @@ export default async function Home() {
         return {
           ...v,
           image: fromApi.image || v.image,
+          company: fromApi.company,
+          role: fromApi.role,
           photoSource: {
             person_photo: fromApi.person_photo,
             person_photo_nobg: fromApi.person_photo_nobg,
