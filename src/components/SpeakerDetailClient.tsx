@@ -132,6 +132,11 @@ export const SpeakerDetailClient: React.FC<SpeakerDetailClientProps> = ({
     ? withPhotoCacheBuster(resolvedPhoto, photoSource)
     : '';
   const firstCompany = member.person_companies?.[0];
+  const matchedCompany = firstCompany
+    ? companies.find((company) => company.id === firstCompany.company_id)
+    : undefined;
+  const companyName = firstCompany?.company_name?.trim();
+  const companyHref = matchedCompany ? getCompanyPublicPath(matchedCompany) : null;
 
   return (
     <DetailPageLayout navigationData={navigationData} navigationAPIData={navigationAPIData} socials={socials}>
@@ -174,25 +179,14 @@ export const SpeakerDetailClient: React.FC<SpeakerDetailClientProps> = ({
                       {firstCompany.person_job_title}
                     </p>
                   )}
-                  {firstCompany.company_name && (
+                  {companyName && (
                     <p className="text-brand-cyan text-lg font-semibold">
-                      {firstCompany.company_slug ? (
-                        <Link
-                          href={(() => {
-                            const matched = companies.find(
-                              (c) =>
-                                c.company_slug === firstCompany.company_slug ||
-                                c.id === firstCompany.company_id,
-                            );
-                            if (matched) return getCompanyPublicPath(matched);
-                            return `/companies/${firstCompany.company_slug}`;
-                          })()}
-                          className="hover:underline"
-                        >
-                          {firstCompany.company_name}
+                      {companyHref ? (
+                        <Link href={companyHref} className="hover:underline">
+                          {companyName}
                         </Link>
                       ) : (
-                        firstCompany.company_name
+                        companyName
                       )}
                     </p>
                   )}

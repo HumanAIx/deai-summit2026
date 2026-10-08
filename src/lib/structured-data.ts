@@ -1,4 +1,5 @@
 import type { Member, Company, PersonSocials, CompanySocials } from './api-types';
+import { currentLinkedCompany, liveCompanyMap } from './personCompany';
 
 /**
  * Serialise an object for inclusion inside an inline <script type="application/ld+json">.
@@ -50,6 +51,7 @@ export function generatePersonSchema(
   member: Member | null | undefined,
   baseUrl: string,
   pathPrefix: string = 'speakers',
+  liveCompanies?: ReadonlyArray<{ id: string; company_name?: string | null }>,
 ) {
   const name = `${member?.person_firstname || ''} ${member?.person_surname || ''}`.trim();
   if (!name) return null;
@@ -59,10 +61,12 @@ export function generatePersonSchema(
   const sameAs = collectSocialUrls(member?.person_socials);
   if (member?.person_website) sameAs.unshift(member.person_website);
 
-  const jobTitle = member?.person_companies?.[0]?.person_job_title;
-  const worksFor = member?.person_companies
-    ?.filter(c => c.company_name)
-    .map(c => ({ '@type': 'Organization' as const, name: c.company_name! }));
+  const current = currentLinkedCompany(member?.person_companies, liveCompanyMap(liveCompanies ?? []));
+  const jobTitle = current?.link.person_job_title || current?.link.member_job_title;
+  const worksFor = (liveCompanies ?? [])
+    .map((company) => company.company_name?.trim())
+    .filter((name): name is string => !!name)
+    .map((name) => ({ '@type': 'Organization' as const, name }));
 
   const honorificPrefix = member?.person_title || undefined;
 
