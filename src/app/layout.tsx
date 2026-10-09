@@ -22,6 +22,8 @@ const playfair = Playfair_Display({
 });
 
 const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL || "https://deaisummit.org";
+const GA4_MEASUREMENT_ID = "G-10XNHM2ZWW";
+const GOOGLE_ADS_ID = "AW-18489910387";
 
 export async function generateMetadata(): Promise<Metadata> {
   const tags = await prefetchPublicAnalyticsTags();
@@ -48,7 +50,7 @@ export default async function RootLayout({
 }>) {
   const tags = await prefetchPublicAnalyticsTags();
   const gtmId = tags.gtmId;
-  const ga4Id = tags.ga4MeasurementId;
+  const ga4Id = tags.ga4MeasurementId || GA4_MEASUREMENT_ID;
   const linkedinPid = tags.linkedinPartnerId;
   const redditBoot = resolveRedditBootstrapId(tags);
 
@@ -90,7 +92,8 @@ export default async function RootLayout({
 
         <ThirdPartyScripts
           gtmId={gtmId || undefined}
-          ga4Id={ga4Id || undefined}
+          ga4Id={ga4Id}
+          googleAdsId={GOOGLE_ADS_ID}
           linkedinPid={linkedinPid || undefined}
           redditBoot={redditBoot || undefined}
         />

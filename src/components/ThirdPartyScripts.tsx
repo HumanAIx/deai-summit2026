@@ -5,6 +5,8 @@ import { useEffect } from 'react';
 type ThirdPartyScriptsProps = {
   gtmId?: string;
   ga4Id?: string;
+  /** Google Ads account, configured on the same gtag as GA4. Not a conversion event. */
+  googleAdsId?: string;
   linkedinPid?: string;
   redditBoot?: string;
 };
@@ -64,6 +66,7 @@ function injectExternalScript(
 export function ThirdPartyScripts({
   gtmId,
   ga4Id,
+  googleAdsId,
   linkedinPid,
   redditBoot,
 }: ThirdPartyScriptsProps) {
@@ -79,17 +82,18 @@ j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
       );
     }
 
-    if (ga4Id) {
+    const googleTagIds = [...new Set([ga4Id, googleAdsId].filter((id): id is string => !!id))];
+    if (googleTagIds.length > 0) {
       injectExternalScript(
         'google-analytics-src',
-        `https://www.googletagmanager.com/gtag/js?id=${encodeURIComponent(ga4Id)}`,
+        `https://www.googletagmanager.com/gtag/js?id=${encodeURIComponent(googleTagIds[0])}`,
       );
       injectInlineScript(
         'google-analytics',
         `window.dataLayer = window.dataLayer || [];
 function gtag(){dataLayer.push(arguments);}
 gtag('js', new Date());
-gtag('config', ${JSON.stringify(ga4Id)});`,
+${googleTagIds.map((id) => `gtag('config', ${JSON.stringify(id)});`).join('\n')}`,
       );
     }
 
@@ -125,7 +129,7 @@ window.rdt('init',${JSON.stringify(redditBoot)});
 window.rdt('track','PageVisit');`,
       );
     }
-  }, [gtmId, ga4Id, linkedinPid, redditBoot]);
+  }, [gtmId, ga4Id, googleAdsId, linkedinPid, redditBoot]);
 
   return null;
 }
