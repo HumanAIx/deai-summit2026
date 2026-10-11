@@ -4,6 +4,7 @@ import React, { useLayoutEffect, useRef, useState } from 'react';
 import Link from 'next/link';
 import { useSearchParams } from 'next/navigation';
 import { HeroConfig } from '@/config/types';
+import { isLumaTicketUrl } from '@/lib/lumaTicket';
 import { HERO_STAGE, HeroWaveField } from '@/components/HeroWaveField';
 
 const VIDEO_MAP: Record<string, string> = {
@@ -156,7 +157,7 @@ export const Hero: React.FC<HeroProps> = ({ data, onOpenWaitlist, onScale, navSl
     const href = btn.link?.trim() || '/contact';
     if (href.startsWith('http')) {
       return (
-        <a key={`${btn.label}-${index}`} href={href} target="_blank" rel="noopener noreferrer" className={className} style={style}>
+        <a key={`${btn.label}-${index}`} href={href} target="_blank" rel="noopener noreferrer" className={className} style={style} data-luma-ticket={isLumaTicketUrl(href) ? '' : undefined}>
           {btn.label}
         </a>
       );

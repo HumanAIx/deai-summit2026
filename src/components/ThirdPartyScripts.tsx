@@ -1,6 +1,7 @@
 'use client';
 
 import { useEffect } from 'react';
+import { isLumaTicketUrl } from '@/lib/lumaTicket';
 
 type ThirdPartyScriptsProps = {
   gtmId?: string;
@@ -22,17 +23,8 @@ declare global {
   }
 }
 
-/** Clicks from this site through to Luma. Not sent on other pages. */
+/** Clicks on ticket buttons that leave for Luma. Footer icons are not included. */
 const LUMA_TICKET_CONVERSION = 'AW-18489910387/SN50CPPA_ZUdEPPI1vBE';
-
-function isLumaTicketHref(href: string): boolean {
-  try {
-    const host = new URL(href, window.location.href).hostname.toLowerCase().replace(/^www\./, '');
-    return host === 'luma.com' || host.endsWith('.luma.com') || host === 'lu.ma' || host.endsWith('.lu.ma');
-  } catch {
-    return false;
-  }
-}
 
 function lumaAnchorFromEvent(event: MouseEvent): HTMLAnchorElement | null {
   const path = event.composedPath();
@@ -65,7 +57,7 @@ function sendLumaTicketConversion() {
 function trackLumaTicketClick(event: MouseEvent) {
   if (event.button !== 0) return;
   const anchor = lumaAnchorFromEvent(event);
-  if (!anchor || !isLumaTicketHref(anchor.href)) return;
+  if (!anchor?.hasAttribute('data-luma-ticket') || !isLumaTicketUrl(anchor.href, window.location.href)) return;
   sendLumaTicketConversion();
 }
 
@@ -119,8 +111,7 @@ export function ThirdPartyScripts({
   redditBoot,
 }: ThirdPartyScriptsProps) {
   useEffect(() => {
-    // Capture so every Luma control is counted: early-bird, each pass,
-    // the closing ticket button, and the footer Luma icons.
+    // Ticket buttons only: early-bird, each pass, and the closing ticket button.
     if (googleAdsId) document.addEventListener('click', trackLumaTicketClick, true);
 
     if (gtmId) {
