@@ -5,7 +5,7 @@ import { useEffect } from 'react';
 type ThirdPartyScriptsProps = {
   gtmId?: string;
   ga4Id?: string;
-  /** Google Ads account, configured on the same gtag as GA4. Not a conversion event. */
+  /** Google Ads account, configured on the same gtag as GA4. */
   googleAdsId?: string;
   linkedinPid?: string;
   redditBoot?: string;
@@ -14,11 +14,59 @@ type ThirdPartyScriptsProps = {
 declare global {
   interface Window {
     dataLayer?: unknown[];
+    gtag?: (...args: unknown[]) => void;
     _linkedin_partner_id?: string;
     _linkedin_data_partner_ids?: string[];
     lintrk?: ((...args: unknown[]) => void) & { q?: unknown[] };
     rdt?: ((...args: unknown[]) => void) & { sendQueue?: unknown[] };
   }
+}
+
+/** Clicks from this site through to Luma. Not sent on other pages. */
+const LUMA_TICKET_CONVERSION = 'AW-18489910387/SN50CPPA_ZUdEPPI1vBE';
+
+function isLumaTicketHref(href: string): boolean {
+  try {
+    const host = new URL(href, window.location.href).hostname.toLowerCase().replace(/^www\./, '');
+    return host === 'luma.com' || host.endsWith('.luma.com') || host === 'lu.ma' || host.endsWith('.lu.ma');
+  } catch {
+    return false;
+  }
+}
+
+function lumaAnchorFromEvent(event: MouseEvent): HTMLAnchorElement | null {
+  const path = event.composedPath();
+  for (const node of path) {
+    if (node instanceof HTMLAnchorElement && node.href) return node;
+    if (node instanceof Element) {
+      const anchor = node.closest('a');
+      if (anchor instanceof HTMLAnchorElement && anchor.href) return anchor;
+    }
+  }
+  return null;
+}
+
+/** Queue the hit even if gtag.js has not finished loading yet. */
+function sendLumaTicketConversion() {
+  window.dataLayer = window.dataLayer || [];
+  if (typeof window.gtag !== 'function') {
+    window.gtag = function gtag() {
+      // gtag.js reads Arguments objects, not arrays.
+      // eslint-disable-next-line prefer-rest-params
+      window.dataLayer?.push(arguments);
+    };
+  }
+  window.gtag('event', 'conversion', {
+    send_to: LUMA_TICKET_CONVERSION,
+    transport_type: 'beacon',
+  });
+}
+
+function trackLumaTicketClick(event: MouseEvent) {
+  if (event.button !== 0) return;
+  const anchor = lumaAnchorFromEvent(event);
+  if (!anchor || !isLumaTicketHref(anchor.href)) return;
+  sendLumaTicketConversion();
 }
 
 function injectInlineScript(id: string, code: string) {
@@ -71,6 +119,10 @@ export function ThirdPartyScripts({
   redditBoot,
 }: ThirdPartyScriptsProps) {
   useEffect(() => {
+    // Capture so every Luma control is counted: early-bird, each pass,
+    // the closing ticket button, and the footer Luma icons.
+    if (googleAdsId) document.addEventListener('click', trackLumaTicketClick, true);
+
     if (gtmId) {
       injectInlineScript(
         'google-tag-manager',
@@ -129,6 +181,10 @@ window.rdt('init',${JSON.stringify(redditBoot)});
 window.rdt('track','PageVisit');`,
       );
     }
+
+    return () => {
+      document.removeEventListener('click', trackLumaTicketClick, true);
+    };
   }, [gtmId, ga4Id, googleAdsId, linkedinPid, redditBoot]);
 
   return null;
