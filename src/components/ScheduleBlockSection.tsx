@@ -1247,7 +1247,7 @@ export function ScheduleBlockSection({
               type="button"
               onClick={() => setActiveDate(d)}
               className={[
-                'group flex-shrink-0 text-center rounded-[15px] border',
+                'group flex-shrink-0 cursor-pointer text-center rounded-[15px] border',
                 sizeCls,
                 '[transition:background-color_420ms_cubic-bezier(0.4,0,0.2,1),border-color_420ms_cubic-bezier(0.4,0,0.2,1),transform_420ms_cubic-bezier(0.4,0,0.2,1),box-shadow_420ms_cubic-bezier(0.4,0,0.2,1)]',
                 active
