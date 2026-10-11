@@ -1,5 +1,6 @@
 import type { ReactNode } from 'react';
 import { IBM_Plex_Mono } from 'next/font/google';
+import { isLumaTicketUrl } from '@/lib/lumaTicket';
 import type { TicketPass, TicketsPageContent } from '@/lib/tickets-page';
 
 const plexMono = IBM_Plex_Mono({
@@ -34,6 +35,7 @@ function TicketLink({
       target={external(href) ? '_blank' : undefined}
       rel={external(href) ? 'noopener noreferrer' : undefined}
       className={className}
+      data-luma-ticket={isLumaTicketUrl(href) ? '' : undefined}
     >
       {children}
       <span aria-hidden="true">→</span>
