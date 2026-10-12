@@ -24,6 +24,19 @@ const playfair = Playfair_Display({
 const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL || "https://deaisummit.org";
 const GA4_MEASUREMENT_ID = "G-10XNHM2ZWW";
 const GOOGLE_ADS_ID = "AW-18489910387";
+const FACEBOOK_PIXEL_ID = "2771836733083164";
+
+/** Meta base pixel. Runs from the document head on every page. */
+const facebookPixelBoot = `!function(f,b,e,v,n,t,s)
+{if(f.fbq)return;n=f.fbq=function(){n.callMethod?
+n.callMethod.apply(n,arguments):n.queue.push(arguments)};
+if(!f._fbq)f._fbq=n;n.push=n;n.loaded=!0;n.version='2.0';
+n.queue=[];t=b.createElement(e);t.async=!0;
+t.src=v;s=b.getElementsByTagName(e)[0];
+s.parentNode.insertBefore(t,s)}(window,document,'script',
+'https://connect.facebook.net/en_US/fbevents.js');
+fbq('init', ${JSON.stringify(FACEBOOK_PIXEL_ID)});
+fbq('track', 'PageView');`;
 
 export async function generateMetadata(): Promise<Metadata> {
   const tags = await prefetchPublicAnalyticsTags();
@@ -58,6 +71,7 @@ export default async function RootLayout({
     <html lang="en" suppressHydrationWarning>
       <head>
         <script dangerouslySetInnerHTML={{ __html: heroMenuScaleBoot }} />
+        <script dangerouslySetInnerHTML={{ __html: facebookPixelBoot }} />
       </head>
       <body
         className={`${inter.variable} ${playfair.variable} antialiased`}
@@ -86,6 +100,16 @@ export default async function RootLayout({
             />
           </noscript>
         ) : null}
+
+        <noscript>
+          <img
+            height="1"
+            width="1"
+            style={{ display: "none" }}
+            alt=""
+            src={`https://www.facebook.com/tr?id=${encodeURIComponent(FACEBOOK_PIXEL_ID)}&ev=PageView&noscript=1`}
+          />
+        </noscript>
 
         {children}
         <NavigationLoader />
