@@ -1211,12 +1211,22 @@ export function ScheduleBlockSection({
   const sortedItems = useMemo(() => {
     if (!activeDate) return [] as ScheduleAgendaItem[];
     const raw = schedule?.agenda_items_by_date?.[activeDate] ?? [];
-    let list = [...raw].sort(compareItems);
-    if (bookmarksOnly) {
-      list = list.filter((it) => bookmarks.has(it.id));
-    }
-    return list;
-  }, [schedule, activeDate, bookmarksOnly, bookmarks]);
+    return [...raw].sort(compareItems);
+  }, [schedule, activeDate]);
+
+  // Bookmarks are saved across both programme days. The filtered view lists
+  // every one of them, so the count matches the sessions on screen.
+  const bookmarkedGroups = useMemo(() => {
+    if (!bookmarksOnly || !schedule) return [] as { dateKey: string; dayItems: ScheduleAgendaItem[] }[];
+    return dates
+      .map((dateKey) => ({
+        dateKey,
+        dayItems: [...(schedule.agenda_items_by_date?.[dateKey] ?? [])]
+          .filter((it) => bookmarks.has(it.id))
+          .sort(compareItems),
+      }))
+      .filter((group) => group.dayItems.length > 0);
+  }, [bookmarksOnly, schedule, dates, bookmarks]);
 
   const handlePrint = () => {
     if (typeof window !== 'undefined') window.print();
@@ -1335,7 +1345,7 @@ export function ScheduleBlockSection({
     </div>
   );
 
-  const showFilterEmpty = bookmarksOnly && sortedItems.length === 0;
+  const showFilterEmpty = bookmarksOnly && bookmarkedGroups.length === 0;
   const body = (
     <div
       key={`${activeDate ?? 'none'}-${viewMode}-${bookmarksOnly ? 'b' : 'a'}`}
@@ -1400,6 +1410,39 @@ export function ScheduleBlockSection({
           >
             Browse full programme
           </button>
+        </div>
+      ) : bookmarksOnly ? (
+        <div className="flex flex-col gap-8 md:gap-10">
+          {bookmarkedGroups.map((group) => (
+            <section key={group.dateKey}>
+              {bookmarkedGroups.length > 1 && (
+                <h3 className="mb-4 font-mono text-[11px] uppercase tracking-[0.22em] text-[#050A1F]/55">
+                  {formatDayLong(group.dateKey)}
+                </h3>
+              )}
+              {viewMode === 'list' && (
+                <ListView
+                  items={group.dayItems}
+                  bookmarks={bookmarks}
+                  onToggleBookmark={toggleBookmark}
+                />
+              )}
+              {viewMode === 'grid' && (
+                <GridView
+                  items={group.dayItems}
+                  bookmarks={bookmarks}
+                  onToggleBookmark={toggleBookmark}
+                />
+              )}
+              {viewMode === 'timetable' && (
+                <TimetableView
+                  items={group.dayItems}
+                  bookmarks={bookmarks}
+                  onToggleBookmark={toggleBookmark}
+                />
+              )}
+            </section>
+          ))}
         </div>
       ) : (
         <>
