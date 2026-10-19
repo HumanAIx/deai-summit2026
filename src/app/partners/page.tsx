@@ -3,6 +3,7 @@ import { prefetchCMSPage, prefetchSponsors, prefetchPartners, prefetchNavigation
 import { generatePageMetadata } from '@/lib/seo-defaults';
 import { PartnersListClient, type MediaPartnerLink } from '@/components/PartnersListClient';
 import type { NormalizedSponsor, CMSBlock, CMSCompanyItem } from '@/lib/api-types';
+import { cmsSortOrder, compareDisplayNames, orderByCmsOrName } from '@/lib/cmsOrder';
 import { resolveGeneralLogoSrc, resolvePublicCardHasDarkBg } from '@/lib/companyLogo';
 
 const BASE_URL = process.env.NEXT_PUBLIC_SITE_URL || 'https://deaisummit.org';
@@ -58,15 +59,26 @@ function extractMediaPartners(blocks: CMSBlock[]): MediaPartnerLink[] {
       darkBg: logoNeedsDarkBg(image),
     });
   }
-  return partners;
+  const order = cmsSortOrder(block);
+  if (!order?.length) {
+    return partners.sort((a, b) => compareDisplayNames(a.name, b.name));
+  }
+  return orderByCmsOrName(
+    partners.map((partner) => ({ ...partner, id: partner.href })),
+    order,
+  );
 }
 
 function extractCompaniesFromBlocks(blocks: CMSBlock[]): {
   sponsors: NormalizedSponsor[];
   partners: NormalizedSponsor[];
+  sponsorOrder?: string[];
+  partnerOrder?: string[];
 } {
   let sponsors: NormalizedSponsor[] = [];
   let partners: NormalizedSponsor[] = [];
+  let sponsorOrder: string[] | undefined;
+  let partnerOrder: string[] | undefined;
 
   for (const block of blocks) {
     const items = block.items as unknown as CMSCompanyItem[] | undefined;
@@ -79,31 +91,36 @@ function extractCompaniesFromBlocks(blocks: CMSBlock[]): {
     const publishedPartners = (list: CMSCompanyItem[]) =>
       list.filter(i => i.company_published !== false && i.company_is_partner);
 
-    const assignFromListType = (resolvedListType: string | undefined, list: CMSCompanyItem[]) => {
+    const assignFromListType = (resolvedListType: string | undefined, list: CMSCompanyItem[], order?: string[]) => {
       if (resolvedListType === 'all-sponsors') {
         sponsors = publishedSponsors(list).map(item => normalizeCMSCompany(item, true, !!item.company_is_partner));
+        sponsorOrder = order;
       } else if (resolvedListType === 'all-partners') {
         partners = publishedPartners(list).map(item => normalizeCMSCompany(item, !!item.company_is_sponsor, true));
+        partnerOrder = order;
       } else if (resolvedListType === 'all-companies') {
         sponsors = publishedSponsors(list).map(item => normalizeCMSCompany(item, true, !!item.company_is_partner));
         partners = publishedPartners(list)
           .filter(item => !item.company_is_sponsor || item.sponsor_published === false)
           .map(item => normalizeCMSCompany(item, !!item.company_is_sponsor, true));
+        sponsorOrder = order;
+        partnerOrder = order;
       }
     };
 
+    const order = cmsSortOrder(block);
     // Direct companies-list block
     if (block.type === 'companies-list') {
-      assignFromListType(listType, items);
+      assignFromListType(listType, items, order);
     }
     // Content block with companies-list addon
     if (block.addon === 'companies-list') {
       const addonListType = (block as Record<string, unknown>).companiesListType || block.listType;
-      assignFromListType(typeof addonListType === 'string' ? addonListType : undefined, items);
+      assignFromListType(typeof addonListType === 'string' ? addonListType : undefined, items, order);
     }
   }
 
-  return { sponsors, partners };
+  return { sponsors, partners, sponsorOrder, partnerOrder };
 }
 
 function extractHeroFromBlocks(blocks: CMSBlock[]): {
@@ -197,6 +214,8 @@ export default async function PartnersPage() {
   let sponsors: NormalizedSponsor[] = [];
   let partners: NormalizedSponsor[] = [];
   let mediaPartners: MediaPartnerLink[] = [];
+  let sponsorOrder: string[] | undefined;
+  let partnerOrder: string[] | undefined;
   let heroData: { badge?: string; title?: string; subtitle?: string } = {};
   let ctaData: { title?: string; subtitle?: string; buttons?: { label: string; link?: string }[] } = {};
 
@@ -214,6 +233,8 @@ export default async function PartnersPage() {
       const extracted = extractCompaniesFromBlocks(blocks);
       sponsors = extracted.sponsors;
       partners = extracted.partners;
+      sponsorOrder = extracted.sponsorOrder;
+      partnerOrder = extracted.partnerOrder;
       mediaPartners = extractMediaPartners(blocks);
       heroData = extractHeroFromBlocks(blocks);
       ctaData = extractCtaFromBlocks(blocks);
@@ -229,12 +250,17 @@ export default async function PartnersPage() {
       sponsors.length === 0 ? prefetchSponsors() : Promise.resolve(sponsors),
       partners.length === 0 ? prefetchPartners() : Promise.resolve(partners),
     ]);
+    if (sponsors.length === 0) sponsorOrder = undefined;
     sponsors = apiSponsors;
     const sponsorIds = new Set(sponsors.map(s => s.id));
+    if (partners.length === 0) partnerOrder = undefined;
     partners = apiPartners.filter(p => p.isPartner && !sponsorIds.has(p.id));
   } catch (error) {
     console.error('Failed to fetch sponsors/partners from direct API:', error);
   }
+
+  sponsors = orderByCmsOrName(sponsors, sponsorOrder);
+  partners = orderByCmsOrName(partners, partnerOrder);
 
   return (
     <PartnersListClient

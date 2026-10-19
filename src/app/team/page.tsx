@@ -1,5 +1,6 @@
 import { SpeakersListClient } from '@/components/SpeakersListClient';
 import type { CMSBlock, CMSSpeakerItem, NormalizedSpeaker } from '@/lib/api-types';
+import { cmsSortOrder, orderByCmsOrName } from '@/lib/cmsOrder';
 import { mapNavigationData, prefetchCMSPage, prefetchNavigation, prefetchSocials, prefetchTeam } from '@/lib/prefetch';
 import { generatePageMetadata } from '@/lib/seo-defaults';
 import type { Metadata } from 'next';
@@ -152,6 +153,7 @@ export async function generateMetadata(): Promise<Metadata> {
 
 export default async function TeamPage() {
   let members: NormalizedSpeaker[] = [];
+  let teamOrder: string[] | undefined;
   let heroData: { badge?: string; title?: string; subtitle?: string } = {};
   let stats: { label: string; value: string }[] = [];
   let ctaData: { title?: string; subtitle?: string; buttons?: { label: string; link?: string }[] } = {};
@@ -194,6 +196,9 @@ export default async function TeamPage() {
         };
       });
 
+      const membersBlock = blocks.find((block) => block.type === 'members-list' || block.addon === 'members-list');
+      teamOrder = membersBlock ? cmsSortOrder(membersBlock) : undefined;
+
       heroData = extractHeroFromBlocks(blocks);
       stats = extractStatsFromBlocks(blocks);
       ctaData = extractCtaFromBlocks(blocks);
@@ -208,8 +213,7 @@ export default async function TeamPage() {
     members = apiTeam.value;
   }
 
-  // Display name is "first surname", so this is A–Z by first name.
-  members.sort((a, b) => a.name.localeCompare(b.name, 'en', { sensitivity: 'base' }));
+  members = orderByCmsOrName(members, teamOrder);
 
   return (
     <SpeakersListClient
