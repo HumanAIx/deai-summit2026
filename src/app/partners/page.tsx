@@ -64,9 +64,13 @@ function extractMediaPartners(blocks: CMSBlock[]): MediaPartnerLink[] {
 function extractCompaniesFromBlocks(blocks: CMSBlock[]): {
   sponsors: NormalizedSponsor[];
   partners: NormalizedSponsor[];
+  sponsorsTitle?: string;
+  partnersTitle?: string;
 } {
   let sponsors: NormalizedSponsor[] = [];
   let partners: NormalizedSponsor[] = [];
+  let sponsorsTitle: string | undefined;
+  let partnersTitle: string | undefined;
 
   for (const block of blocks) {
     const items = block.items as unknown as CMSCompanyItem[] | undefined;
@@ -80,10 +84,13 @@ function extractCompaniesFromBlocks(blocks: CMSBlock[]): {
       list.filter(i => i.company_published !== false && i.company_is_partner);
 
     const assignFromListType = (resolvedListType: string | undefined, list: CMSCompanyItem[]) => {
+      const title = block.title?.trim() || undefined;
       if (resolvedListType === 'all-sponsors') {
         sponsors = publishedSponsors(list).map(item => normalizeCMSCompany(item, true, !!item.company_is_partner));
+        sponsorsTitle = title;
       } else if (resolvedListType === 'all-partners') {
         partners = publishedPartners(list).map(item => normalizeCMSCompany(item, !!item.company_is_sponsor, true));
+        partnersTitle = title;
       } else if (resolvedListType === 'all-companies') {
         sponsors = publishedSponsors(list).map(item => normalizeCMSCompany(item, true, !!item.company_is_partner));
         partners = publishedPartners(list)
@@ -103,7 +110,7 @@ function extractCompaniesFromBlocks(blocks: CMSBlock[]): {
     }
   }
 
-  return { sponsors, partners };
+  return { sponsors, partners, sponsorsTitle, partnersTitle };
 }
 
 function extractHeroFromBlocks(blocks: CMSBlock[]): {
@@ -197,6 +204,8 @@ export default async function PartnersPage() {
   let sponsors: NormalizedSponsor[] = [];
   let partners: NormalizedSponsor[] = [];
   let mediaPartners: MediaPartnerLink[] = [];
+  let sponsorsTitle: string | undefined;
+  let partnersTitle: string | undefined;
   let heroData: { badge?: string; title?: string; subtitle?: string } = {};
   let ctaData: { title?: string; subtitle?: string; buttons?: { label: string; link?: string }[] } = {};
 
@@ -214,6 +223,8 @@ export default async function PartnersPage() {
       const extracted = extractCompaniesFromBlocks(blocks);
       sponsors = extracted.sponsors;
       partners = extracted.partners;
+      sponsorsTitle = extracted.sponsorsTitle;
+      partnersTitle = extracted.partnersTitle;
       mediaPartners = extractMediaPartners(blocks);
       heroData = extractHeroFromBlocks(blocks);
       ctaData = extractCtaFromBlocks(blocks);
@@ -241,6 +252,8 @@ export default async function PartnersPage() {
       sponsors={sponsors}
       partners={partners}
       mediaPartners={mediaPartners}
+      sponsorsTitle={sponsorsTitle}
+      partnersTitle={partnersTitle}
       heroTitle={heroData.title}
       heroSubtitle={heroData.subtitle}
       heroBadge={heroData.badge}

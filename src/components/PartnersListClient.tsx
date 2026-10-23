@@ -12,6 +12,8 @@ interface PartnersListClientProps {
   sponsors: NormalizedSponsor[];
   partners: NormalizedSponsor[];
   mediaPartners?: MediaPartnerLink[];
+  sponsorsTitle?: string;
+  partnersTitle?: string;
   heroTitle?: string;
   heroSubtitle?: string;
   heroBadge?: string;
@@ -145,7 +147,7 @@ function CompanyGrid({ companies, type }: { companies: NormalizedSponsor[]; type
   );
 }
 
-export function PartnersListClient({ sponsors, partners, mediaPartners = [], heroTitle, heroSubtitle, heroBadge, ctaTitle, ctaSubtitle, ctaButtons, navigationData, navigationAPIData, socials }: PartnersListClientProps) {
+export function PartnersListClient({ sponsors, partners, mediaPartners = [], sponsorsTitle, partnersTitle, heroTitle, heroSubtitle, heroBadge, ctaTitle, ctaSubtitle, ctaButtons, navigationData, navigationAPIData, socials }: PartnersListClientProps) {
   const sponsorIds = new Set(sponsors.map(s => s.id));
   const sortedSponsors = [...sponsors].sort(byName);
   const partnerCompanies = partners.filter(p => p.isPartner && !sponsorIds.has(p.id)).sort(byName);
@@ -223,7 +225,7 @@ export function PartnersListClient({ sponsors, partners, mediaPartners = [], her
                 <div className="flex items-center gap-4 mb-10">
                   <div className="w-1 h-8 bg-brand-cyan rounded-full" />
                   <h2 className="text-2xl md:text-3xl font-display font-bold text-[#050A1F]">
-                    Sponsors & Supporters
+                    {sponsorsTitle || 'Sponsors & Supporters'}
                   </h2>
                 </div>
                 <CompanyGrid companies={sortedSponsors} type="sponsor" />
@@ -234,7 +236,7 @@ export function PartnersListClient({ sponsors, partners, mediaPartners = [], her
                 <div className="flex items-center gap-4 mb-10">
                   <div className="w-1 h-8 bg-brand-blue rounded-full" />
                   <h2 className="text-2xl md:text-3xl font-display font-bold text-[#050A1F]">
-                    Speakers & Partners Organizations
+                    {partnersTitle || 'Speakers & Partners Organizations'}
                   </h2>
                 </div>
                 <CompanyGrid companies={partnerCompanies} type="partner" />
