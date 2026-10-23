@@ -140,17 +140,6 @@ export function normalizeSponsor(company: Company): NormalizedSponsor {
   };
 }
 
-function getSpeakerContentScore(member: Member): number {
-  let score = 0;
-  if (member.is_speaker_featured) score += 100;
-  if (member.speaker_bio || member.person_bio) score += (member.speaker_bio || member.person_bio || '').length / 10;
-  if (member.person_companies?.[0]?.person_job_title) score += 20;
-  if (member.person_companies?.[0]?.company_name) score += 15;
-  if (member.person_socials && Object.values(member.person_socials).some(Boolean)) score += 10;
-  if (member.person_photo) score += 5;
-  return score;
-}
-
 // --- Prefetch functions ---
 
 export async function prefetchSpeakers(): Promise<NormalizedSpeaker[]> {
@@ -161,18 +150,10 @@ export async function prefetchSpeakers(): Promise<NormalizedSpeaker[]> {
     existingCompanyNames(),
   ]);
   if (!members) return [];
+  // Keep the API order: `sort_order`, then newest. Re-sorting here used to
+  // override both that order and a CMS add-on's manual pin list.
   return members
     .filter(m => m.is_speaker_published)
-    // Primary order: hand-curated `sort_order` (lower = first; NULL =
-    // sort to the end). Tail fallback: content score so empty rows still
-    // surface the most-complete profiles first. The dashboard's Reorder
-    // dialog writes `sort_order`, and that overrides everything else.
-    .sort((a, b) => {
-      const ao = (a as unknown as { sort_order?: number | null }).sort_order ?? Number.POSITIVE_INFINITY;
-      const bo = (b as unknown as { sort_order?: number | null }).sort_order ?? Number.POSITIVE_INFINITY;
-      if (ao !== bo) return ao - bo;
-      return getSpeakerContentScore(b) - getSpeakerContentScore(a);
-    })
     .map((member) => normalizeSpeaker(member, liveById));
 }
 

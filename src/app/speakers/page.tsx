@@ -54,17 +54,21 @@ function blocksRequestDynamicSpeakers(blocks: CMSBlock[]): boolean {
 }
 
 function extractSpeakersFromBlocks(blocks: CMSBlock[]): NormalizedSpeaker[] {
-  for (const block of blocks) {
-    // Direct members-list block
-    if (block.type === 'members-list' && block.items && block.items.length > 0) {
-      return block.items.map((item, i) => normalizeCMSSpeaker(item, i));
-    }
-    // Content block with members-list addon
-    if (block.addon === 'members-list' && block.items && block.items.length > 0) {
-      return block.items.map((item, i) => normalizeCMSSpeaker(item, i));
-    }
-  }
-  return [];
+  const lists = blocks.filter(
+    (block) =>
+      (block.type === 'members-list' || block.addon === 'members-list') &&
+      block.items &&
+      block.items.length > 0,
+  );
+  // Prefer the live all-speakers add-on. Its items are already ordered by
+  // the backend sort and any manual pin list on that add-on.
+  const block = lists.find((b) => {
+    const listType = (b as { membersListType?: string; listType?: string }).membersListType
+      || (b as { listType?: string }).listType;
+    return !!listType?.startsWith('all-');
+  }) ?? lists[0];
+  if (!block?.items) return [];
+  return block.items.map((item, i) => normalizeCMSSpeaker(item, i));
 }
 
 function extractHeroFromBlocks(blocks: CMSBlock[]): {
@@ -206,27 +210,24 @@ export default async function SpeakersPage() {
         ? cmsPage.content.blocks
         : Object.values(cmsPage.content.blocks) as CMSBlock[];
 
-      // When the CMS block requests a dynamic list (membersListType
-      // `all-*`), bypass the hardcoded `items` array and source straight
-      // from the API. This is what makes "publish a speaker in the
-      // dashboard → automatically appears on the public site" actually
-      // work — without it the dashboard's curated `items` snapshot freezes
-      // the roster and new speakers never show until someone re-saves the
-      // CMS page.
-      if (blocksRequestDynamicSpeakers(blocks) && apiSpeakers.status === 'fulfilled') {
+      // Hydrated `items` are already the live roster, in backend
+      // `sort_order` and then any CMS add-on pin list. Replacing them with
+      // the members API list drops that pin list.
+      const fromCms = extractSpeakersFromBlocks(blocks).map(m => {
+        const fromApi = m.slug ? apiBySlug.get(m.slug) : undefined;
+        if (!fromApi) return m;
+        return {
+          ...m,
+          image: fromApi.image || m.image,
+          person_photo: fromApi.person_photo ?? m.person_photo,
+          person_photo_nobg: fromApi.person_photo_nobg ?? m.person_photo_nobg,
+          photo_settings: fromApi.photo_settings ?? m.photo_settings,
+        };
+      });
+      if (fromCms.length > 0) {
+        speakers = fromCms;
+      } else if (apiSpeakers.status === 'fulfilled') {
         speakers = apiSpeakers.value;
-      } else {
-        speakers = extractSpeakersFromBlocks(blocks).map(m => {
-          const fromApi = m.slug ? apiBySlug.get(m.slug) : undefined;
-          if (!fromApi) return m;
-          return {
-            ...m,
-            image: fromApi.image || m.image,
-            person_photo: fromApi.person_photo ?? m.person_photo,
-            person_photo_nobg: fromApi.person_photo_nobg ?? m.person_photo_nobg,
-            photo_settings: fromApi.photo_settings ?? m.photo_settings,
-          };
-        });
       }
       heroData = extractHeroFromBlocks(blocks);
       stats = extractStatsFromBlocks(blocks).map(stat => {

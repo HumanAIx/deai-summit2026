@@ -39,10 +39,6 @@ function highlightTitle(text: string): string {
 
 const FOOTER_COLORS = ['#00B0C2', '#0E6FEB'] as const;
 
-function byName(a: { name: string }, b: { name: string }): number {
-  return a.name.localeCompare(b.name, 'en', { sensitivity: 'base' });
-}
-
 export interface MediaPartnerLink {
   name: string;
   image: string;
@@ -149,9 +145,9 @@ function CompanyGrid({ companies, type }: { companies: NormalizedSponsor[]; type
 
 export function PartnersListClient({ sponsors, partners, mediaPartners = [], sponsorsTitle, partnersTitle, heroTitle, heroSubtitle, heroBadge, ctaTitle, ctaSubtitle, ctaButtons, navigationData, navigationAPIData, socials }: PartnersListClientProps) {
   const sponsorIds = new Set(sponsors.map(s => s.id));
-  const sortedSponsors = [...sponsors].sort(byName);
-  const partnerCompanies = partners.filter(p => p.isPartner && !sponsorIds.has(p.id)).sort(byName);
-  const sortedMediaPartners = [...mediaPartners].sort(byName);
+  const sortedSponsors = sponsors;
+  const partnerCompanies = partners.filter(p => p.isPartner && !sponsorIds.has(p.id));
+  const sortedMediaPartners = mediaPartners;
   const totalCompanies = sortedSponsors.length + partnerCompanies.length;
 
   return (

@@ -35,15 +35,19 @@ function normalizeCMSMember(item: CMSSpeakerItem): NormalizedSpeaker {
 }
 
 function extractMembersFromBlocks(blocks: CMSBlock[]): NormalizedSpeaker[] {
-  for (const block of blocks) {
-    if (block.type === 'members-list' && block.items && block.items.length > 0) {
-      return block.items.map(normalizeCMSMember);
-    }
-    if (block.addon === 'members-list' && block.items && block.items.length > 0) {
-      return block.items.map(normalizeCMSMember);
-    }
-  }
-  return [];
+  const lists = blocks.filter(
+    (block) =>
+      (block.type === 'members-list' || block.addon === 'members-list') &&
+      block.items &&
+      block.items.length > 0,
+  );
+  const block = lists.find((b) => {
+    const listType = (b as { membersListType?: string; listType?: string }).membersListType
+      || (b as { listType?: string }).listType;
+    return listType === 'all-team-members' || !!listType?.startsWith('all-');
+  }) ?? lists[0];
+  if (!block?.items) return [];
+  return block.items.map(normalizeCMSMember);
 }
 
 function extractHeroFromBlocks(blocks: CMSBlock[]): {
@@ -207,9 +211,6 @@ export default async function TeamPage() {
   if (members.length === 0 && apiTeam.status === 'fulfilled') {
     members = apiTeam.value;
   }
-
-  // Display name is "first surname", so this is A–Z by first name.
-  members.sort((a, b) => a.name.localeCompare(b.name, 'en', { sensitivity: 'base' }));
 
   return (
     <SpeakersListClient

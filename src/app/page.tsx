@@ -191,13 +191,7 @@ export default async function Home() {
   const resolvedOrganizers: OrganizerConfig[] | undefined = (() => {
     const fromCms = cmsSections.stats?.organizers;
     if (!fromCms || fromCms.length === 0) return undefined;
-    const list = enrichOrganizers(fromCms);
-    // HumanAIx leads the Hosted-by row.
-    return [...list].sort((a, b) => {
-      const rank = (o: OrganizerConfig) =>
-        o.slug === 'humanaix-foundation' || /humanaix/i.test(o.name) ? 0 : 1;
-      return rank(a) - rank(b);
-    });
+    return enrichOrganizers(fromCms);
   })();
 
   const cmsQuote = cmsSections.stats?.quote;
