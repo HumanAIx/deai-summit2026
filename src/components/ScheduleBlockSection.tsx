@@ -1162,7 +1162,8 @@ export function ScheduleBlockSection({
 
   useEffect(() => {
     if (dates.length && (activeDate === null || !dates.includes(activeDate))) {
-      setActiveDate(dates[0]);
+      const realDays = dates.filter((d) => d !== 'unset');
+      setActiveDate(realDays[1] ?? dates[0]);
     }
   }, [dates, activeDate]);
 

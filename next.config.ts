@@ -5,6 +5,9 @@ const isLocal =
   process.env.NEXT_PUBLIC_API_URL?.includes('localhost');
 
 const nextConfig: NextConfig = {
+  // A stray lockfile in a parent folder otherwise becomes the inferred root,
+  // and `@import "tailwindcss"` fails to resolve from there.
+  turbopack: { root: __dirname },
   serverExternalPackages: ['sharp'],
   images: {
     // SECURITY NOTE: `hostname: '**'` accepts any HTTPS host and turns
