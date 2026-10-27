@@ -173,6 +173,18 @@ window.rdt('track','PageVisit');`,
       );
     }
 
+    // Last child of <body>, same place as a tag just before </body>.
+    injectExternalScript(
+      'gconf-assistant',
+      'https://api.gconf.ai/widget/gconf-assistant.js',
+      {
+        defer: 'true',
+        'data-embed-key': 'wk_agent_a5ac701e6987598f3516c091f3f1e04cf4fe409f1a4c128e',
+        'data-avatar': 'https://xdcbvwvkcuqznemhvtox.supabase.co/storage/v1/object/public/tenants/deaisummit/members/sabine-roiss-photo-1776797180363-uu1lle2v1xq-nobg.png',
+        'data-accent': '#667eea',
+      },
+    );
+
     return () => {
       document.removeEventListener('click', trackLumaTicketClick, true);
     };
