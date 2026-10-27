@@ -24,7 +24,7 @@ const playfair = Playfair_Display({
 const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL || "https://deaisummit.org";
 const GA4_MEASUREMENT_ID = "G-10XNHM2ZWW";
 const GOOGLE_ADS_ID = "AW-18489910387";
-const FACEBOOK_PIXEL_ID = "2771836733083164";
+const FACEBOOK_PIXEL_ID = "1588014588132810";
 
 /** Meta base pixel. Runs from the document head on every page. */
 const facebookPixelBoot = `!function(f,b,e,v,n,t,s)
