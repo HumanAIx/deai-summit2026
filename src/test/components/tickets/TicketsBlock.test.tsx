@@ -39,11 +39,24 @@ afterEach(() => vi.unstubAllGlobals());
 const show = (cards: TicketCard[], editable = false) => render(<TicketsBlock cards={cards} buyHref="/fr/tickets" editable={editable} />);
 
 describe("TicketsBlock — status to button", () => {
-  it("on sale: the card's label (or Buy ticket) links to the locale-prefixed /tickets", async () => {
+  it("on sale: the card's label (or Buy ticket) links to the /tickets checkout page with that type preselected", async () => {
     answer(live([type()]));
     show([card({ btn: "Get in" })]);
     const link = await screen.findByRole("link", { name: /Get in/ });
-    expect(link).toHaveAttribute("href", "/fr/tickets");
+    expect(link).toHaveAttribute("href", `/fr/tickets?type=${type().id}`);
+  });
+
+  it("buying never opens a pop-up: a plain click is a normal navigation (no dialog, nothing prevented)", async () => {
+    answer(live([type()]));
+    show([card({ btn: "Get in" })]);
+    const link = await screen.findByRole("link", { name: /Get in/ });
+    const probe = (event: Event) => event.preventDefault();
+    document.addEventListener("click", probe);
+    const notPreventedByTheCard = fireEvent.click(link);
+    document.removeEventListener("click", probe);
+    expect(notPreventedByTheCard).toBe(false); // only the probe prevented it (jsdom cannot navigate)
+    expect(screen.queryByRole("dialog")).toBeNull();
+    expect(link).not.toHaveAttribute("data-opens-dialog");
   });
 
   it("defaults the label to Buy ticket", async () => {

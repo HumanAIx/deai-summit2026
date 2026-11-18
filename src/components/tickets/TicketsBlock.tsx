@@ -1,7 +1,7 @@
 "use client"; // reads live prices and stock in the browser (mount, tab refocus, Retry): the CMS page itself is cached for 60 s
 import Link from "next/link";
 import { useLocale, useFormatter, useTranslations } from "@/lib/tickets/i18n";
-import { lazy, Suspense, useCallback, useEffect, useMemo, useRef, useState, type MouseEvent } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import type { TicketCard } from "@/lib/tickets/block-schema";
 import { NO_TICKETS_CODES, requestBlockTypes } from "@/lib/tickets/block-types-client";
 import {
@@ -19,17 +19,8 @@ import {
   type ResolvedCard,
 } from "@/lib/tickets/block-cards";
 import { formatMoney, formatPlainDate } from "@/lib/tickets/format";
-import { configOf } from "@/lib/tickets/checkout-config";
 import type { BlockTypes, PublicType } from "@/lib/tickets/schemas";
 import { WaitlistJoin } from "./checkout/WaitlistJoin";
-
-// The pop-up (checkout steps, Stripe, confirmation) is fetched only when a buyer first opens it.
-const CheckoutPopup = lazy(() => import("./checkout/CheckoutPopup").then((module) => ({ default: module.CheckoutPopup })));
-
-/** The event or schedule a ticket type belongs to: one order covers one of these, so one pop-up too. */
-function groupOf({ type }: { type: PublicType }): string {
-  return `${type.source.kind}:${type.source.id}`;
-}
 
 type Live = { status: "loading" } | { status: "ready"; data: BlockTypes } | { status: "error" };
 
@@ -81,80 +72,13 @@ function useLiveTypes({ locale }: { locale: string }): { live: Live; retry: () =
       setLive({ status: "loading" });
       load();
     },
-    // Stock may have changed under an open pop-up (a hold ended, a card was refused): re-read without a skeleton.
+    // Re-read without a skeleton (kept for callers that know stock changed).
     refresh: () => {
       load();
     },
   };
 }
 
-type PopupGroup = { startTypeId: string; nonce: number; allowedKey: string };
-
-/**
- * One checkout pop-up per event / schedule of the block (an order covers one event). A group's pop-up stays mounted
- * once opened, so reopening resumes the buyer's checkout; it starts over (a new `nonce`, the clicked type at 1) when the
- * last one had nothing in progress. Only one is open at a time.
- */
-function usePopups() {
-  const [groups, setGroups] = useState<Record<string, PopupGroup>>({});
-  const [active, setActive] = useState<string | null>(null);
-  const resumable = useRef<Record<string, boolean>>({});
-
-  const open = useCallback(({ group, typeId, allowedKey }: { group: string; typeId: string; allowedKey: string }) => {
-    setGroups((previous) => {
-      const current = previous[group];
-      const resume = current !== undefined && resumable.current[group] === true;
-      return { ...previous, [group]: { startTypeId: resume ? current.startTypeId : typeId, nonce: (current?.nonce ?? 0) + (resume ? 0 : 1), allowedKey } };
-    });
-    setActive(group);
-  }, []);
-  const close = useCallback(({ group }: { group: string }) => setActive((current) => (current === group ? null : current)), []);
-  const setResumable = useCallback(({ group, value }: { group: string; value: boolean }) => {
-    resumable.current[group] = value;
-  }, []);
-  return { groups, active, open, close, setResumable };
-}
-
-function PopupHost({
-  group,
-  entry,
-  open,
-  live,
-  localePrefix,
-  locale,
-  onClose,
-  onResumable,
-  onRefresh,
-}: {
-  group: string;
-  entry: PopupGroup;
-  open: boolean;
-  live: BlockTypes;
-  localePrefix: string;
-  locale: string;
-  onClose: (args: { group: string }) => void;
-  onResumable: (args: { group: string; value: boolean }) => void;
-  onRefresh: () => void;
-}) {
-  const allowed = useMemo(() => (entry.allowedKey === "" ? [] : entry.allowedKey.split(",")), [entry.allowedKey]);
-  const config = useMemo(() => configOf({ checkout: live.checkout }), [live.checkout]);
-  const handleOpenChange = useCallback((next: boolean) => (next ? undefined : onClose({ group })), [group, onClose]);
-  const handleResumable = useCallback((value: boolean) => onResumable({ group, value }), [group, onResumable]);
-  return (
-    <CheckoutPopup
-      open={open}
-      onOpenChange={handleOpenChange}
-      onResumable={handleResumable}
-      startTypeId={entry.startTypeId}
-      types={live.types}
-      allowedTypeIds={allowed}
-      config={config}
-      locale={locale}
-      localePrefix={localePrefix}
-      onRefresh={onRefresh}
-    />
-  );
-}
 
 const BUTTON_BASE =
   "mt-8 inline-flex min-h-14 w-full items-center justify-center gap-2 rounded-full px-6 text-center text-base font-semibold [overflow-wrap:anywhere]";
@@ -173,21 +97,13 @@ const WAITLIST_BUTTON =
 export function TicketsBlock({ cards, buyHref, editable = false }: { cards: readonly TicketCard[]; buyHref: string; editable?: boolean }) {
   const t = useTranslations("block.ticketsBlock");
   const locale = useLocale();
-  const { live, retry, refresh } = useLiveTypes({ locale });
-  const popups = usePopups();
+  const { live, retry } = useLiveTypes({ locale });
   const resolved = resolveCards({ cards, types: live.status === "ready" ? live.data.types : null, editor: editable });
   if (resolved.length === 0) return null;
 
   const featured = featuredIndex({ resolved });
   const salesOpen = live.status === "ready" ? live.data.checkout.salesOpen : false;
   const feePayer = live.status === "ready" ? live.data.checkout.feePayer : "";
-  // `/fr/tickets` → `/fr`: the confirmation's order link stays in the buyer's language.
-  const localePrefix = buyHref.replace(/\/tickets$/, "");
-  const buy = (type: PublicType) => {
-    const group = groupOf({ type });
-    const allowedKey = resolved.flatMap((entry) => (entry.type && groupOf({ type: entry.type }) === group ? [entry.type.id] : [])).join(",");
-    popups.open({ group, typeId: type.id, allowedKey });
-  };
 
   return (
     // On a template site the template's own palette wins (`--t-accent-text` is its contrast-checked accent text and
@@ -199,27 +115,10 @@ export function TicketsBlock({ cards, buyHref, editable = false }: { cards: read
       <ul className="mx-auto grid list-none gap-4 p-0" style={gridStyle({ count: resolved.length })} aria-busy={live.status === "loading"}>
         {resolved.map((entry, index) => (
           <li key={entry.card.id} className="flex min-w-0">
-            <TicketCardView entry={entry} featured={index === featured} live={live} salesOpen={salesOpen} feePayer={feePayer} buyHref={buyHref} editable={editable} onBuy={buy} />
+            <TicketCardView entry={entry} featured={index === featured} live={live} salesOpen={salesOpen} feePayer={feePayer} buyHref={buyHref} editable={editable} />
           </li>
         ))}
       </ul>
-      {!editable && live.status === "ready"
-        ? Object.entries(popups.groups).map(([group, entry]) => (
-            <Suspense key={`${group}:${entry.nonce}`} fallback={null}>
-              <PopupHost
-                group={group}
-                entry={entry}
-                open={popups.active === group}
-                live={live.data}
-                localePrefix={localePrefix}
-                locale={locale}
-                onClose={popups.close}
-                onResumable={popups.setResumable}
-                onRefresh={refresh}
-              />
-            </Suspense>
-          ))
-        : null}
       {live.status === "error" ? (
         <div role="alert" className="mx-auto mt-4 flex flex-wrap items-center justify-center gap-3 text-sm text-muted">
           <span>{t("loadFailed")}</span>
@@ -240,7 +139,6 @@ function TicketCardView({
   feePayer,
   buyHref,
   editable,
-  onBuy,
 }: {
   entry: ResolvedCard;
   featured: boolean;
@@ -249,7 +147,6 @@ function TicketCardView({
   feePayer: string;
   buyHref: string;
   editable: boolean;
-  onBuy: (type: PublicType) => void;
 }) {
   const t = useTranslations("block.ticketsBlock");
   const tl = useTranslations("tickets.list");
@@ -353,7 +250,7 @@ function TicketCardView({
       </ul>
 
       {type && state ? (
-        <CardButton state={state} featured={featured} label={card.btn !== "" ? card.btn : t("buy")} opensText={opensText} buyHref={buyHref} editable={editable} type={type} onBuy={() => onBuy(type)} />
+        <CardButton state={state} featured={featured} label={card.btn !== "" ? card.btn : t("buy")} opensText={opensText} buyHref={buyHref} editable={editable} type={type} />
       ) : placeholder ? (
         <div aria-hidden className={`${BUTTON_BASE} cursor-default border border-dashed border-(--color-control-border) text-muted`}>
           {t("editorPickType")}
@@ -377,7 +274,6 @@ function CardButton({
   buyHref,
   editable,
   type,
-  onBuy,
 }: {
   state: ButtonState;
   featured: boolean;
@@ -386,7 +282,6 @@ function CardButton({
   buyHref: string;
   editable: boolean;
   type: PublicType;
-  onBuy: () => void;
 }) {
   const t = useTranslations("block.ticketsBlock");
 
@@ -423,17 +318,8 @@ function CardButton({
     );
   }
   return (
-    // Still a real link (`/tickets` works without JavaScript); a plain click opens the pop-up instead of navigating.
-    <Link
-      href={buyHref}
-      data-opens-dialog=""
-      className={`${BUTTON_BASE} ${look}`}
-      onClick={(event: MouseEvent<HTMLAnchorElement>) => {
-        if (event.defaultPrevented || event.button !== 0 || event.metaKey || event.ctrlKey || event.shiftKey || event.altKey) return;
-        event.preventDefault();
-        onBuy();
-      }}
-    >
+    // DeAI: buying always happens on the full `/tickets` page (never in a pop-up), with this card's type preselected.
+    <Link href={`${buyHref}?type=${encodeURIComponent(type.id)}`} className={`${BUTTON_BASE} ${look}`}>
       {label}
       {arrow}
     </Link>

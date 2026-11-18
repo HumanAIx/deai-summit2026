@@ -34,7 +34,8 @@ export function shouldOpenInNewTab({ anchor, current }: { anchor: HTMLAnchorElem
  * natively, instead of `preventDefault()` + `window.open()`. A native link click is never caught by a popup blocker, and
  * Next's `<Link>` already leaves a link with a non-`_self` target to the browser (`isModifiedEvent`), so no client-side
  * transition starts. The attributes are put back right after the click. `noreferrer`: the new tab sends no Referer,
- * matching the private ticket pages' policy.
+ * matching the private ticket pages' policy. The click is also stopped before any page handler sees it, so a link with
+ * its own click handler (DeAI's navbar navigates with `router.push`) cannot pull the buyer away from the cart.
  */
 export function useKeepCartOnNavigation({ active }: { active: boolean }): void {
   useEffect(() => {
@@ -47,6 +48,10 @@ export function useKeepCartOnNavigation({ active }: { active: boolean }): void {
       const rel = anchor.getAttribute("rel");
       anchor.setAttribute("target", "_blank");
       anchor.setAttribute("rel", "noopener noreferrer");
+      // DeAI: the site's own navbar handles its clicks itself (`preventDefault()` + `router.push`), which would ignore
+      // the target and leave the checkout in this tab. Stopping the click here (capture phase on the document, before
+      // React's handlers on the root) leaves only the browser's native action: open the link in the new tab.
+      event.stopPropagation();
       // After the default action (the new tab) has run: restore the link as the page rendered it.
       window.setTimeout(() => {
         anchor.removeAttribute("target");

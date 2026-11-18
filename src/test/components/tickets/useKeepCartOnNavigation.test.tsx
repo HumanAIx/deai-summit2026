@@ -20,20 +20,21 @@ function link({ href, attrs = {} }: { href: string; attrs?: Record<string, strin
 }
 
 /**
- * Clicks and reports how the link looked when the browser followed it: a bubble listener (after the hook's capture
- * listener) reads `target` / `rel`, then stops jsdom "navigating". `prevented` tells whether anything blocked the click.
+ * Clicks and reports how the link looked when the browser followed it. The hook's capture listener stops the click
+ * before anything else sees it, so the link is read right after the click (it is restored on a timer). A bubble
+ * listener stops jsdom "navigating" when the hook did NOT take the click; `prevented` tells whether anything blocked it.
  */
 function click({ anchor, init = {} }: { anchor: HTMLElement; init?: MouseEventInit }): { target: string | null; rel: string | null; prevented: boolean } {
   const a = anchor.closest("a") as HTMLAnchorElement;
-  let seen = { target: null as string | null, rel: null as string | null, prevented: false };
+  let prevented = false;
   const probe = (event: Event) => {
-    seen = { target: a.getAttribute("target"), rel: a.getAttribute("rel"), prevented: event.defaultPrevented };
+    prevented = event.defaultPrevented;
     event.preventDefault();
   };
   document.addEventListener("click", probe);
   fireEvent.click(anchor, init);
   document.removeEventListener("click", probe);
-  return seen;
+  return { target: a.getAttribute("target"), rel: a.getAttribute("rel"), prevented };
 }
 
 beforeEach(() => {
@@ -73,17 +74,28 @@ describe("useKeepCartOnNavigation", () => {
     expect(click({ anchor: inner }).target).toBe("_blank");
   });
 
-  // Next's <Link> leaves a link with a non-_self target to the browser (isModifiedEvent), so no client-side
-  // transition replaces the checkout. A handler on the link sees the target the hook set.
-  it("a <Link>-style handler on the link sees the new target, so it does not navigate in the same tab", () => {
+  // DeAI's navbar handles its own clicks (`preventDefault()` + `router.push`), which would ignore the target and
+  // replace the checkout in this tab. The hook stops the click before any such handler runs.
+  it("a link with its own click handler (navbar: preventDefault + router.push) never sees the click", () => {
     render(<Probe active />);
     const a = link({ href: "/speakers" });
-    let targetSeen: string | null = null;
-    a.addEventListener("click", () => {
-      targetSeen = a.getAttribute("target");
+    const routerPush = vi.fn();
+    a.addEventListener("click", (event) => {
+      event.preventDefault();
+      routerPush("/speakers");
     });
-    click({ anchor: a });
-    expect(targetSeen).toBe("_blank");
+    const seen = click({ anchor: a });
+    expect(routerPush).not.toHaveBeenCalled();
+    expect(seen).toEqual({ target: "_blank", rel: "noopener noreferrer", prevented: false });
+  });
+
+  it("a page-level listener after the hook (the site's page loader) does not see the click either", () => {
+    render(<Probe active />);
+    const loader = vi.fn();
+    document.body.addEventListener("click", loader);
+    click({ anchor: link({ href: "/speakers" }) });
+    document.body.removeEventListener("click", loader);
+    expect(loader).not.toHaveBeenCalled();
   });
 
   it("does nothing while inactive", () => {

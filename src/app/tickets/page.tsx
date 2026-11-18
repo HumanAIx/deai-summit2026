@@ -38,9 +38,9 @@ export async function generateMetadata({ searchParams }: { searchParams: Promise
  *
  * - Checkout off (`TICKETS_CHECKOUT_ENABLED` not `true`): the CMS `tickets` page with its Luma links, as before.
  * - Checkout on, and the CMS `tickets` page has a Tickets section (dashboard › CMS › block › add-on Sales › Tickets):
- *   that page is rendered, so organisers design it; its cards read live prices and open the checkout pop-up.
- * - Checkout on otherwise (or a filtered / private link): the built-in live list + 4-step checkout, under the CMS
- *   page's heading texts.
+ *   that page is rendered, so organisers design it; its cards read live prices and link to this page's checkout with the type preselected.
+ * - Checkout on otherwise (or a filtered / private link, or `?type=` from a card's Buy button): the built-in live list +
+ *   4-step checkout, under the CMS page's heading texts.
  */
 export default async function TicketsPage({ searchParams }: { searchParams: Promise<SearchParams> }) {
   const [cmsPage, params] = await Promise.all([prefetchCMSPage('tickets'), searchParams]);
@@ -51,7 +51,9 @@ export default async function TicketsPage({ searchParams }: { searchParams: Prom
     return <TicketsPageView content={parseTicketsPage(blocks)} />;
   }
 
-  const filtered = Boolean(first(params.link) ?? first(params.schedule) ?? first(params.event));
+  // A filtered or private link, or a card's Buy button (`?type=`), always opens the checkout itself: a CMS page here
+  // would send the buyer in a circle.
+  const filtered = Boolean(first(params.link) ?? first(params.schedule) ?? first(params.event) ?? first(params.type));
   if (!filtered && blocks.some(isTicketsSectionBlock)) {
     const [captchaConfig, formConfigs] = await Promise.all([
       prefetchCaptchaConfig(),

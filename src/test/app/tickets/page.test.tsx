@@ -93,6 +93,14 @@ describe("/tickets page, checkout ON", () => {
     expect(prefetchCaptchaConfig).not.toHaveBeenCalled();
   });
 
+  // A card's Buy button links to `/tickets?type=…`: showing the CMS page again would send the buyer in a circle.
+  it("?type= from a card's Buy button opens the built-in checkout even with a Tickets block, with that type", async () => {
+    prefetchCMSPage.mockResolvedValue(cms([heroBlock, ticketsBlock]));
+    const el = await render({ type: "t1" });
+    expect(el.type).toBe(TicketsPageBody);
+    expect(el.props).toMatchObject({ rawType: "t1" });
+  });
+
   it.each([{ link: "tok" }, { event: "e1" }])("a filtered/private request %j also shows the built-in checkout", async (params) => {
     prefetchCMSPage.mockResolvedValue(cms([ticketsBlock]));
     expect((await render(params)).type).toBe(TicketsPageBody);

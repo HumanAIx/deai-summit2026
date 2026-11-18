@@ -882,8 +882,8 @@
   --font-body: var(--font-sans);
 }
 
-/* Global (only the ticket components read them), so the checkout pop-up, which renders in <body> outside
-   .deai-tickets, gets the same corners and buttons. The primary button is the blue → cyan gradient of the
+/* Global (only the ticket components read them), so dialogs rendered outside .deai-tickets
+   (the waitlist one) get the same corners and buttons. The primary button is the blue → cyan gradient of the
    prototype ("My Ticket") and of the CMS ticket cards. */
 :root {
   --radius: 0.75rem;
@@ -891,7 +891,7 @@
   --ticket-btn-bg: linear-gradient(90deg, #1E6BF0, #08B5C6);
 }
 
-/* Scoped: DeAI's other mono text keeps its font; ticket pages and the pop-up use IBM Plex Mono. */
+/* Scoped: DeAI's other mono text keeps its font; ticket pages use IBM Plex Mono. */
 .deai-tickets {
   --font-mono: var(--font-plex-mono), ui-monospace, monospace;
   color-scheme: dark;

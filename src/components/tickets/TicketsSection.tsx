@@ -25,7 +25,7 @@ function splitHeading(title: string, hl: string): { lead: string; accent: string
  * The CMS Tickets section on any DeAI CMS page: the section heading (subtitle = mono kicker, title with its accented
  * word, description = meta line) in the CMS tickets-page look, then GConf.ai's live ticket cards. Prices, stock and
  * sale state are read live from `/api/tickets/types` (on mount and when the tab comes back); a card's Buy button
- * opens the checkout pop-up for that ticket's event. No cards in the block = every public ticket type of the site.
+ * goes to the `/tickets` checkout page with that type preselected (never a pop-up). No cards in the block = every public ticket type of the site.
  */
 export function TicketsSection({ block }: { block: CMSBlock }) {
   const kicker = text(block.subtitle);

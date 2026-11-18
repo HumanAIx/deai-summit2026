@@ -734,16 +734,17 @@ describe("keeping the cart: links that leave the checkout open in a new tab", ()
   afterEach(() => {
     header.remove();
   });
-  /** The target the header link had when the browser followed it ("_blank" = new tab); jsdom navigation is stopped. */
+  /**
+   * The target the header link had when the browser followed it ("_blank" = new tab). Read right after the click: the
+   * hook stops the click before other listeners and restores the link on a timer. When the hook does not take the
+   * click, a bubble listener stops jsdom navigating.
+   */
   function clickHeader(): string | null {
-    let target: string | null = null;
-    const probe = (event: Event) => {
-      target = header.getAttribute("target");
-      event.preventDefault();
-    };
+    const probe = (event: Event) => event.preventDefault();
     document.addEventListener("click", probe);
     fireEvent.click(header);
     document.removeEventListener("click", probe);
+    const target = header.getAttribute("target");
     header.removeAttribute("target");
     header.removeAttribute("rel");
     return target;

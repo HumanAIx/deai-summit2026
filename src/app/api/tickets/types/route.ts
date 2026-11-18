@@ -6,8 +6,7 @@ import { blockTypesSchema, type BlockTypes } from "@/lib/tickets/schemas";
 /**
  * Live ticket types for the site-builder Tickets block — proxies `GET /tickets/types` (no writes). The CMS page is
  * cached for 60 s, so prices, stock and sale state are NEVER baked into it: the block's browser island calls this
- * on mount and when the tab regains focus. Answers the types and the `checkout` block (cards read the flags, the checkout pop-up builds its
- * config from it), `no-store`. Sits outside `proxy.ts`'s matcher (`api/`), so it resolves the site from `Host` and passes
+ * on mount and when the tab regains focus. Answers the types and the `checkout` block (the cards read its flags), `no-store`. Sits outside `proxy.ts`'s matcher (`api/`), so it resolves the site from `Host` and passes
  * the key explicitly (rule 21). 60 / min per IP: one call per page view and per tab refocus.
  */
 const isRateLimited = createRateLimiter({ windowMs: 60 * 1000, max: 60 });
