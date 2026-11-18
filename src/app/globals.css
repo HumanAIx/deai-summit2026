@@ -871,6 +871,11 @@
   --color-success: #47CD89;
   --color-warning: #FFC107;
   --color-warning-emphasis: #FFDA6A;
+  /* Fixed, never themed: the dialog backdrop (bg-scrim/50) and the white plate behind the QR code and the badge
+     preview (bg-on-dark, a QR must stay dark-on-white to scan). */
+  --color-scrim: #000000;
+  --color-on-dark: #FFFFFF;
+  --color-on-light: #000000;
   --color-ticket-accent: #2CC7D9;
   --color-ticket-accent-2: #08B5C6;
   --font-heading: var(--font-display);

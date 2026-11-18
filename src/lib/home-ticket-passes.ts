@@ -1,5 +1,6 @@
 import type { CMSBlock } from '@/lib/api-types';
 import type { TicketsPageContent } from '@/lib/tickets-page';
+import { isTicketsSectionBlock } from '@/lib/tickets/cms-section';
 
 export interface HomeTicketPass {
   id: string;
@@ -44,6 +45,8 @@ export function homeTicketPassesFromTickets(content: TicketsPageContent): HomeTi
 
 /** Homepage blocks that duplicate the tickets page, so they can be removed from the CMS. */
 export function isHomepageTicketBlock(block: CMSBlock): boolean {
+  // A live Tickets section (add-on Sales › Tickets) is content, not a duplicate: it reads prices from the API.
+  if (isTicketsSectionBlock(block)) return false;
   const title = text(block.title);
   const subtitle = text(block.subtitle);
   if (block.type && block.type !== 'simple' && block.type !== 'content') return false;

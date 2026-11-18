@@ -344,6 +344,15 @@ export function TicketCheckout({ types: allTypes, config, linkToken, offerToken,
    * trip — 11.8 s on a cold serverless start. A payment that lands after its hold anyway is handled by ep-api (stock
    * still free → paid; otherwise refunded in full and emailed), so the extend is a courtesy, not a gate.
    */
+  // The buyer's own "Extend" near the end of the hold: waits for ep-api (unlike the courtesy extend in `beforePay`).
+  async function extendHold(): Promise<boolean> {
+    if (!order) return false;
+    const answer = await requestExtendHold({ orderId: order.orderId, token: order.buyerToken });
+    if (!answer.ok) return false;
+    setOrder((current) => (current ? { ...current, holdExpiresAt: answer.data.holdExpiresAt, holdMaxAt: answer.data.holdMaxAt ?? current.holdMaxAt } : current));
+    return true;
+  }
+
   async function beforePay(): Promise<boolean> {
     if (!order) return false;
     if (new Date(order.holdExpiresAt).getTime() <= Date.now()) {
@@ -488,6 +497,8 @@ export function TicketCheckout({ types: allTypes, config, linkToken, offerToken,
           testMode={config.testMode}
           payLabel={t("pay.payNow", { amount: formatMoney({ format, cents: order.totals.totalCents, currency: order.currency }) })}
           beforePay={beforePay}
+          types={types}
+          onExtend={extendHold}
           onSucceeded={() => {
             setFinished(true);
             if (embedded) {

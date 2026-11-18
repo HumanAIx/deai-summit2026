@@ -501,6 +501,60 @@ describe("idempotency", () => {
   });
 });
 
+describe("the pay step: order summary and hold extension", () => {
+  const orderWith = ({ holdMs, holdMaxMs }: { holdMs: number; holdMaxMs?: number }) => () => {
+    const order = orderAnswer({ holdMs });
+    return { status: 201, body: { success: true, data: { ...order, ...(holdMaxMs ? { holdMaxAt: new Date(Date.now() + holdMaxMs).toISOString() } : {}) } } };
+  };
+
+  it("shows the price summary from the order answer's totals (not Pay € alone) above the payment", async () => {
+    mountCheckout();
+    const payment = await reachPayStep();
+    const heading = screen.getByRole("heading", { name: "Order summary" });
+    expect(heading.compareDocumentPosition(payment) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
+    expect(screen.getByText("€22.22")).toBeInTheDocument(); // the order vatCents, as given
+  });
+
+  it("no warning with plenty of hold time left", async () => {
+    mountCheckout();
+    await reachPayStep();
+    expect(screen.queryByRole("button", { name: "Extend" })).not.toBeInTheDocument();
+  });
+
+  it("in the last 2 minutes Extend asks ep-api with the buyer token and the hold restarts from the new end", async () => {
+    api.order = orderWith({ holdMs: 90_000, holdMaxMs: 30 * 60_000 });
+    mountCheckout();
+    await reachPayStep();
+    expect(screen.getByText("Your reservation ends soon. Need more time?")).toBeInTheDocument();
+    fireEvent.click(await screen.findByRole("button", { name: "Extend" }));
+    await waitFor(() => expect(api.callsTo(`/api/tickets/orders/${ORDER_ID}/extend`)).toHaveLength(1));
+    expect(api.callsTo(`/api/tickets/orders/${ORDER_ID}/extend`)[0]?.headers["x-order-token"]).toBe(BUYER_TOKEN);
+    await waitFor(() => expect(screen.queryByRole("button", { name: "Extend" })).not.toBeInTheDocument());
+    expect(screen.getByRole("timer")).toHaveTextContent(/^(09|10):\d\d$/);
+  });
+
+  it("a refused extend keeps the warning and tells the buyer", async () => {
+    api.order = orderWith({ holdMs: 90_000, holdMaxMs: 30 * 60_000 });
+    api.extend = () => refusal({ code: "holdEnded" });
+    mountCheckout();
+    await reachPayStep();
+    fireEvent.click(await screen.findByRole("button", { name: "Extend" }));
+    expect(await screen.findByText(/couldn't extend your reservation/)).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "Extend" })).toBeEnabled();
+  });
+
+  it("a hold already at holdMaxAt offers no Extend, only the 'any further' note", async () => {
+    api.order = () => {
+      const order = orderAnswer({ holdMs: 90_000 });
+      return { status: 201, body: { success: true, data: { ...order, holdMaxAt: order.holdExpiresAt } } };
+    };
+    mountCheckout();
+    await reachPayStep();
+    expect(screen.getByText(/can't be extended any further/)).toBeInTheDocument();
+    expect(screen.queryByRole("button", { name: "Extend" })).not.toBeInTheDocument();
+  });
+});
+
 describe("paying", () => {
   it("asks for more hold time and confirms with redirect 'if_required' and the order return URL; success navigates to the order", async () => {
     mountCheckout();

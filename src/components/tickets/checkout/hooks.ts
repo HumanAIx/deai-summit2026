@@ -105,7 +105,8 @@ export function useRemainingMs({ until, onExpire }: { until: string | null; onEx
   return target === null || Number.isNaN(target) ? null : Math.max(0, target - now);
 }
 
-export type CaptchaProvider = "recaptcha" | "hcaptcha";
+/** DeAI: `recaptcha-v3` (invisible, token per `execute()`) next to the v2 checkbox and hCaptcha; ep-api verifies all three. */
+export type CaptchaProvider = "recaptcha" | "hcaptcha" | "recaptcha-v3";
 /** `loading`: not answered yet (the step-3 button waits); `off`: no usable captcha, so no widget and NO token is sent. */
 export type CheckoutCaptcha = { status: "loading" } | { status: "off" } | { status: "on"; provider: CaptchaProvider };
 
@@ -115,6 +116,11 @@ export type CheckoutCaptcha = { status: "loading" } | { status: "off" } | { stat
  * the captcha provider's script and the extra request never reach a visitor who only browses the tickets. Any failure reads as `off`: the widget cannot be
  * shown, and ep-api's own answer then decides (a refusal is turned into a message, never a blocked button).
  */
+function providerOf(stored: string | undefined): CaptchaProvider {
+  if (stored === "hcaptcha" || stored === "recaptcha-v3") return stored;
+  return "recaptcha";
+}
+
 export function useCheckoutCaptcha({ active }: { active: boolean }): CheckoutCaptcha {
   const [state, setState] = useState<CheckoutCaptcha>({ status: "loading" });
   const asked = useRef(false);
@@ -125,7 +131,7 @@ export function useCheckoutCaptcha({ active }: { active: boolean }): CheckoutCap
       .then((response) => (response.ok ? response.json() : null))
       .then((body: { provider?: string; site_key?: string; disabled?: boolean } | null) => {
         const usable = body !== null && !body.disabled && Boolean(body.site_key);
-        setState(usable ? { status: "on", provider: body?.provider === "hcaptcha" ? "hcaptcha" : "recaptcha" } : { status: "off" });
+        setState(usable ? { status: "on", provider: providerOf(body?.provider) } : { status: "off" });
       })
       .catch(() => setState({ status: "off" }));
   }, [active]);

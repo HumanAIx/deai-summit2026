@@ -84,7 +84,9 @@ export function DetailsStep({ config, values, onBack, onSubmit }: { config: Chec
                 >
                   <option value="">{t("details.countryPlaceholder")}</option>
                   {countries.map((country) => (
-                    <option key={country.value} value={country.value}>
+                    // The label comes from Intl.DisplayNames, whose ICU data differs between Node and the browser
+                    // ("Falkland Islands (Islas Malvinas)" vs "Falkland Islands"); the value (ISO code) is the same.
+                    <option key={country.value} value={country.value} suppressHydrationWarning>
                       {country.label}
                     </option>
                   ))}

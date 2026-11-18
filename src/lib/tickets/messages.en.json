@@ -447,7 +447,9 @@
         "applied": "Discount code {code} applied."
       },
       "newsletter": {
-        "label": "Subscribe to the newsletter and get {pct}% off this order."
+        "label": "Subscribe to the newsletter and get {pct}% off this order.",
+        "codeWins": "Your discount code gives more than the newsletter's {pct}%, so only the code applies.",
+        "newsletterWins": "The newsletter's {pct}% gives more than your discount code, so only the newsletter discount applies."
       },
       "summary": {
         "heading": "Order summary",
@@ -500,7 +502,12 @@
         "processing": "Processing…",
         "notReady": "Payment is still loading. Please wait a moment.",
         "declined": "The payment did not go through. Please try another card.",
-        "back": "Back to ticket holders"
+        "back": "Back to ticket holders",
+        "holdEndingSoon": "Your reservation ends soon. Need more time?",
+        "holdEndingNoMore": "Your reservation ends soon and can't be extended any further.",
+        "extend": "Extend",
+        "extending": "Extending…",
+        "extendFailed": "We couldn't extend your reservation. Finish paying before the time runs out."
       },
       "validation": {
         "required": "This field is required.",

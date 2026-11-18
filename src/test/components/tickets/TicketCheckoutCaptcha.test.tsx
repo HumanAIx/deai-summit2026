@@ -137,3 +137,45 @@ describe("checkout captcha — site with a captcha", () => {
     expect(api.callsTo("/api/tickets/orders")[0]?.body).not.toHaveProperty("captchaToken");
   });
 });
+
+describe("checkout captcha — provider mapping and reCAPTCHA v3", () => {
+  it.each([
+    ["recaptcha-v3", "recaptcha-v3"],
+    ["hcaptcha", "hcaptcha"],
+    ["recaptcha", "recaptcha"],
+    ["turnstile", "recaptcha"],
+    ["", "recaptcha"],
+  ])("the stored provider %j reaches the widget as %j (anything unknown is reCAPTCHA v2)", async (stored, expected) => {
+    withSiteKey({ provider: stored, site_key: "site-key", disabled: false });
+    await toHolders();
+    await screen.findByTestId("captcha-widget");
+    expect(widget.props?.provider).toBe(expected);
+  });
+
+  it("v3: no captcha card and no 'solve the check' hint, but Place order still waits for the token and sends it", async () => {
+    withSiteKey({ provider: "recaptcha-v3", site_key: "site-key", disabled: false });
+    freeOrder();
+    await toHolders();
+    expect(await screen.findByTestId("captcha-widget")).toBeInTheDocument();
+    expect(screen.getByTestId("captcha-widget").parentElement?.className ?? "").not.toContain("flex-col gap-3");
+    expect(screen.queryByText("Please solve the check above to continue.")).not.toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "Place order" })).toBeDisabled();
+
+    act(() => widget.props?.onToken("v3-token"));
+    expect(screen.getByRole("button", { name: "Place order" })).toBeEnabled();
+    fireEvent.click(screen.getByRole("button", { name: "Place order" }));
+    await waitFor(() => expect(api.callsTo("/api/tickets/orders")).toHaveLength(1));
+    expect(api.callsTo("/api/tickets/orders")[0]?.body).toMatchObject({ captchaToken: "v3-token" });
+  });
+
+  it("v3 that cannot run fails open: the button works and no token is sent", async () => {
+    withSiteKey({ provider: "recaptcha-v3", site_key: "site-key", disabled: false });
+    freeOrder();
+    await toHolders();
+    await screen.findByTestId("captcha-widget");
+    act(() => widget.props?.onUnavailable());
+    fireEvent.click(screen.getByRole("button", { name: "Place order" }));
+    await waitFor(() => expect(api.callsTo("/api/tickets/orders")).toHaveLength(1));
+    expect(api.callsTo("/api/tickets/orders")[0]?.body).not.toHaveProperty("captchaToken");
+  });
+});

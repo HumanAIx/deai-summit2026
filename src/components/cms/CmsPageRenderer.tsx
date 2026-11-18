@@ -46,13 +46,18 @@ function buttonHref(button: CMSButton): string {
   return '#';
 }
 
+/** The caption: the CMS editor saves it as `text`, older content as `label`. */
+function buttonLabel(button: CMSButton): string {
+  return (button.text ?? button.label ?? '').trim();
+}
+
 function CtaButtons({ buttons }: { buttons?: CMSButton[] }) {
   if (!buttons?.length) return null;
   return (
     <div className="flex flex-col sm:flex-row gap-4 justify-center flex-wrap">
       {buttons.map((btn, i) => (
         <Link
-          key={`${btn.label}-${i}`}
+          key={`${buttonLabel(btn)}-${i}`}
           href={buttonHref(btn)}
           className={
             i === 0
@@ -60,7 +65,7 @@ function CtaButtons({ buttons }: { buttons?: CMSButton[] }) {
               : 'px-10 py-4 rounded-full border border-white/40 text-white hover:bg-white/10 transition-all duration-300 text-base md:text-lg font-bold no-underline'
           }
         >
-          {btn.label}
+          {buttonLabel(btn)}
         </Link>
       ))}
     </div>

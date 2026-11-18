@@ -71,7 +71,7 @@ export function CancelTicket({ token }: { token: string }) {
       </div>
       <div role="alert">{failure ? <p className="text-sm text-danger">{t.has(`errors.${failure}`) ? t(`errors.${failure}`) : t("errors.generic")}</p> : null}</div>
       {open ? (
-        <DialogShell labelledBy="cancel-ticket-confirm-heading" onClose={close} initialFocusRef={keepButton} backdropClassName="fixed inset-0 z-50 flex items-center justify-center bg-scrim/50 p-4" className={`${MT_CARD} flex w-full max-w-md flex-col gap-3 p-6`}>
+        <DialogShell labelledBy="cancel-ticket-confirm-heading" onClose={close} initialFocusRef={keepButton} backdropClassName="fixed inset-0 z-[60] flex items-center justify-center bg-scrim/50 p-4" className={`${MT_CARD} flex w-full max-w-md flex-col gap-3 p-6`}>
           <h3 id="cancel-ticket-confirm-heading" className="text-lg font-semibold">
             {t("selfService.cancelTicket.confirmHeading")}
           </h3>

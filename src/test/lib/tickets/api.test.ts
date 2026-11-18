@@ -162,6 +162,16 @@ describe("tickets ep-api calls", () => {
       expect(passOptions).toMatchObject({ method: "POST", cache: "no-store", headers: { "x-ticket-token": TOKEN } });
     });
 
+    it("postMyTicketPassOnCheck posts the e-mail to /pass-on/check with the holder token header and parses { ok: true }", async () => {
+      epFetch.mockResolvedValue({ ok: true });
+      await expect(api.postMyTicketPassOnCheck({ token: TOKEN, body: { email: "g@example.com" }, locale: "en", ip: "203.0.113.9" })).resolves.toEqual({ ok: true });
+      const [path, options] = epFetch.mock.calls[0] as [string, Record<string, unknown>];
+      expect(path).toBe("/tickets/my/ticket/pass-on/check");
+      expect(options).toMatchObject({ method: "POST", cache: "no-store", body: { email: "g@example.com" }, headers: { "x-ticket-token": TOKEN, "x-gconf-client-ip": "203.0.113.9" } });
+      epFetch.mockResolvedValue({ ok: false });
+      await expect(api.postMyTicketPassOnCheck({ token: TOKEN, body: { email: "g@example.com" }, locale: "en", ip: undefined })).rejects.toThrow();
+    });
+
     it("the buyer-token calls: PATCH a holder (id in the path) and POST a refund request, token in x-order-token", async () => {
       epFetch.mockResolvedValue({ holder: { name: "Ivo", email: "i@example.com" }, nameChanged: true, emailChanged: false, emailSent: false });
       await api.patchMyOrderHolder({ token: TOKEN, ticketId: TICKET_ID, body: { name: "Ivo" }, locale: "en", ip: undefined });

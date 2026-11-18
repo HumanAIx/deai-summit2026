@@ -485,6 +485,11 @@ export type NameBody = z.infer<typeof nameBodySchema>;
 export const passOnBodySchema = z.object({ name: personName, email: personEmail });
 export type PassOnBody = z.infer<typeof passOnBodySchema>;
 
+/** `POST /tickets/my/ticket/pass-on/check` — would a pass-on to this address be accepted? Nothing changes. */
+export const passOnCheckBodySchema = z.object({ email: personEmail });
+export type PassOnCheckBody = z.infer<typeof passOnCheckBodySchema>;
+export const passOnCheckResultSchema = z.object({ ok: z.literal(true) });
+
 /** `PATCH /tickets/my/order/holders/:ticketId` — at least one of the two. */
 export const holderEditBodySchema = z
   .object({ name: personName.optional(), email: personEmail.optional() })

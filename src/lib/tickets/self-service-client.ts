@@ -3,12 +3,14 @@ import {
   cancelResultSchema,
   holderEditResultSchema,
   nameResultSchema,
+  passOnCheckResultSchema,
   passOnResultSchema,
   profileBlockSchema,
   refundRequestResultSchema,
   type HolderEditBody,
   type NameBody,
   type PassOnBody,
+  type PassOnCheckBody,
   type ProfileBody,
   type RefundRequestBody,
 } from "./schemas";
@@ -46,6 +48,11 @@ async function send<T>({ endpoint, method, token, tokenHeader, body, parser }: {
 
 export function requestNameCorrection({ token, body }: { token: string; body: NameBody }) {
   return send({ endpoint: "my/ticket/name", method: "POST", token, tokenHeader: "x-ticket-token", body, parser: nameResultSchema });
+}
+
+/** Asked before the "cannot be undone" question, so a refusal shows on the form instead of after the confirm. */
+export function requestPassOnCheck({ token, body }: { token: string; body: PassOnCheckBody }) {
+  return send({ endpoint: "my/ticket/pass-on/check", method: "POST", token, tokenHeader: "x-ticket-token", body, parser: passOnCheckResultSchema });
 }
 
 export function requestPassOn({ token, body }: { token: string; body: PassOnBody }) {

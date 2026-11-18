@@ -11,6 +11,8 @@ import {
   nameBodySchema,
   orderIdSchema,
   passOnBodySchema,
+  passOnCheckBodySchema,
+  passOnCheckResultSchema,
   passOnResultSchema,
   cancelResultSchema,
   createOrderResultSchema,
@@ -279,5 +281,20 @@ describe("isTest, canCancel and holdMaxAt (DASH-236)", () => {
     expect(createOrderResultSchema.parse({ ...base, holdMaxAt: "2030-01-01T00:30:00Z" }).holdMaxAt).toBe("2030-01-01T00:30:00Z");
     expect(createOrderResultSchema.parse(base).holdMaxAt).toBeUndefined();
     expect(extendResultSchema.parse({ holdExpiresAt: "2030-01-01T00:25:00Z", holdMaxAt: "2030-01-01T00:30:00Z" }).holdMaxAt).toBe("2030-01-01T00:30:00Z");
+  });
+});
+
+describe("pass-on pre-check schemas", () => {
+  it("passOnCheckBodySchema trims and lower-cases the email and enforces ep-api's limits", () => {
+    expect(passOnCheckBodySchema.parse({ email: " Grace@Example.COM " })).toEqual({ email: "grace@example.com" });
+    expect(passOnCheckBodySchema.safeParse({ email: "nope" }).success).toBe(false);
+    expect(passOnCheckBodySchema.safeParse({}).success).toBe(false);
+    expect(passOnCheckBodySchema.safeParse({ email: `${"a".repeat(250)}@example.com` }).success).toBe(false);
+  });
+
+  it("passOnCheckResultSchema accepts only { ok: true }", () => {
+    expect(passOnCheckResultSchema.safeParse({ ok: true }).success).toBe(true);
+    expect(passOnCheckResultSchema.safeParse({ ok: false }).success).toBe(false);
+    expect(passOnCheckResultSchema.safeParse({}).success).toBe(false);
   });
 });

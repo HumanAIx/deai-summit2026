@@ -27,18 +27,27 @@ import { useEffect, useRef, useState } from "react";
 interface ExplicitCaptchaApi {
   ready?: (cb: () => void) => void;
   render: (container: HTMLElement, params: Record<string, unknown>) => number | string;
+  /** reCAPTCHA v3 only (script loaded with `?render={siteKey}`). */
+  execute?: (siteKey: string, options: { action: string }) => Promise<string>;
 }
 
 function captchaApis(): { grecaptcha?: ExplicitCaptchaApi; hcaptcha?: ExplicitCaptchaApi } {
   return window as unknown as { grecaptcha?: ExplicitCaptchaApi; hcaptcha?: ExplicitCaptchaApi };
 }
 
-type Provider = "recaptcha" | "hcaptcha";
+type Provider = "recaptcha" | "hcaptcha" | "recaptcha-v3";
 
-const SCRIPT_SRC: Record<Provider, string> = {
-  recaptcha: "https://www.google.com/recaptcha/api.js?render=explicit",
-  hcaptcha: "https://js.hcaptcha.com/1/api.js?render=explicit",
+/** v3 has no widget: its script is loaded with the site key and hands out a token per `execute()`. */
+const SCRIPT_SRC: Record<Provider, (siteKey: string) => string> = {
+  recaptcha: () => "https://www.google.com/recaptcha/api.js?render=explicit",
+  hcaptcha: () => "https://js.hcaptcha.com/1/api.js?render=explicit",
+  "recaptcha-v3": (siteKey) => `https://www.google.com/recaptcha/api.js?render=${encodeURIComponent(siteKey)}`,
 };
+
+/** A v3 token is valid for 2 minutes: a fresh one is fetched well before that while the buyer is on the step. */
+const V3_REFRESH_MS = 90_000;
+/** The v3 action name ep-api's siteverify sees for ticket orders. */
+const V3_ACTION = "ticket_checkout";
 
 /** Width of the providers' "normal" checkbox (reCAPTCHA 304px, hCaptcha 303px). */
 const NORMAL_WIDGET_WIDTH = 304;
@@ -47,12 +56,12 @@ const NORMAL_WIDGET_WIDTH = 304;
 // the page's lifetime regardless of how many widgets mount/unmount.
 const scriptLoads: Partial<Record<Provider, Promise<void>>> = {};
 
-function loadCaptchaScript(provider: Provider): Promise<void> {
+function loadCaptchaScript(provider: Provider, siteKey: string): Promise<void> {
   const existing = scriptLoads[provider];
   if (existing) return existing;
   const promise = new Promise<void>((resolve, reject) => {
     const script = document.createElement("script");
-    script.src = SCRIPT_SRC[provider];
+    script.src = SCRIPT_SRC[provider](siteKey);
     script.async = true;
     script.onload = () => resolve();
     script.onerror = () => reject(new Error(`Failed to load ${provider} script`));
@@ -112,7 +121,51 @@ export function CaptchaWidget({
   }, [onUnavailable]);
 
   useEffect(() => {
-    if (!siteKey) return;
+    if (!siteKey || provider !== "recaptcha-v3") return;
+    let cancelled = false;
+    let timer: ReturnType<typeof setInterval> | undefined;
+
+    // Invisible: ask for a token now and again before it expires. A failure to get one is "unavailable" (fail open,
+    // like the widget), so the buyer is never stuck behind a captcha that cannot run.
+    const fetchToken = () => {
+      const api = captchaApis().grecaptcha;
+      if (cancelled || !api?.execute) return;
+      api
+        .execute(siteKey, { action: V3_ACTION })
+        .then((token) => {
+          if (!cancelled) onToken(token);
+        })
+        .catch(() => {
+          if (cancelled) return;
+          setFailed(true);
+          onUnavailable();
+        });
+    };
+
+    loadCaptchaScript(provider, siteKey)
+      .then(() => {
+        if (cancelled) return;
+        const api = captchaApis().grecaptcha;
+        if (!api?.ready) throw new Error("reCAPTCHA v3 did not load");
+        api.ready(() => {
+          fetchToken();
+          timer = setInterval(fetchToken, V3_REFRESH_MS);
+        });
+      })
+      .catch(() => {
+        if (cancelled) return;
+        setFailed(true);
+        onUnavailable();
+      });
+
+    return () => {
+      cancelled = true;
+      if (timer) clearInterval(timer);
+    };
+  }, [siteKey, provider, onToken, onUnavailable]);
+
+  useEffect(() => {
+    if (!siteKey || provider === "recaptcha-v3") return;
     let cancelled = false;
 
     const render = () => {
@@ -130,7 +183,7 @@ export function CaptchaWidget({
       });
     };
 
-    loadCaptchaScript(provider)
+    loadCaptchaScript(provider, siteKey)
       .then(() => {
         if (cancelled) return;
         const recaptcha = captchaApis().grecaptcha;
@@ -152,5 +205,7 @@ export function CaptchaWidget({
   }, [siteKey, provider, onToken, onUnavailable]);
 
   if (failed) return null;
+  // v3 draws nothing here (Google shows its own badge); the empty group keeps the layout identical.
+  if (provider === "recaptcha-v3") return null;
   return <div ref={containerRef} role="group" aria-label={a11yT("captcha")} />;
 }

@@ -1,5 +1,5 @@
 import { afterEach, describe, expect, it, vi } from "vitest";
-import { requestHolderEdit, requestNameCorrection, requestPassOn, requestRefund } from "../../../lib/tickets/self-service-client";
+import { requestHolderEdit, requestNameCorrection, requestPassOn, requestPassOnCheck, requestRefund } from "../../../lib/tickets/self-service-client";
 
 const TOKEN = "t".repeat(43);
 const TICKET_ID = "5c1f7a1e-2f4a-4a53-9a3e-0e6f6a4c1b11";
@@ -52,5 +52,22 @@ describe("self-service browser client", () => {
     expect(await requestNameCorrection({ token: TOKEN, body: { name: "Ada" } })).toMatchObject({ ok: false, code: "unavailable" });
     vi.stubGlobal("fetch", vi.fn().mockRejectedValue(new TypeError("offline")));
     expect(await requestPassOn({ token: TOKEN, body: { name: "G", email: "g@example.com" } })).toEqual({ ok: false, code: "unavailable", status: 0 });
+  });
+
+  it("requestPassOnCheck posts the e-mail to the check handler with the holder token in a header and parses { ok: true }", async () => {
+    const fetchMock = respond({ success: true, data: { ok: true } });
+    vi.stubGlobal("fetch", fetchMock);
+    expect(await requestPassOnCheck({ token: TOKEN, body: { email: "g@example.com" } })).toEqual({ ok: true, data: { ok: true } });
+    const [url, init] = fetchMock.mock.calls[0] as [string, RequestInit & { headers: Record<string, string> }];
+    expect(url).toBe("/api/tickets/my/ticket/pass-on/check");
+    expect(init).toMatchObject({ method: "POST", headers: { "x-ticket-token": TOKEN } });
+    expect(JSON.parse(init.body as string)).toEqual({ email: "g@example.com" });
+  });
+
+  it("requestPassOnCheck relays a refusal's code and rejects an unexpected shape", async () => {
+    vi.stubGlobal("fetch", respond({ success: false, error: "x", code: "passOnSameEmail" }, 409));
+    expect(await requestPassOnCheck({ token: TOKEN, body: { email: "g@example.com" } })).toMatchObject({ ok: false, code: "passOnSameEmail" });
+    vi.stubGlobal("fetch", respond({ success: true, data: { ok: false } }));
+    expect((await requestPassOnCheck({ token: TOKEN, body: { email: "g@example.com" } })).ok).toBe(false);
   });
 });

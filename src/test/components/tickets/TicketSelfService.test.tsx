@@ -13,6 +13,17 @@ function respond(body: unknown, status = 200) {
   return vi.fn().mockResolvedValue(new Response(JSON.stringify(body), { status }));
 }
 
+/** A fetch fake routing the two pass-on endpoints: the pre-check and the irreversible pass-on. */
+function passOnApi({ check = { status: 200, body: { success: true, data: { ok: true } } }, passOn = { status: 200, body: { success: true, data: { passedOnTo: { name: "Grace Hopper" }, emailSent: true } } } }: { check?: { status: number; body: unknown }; passOn?: { status: number; body: unknown } } = {}) {
+  const fetchMock = vi.fn(async (url: string) => {
+    const reply = url.endsWith("/pass-on/check") ? check : passOn;
+    return new Response(JSON.stringify(reply.body), { status: reply.status });
+  });
+  vi.stubGlobal("fetch", fetchMock);
+  return fetchMock;
+}
+const urls = (fetchMock: ReturnType<typeof vi.fn>) => fetchMock.mock.calls.map((call) => call[0] as string);
+
 beforeEach(() => router.refresh.mockReset());
 afterEach(() => vi.unstubAllGlobals());
 
@@ -110,9 +121,8 @@ describe("TicketSelfService", () => {
       expect(fetchMock).not.toHaveBeenCalled();
     });
 
-    it("asks to confirm first (the QR stops working), moves focus to the question, and only then posts", async () => {
-      const fetchMock = respond({ success: true, data: { passedOnTo: { name: "Grace Hopper" }, emailSent: true } });
-      vi.stubGlobal("fetch", fetchMock);
+    it("submitting calls the pre-check FIRST (e-mail only, holder token in a header), then asks to confirm, and only Confirm posts the pass-on", async () => {
+      const fetchMock = passOnApi();
       const { container } = render(<TicketSelfService token={TOKEN} holderName="Ada" canCorrectName={false} canPassOn />);
       fill();
       const heading = await screen.findByRole("heading", { name: "Pass this ticket to Grace Hopper?" });
@@ -120,33 +130,49 @@ describe("TicketSelfService", () => {
       await waitFor(() => expect(heading).toHaveFocus());
       expect(screen.getByText("Grace Hopper (grace@example.com) will receive this ticket by email.")).toBeInTheDocument();
       expect(screen.getByText("Your QR code stops working as soon as you confirm. This cannot be undone.")).toBeInTheDocument();
-      expect(fetchMock).not.toHaveBeenCalled();
+      // Only the pre-check has gone out so far.
+      expect(urls(fetchMock)).toEqual(["/api/tickets/my/ticket/pass-on/check"]);
+      const [, checkInit] = fetchMock.mock.calls[0] as unknown as [string, { headers: Record<string, string>; body: string }];
+      expect(checkInit.headers["x-ticket-token"]).toBe(TOKEN);
+      expect(JSON.parse(checkInit.body)).toEqual({ email: "grace@example.com" });
       expect(describeViolations(await axeViolations({ container }))).toEqual([]);
 
       fireEvent.click(screen.getByRole("button", { name: "Yes, pass it on" }));
       await waitFor(() => expect(router.refresh).toHaveBeenCalledTimes(1));
-      const [url, init] = fetchMock.mock.calls[0] as [string, { headers: Record<string, string>; body: string }];
-      expect(url).toBe("/api/tickets/my/ticket/pass-on");
+      expect(urls(fetchMock)).toEqual(["/api/tickets/my/ticket/pass-on/check", "/api/tickets/my/ticket/pass-on"]);
+      const [, init] = fetchMock.mock.calls[1] as unknown as [string, { headers: Record<string, string>; body: string }];
       expect(init.headers["x-ticket-token"]).toBe(TOKEN);
       expect(JSON.parse(init.body)).toEqual({ name: "Grace Hopper", email: "grace@example.com" });
     });
 
-    it("'Go back' returns to the form with nothing posted", async () => {
-      const fetchMock = vi.fn();
-      vi.stubGlobal("fetch", fetchMock);
+    it("a pre-check refusal (passOnSameEmail) shows the error on the form; the confirm question never appears and nothing is passed on", async () => {
+      const fetchMock = passOnApi({ check: { status: 409, body: { success: false, error: "api text", code: "passOnSameEmail" } } });
+      render(<TicketSelfService token={TOKEN} holderName="Ada" canCorrectName={false} canPassOn />);
+      fill();
+      expect(await screen.findByText("Enter a different email address: this ticket already belongs to that one.")).toBeInTheDocument();
+      expect(screen.queryByText(/cannot be undone/)).not.toBeInTheDocument();
+      expect(screen.queryByRole("button", { name: "Yes, pass it on" })).not.toBeInTheDocument();
+      expect(screen.getByLabelText("New holder's name")).toBeInTheDocument();
+      expect(screen.queryByText("api text")).not.toBeInTheDocument();
+      expect(urls(fetchMock)).toEqual(["/api/tickets/my/ticket/pass-on/check"]);
+      expect(router.refresh).not.toHaveBeenCalled();
+    });
+
+    it("'Go back' returns to the form; the pass-on is never posted", async () => {
+      const fetchMock = passOnApi();
       render(<TicketSelfService token={TOKEN} holderName="Ada" canCorrectName={false} canPassOn />);
       fill();
       fireEvent.click(await screen.findByRole("button", { name: "Go back" }));
       expect(await screen.findByLabelText("New holder's name")).toBeInTheDocument();
-      expect(fetchMock).not.toHaveBeenCalled();
+      expect(urls(fetchMock)).toEqual(["/api/tickets/my/ticket/pass-on/check"]);
     });
 
-    it("a refusal (same email, transfers off) goes back to the form with a translated message and no refresh", async () => {
-      vi.stubGlobal("fetch", respond({ success: false, error: "api text", code: "passOnSameEmail" }, 409));
+    it("a refusal at the final step (race: window closed meanwhile) goes back to the form with a translated message and no refresh", async () => {
+      passOnApi({ passOn: { status: 409, body: { success: false, error: "api text", code: "changesClosed" } } });
       render(<TicketSelfService token={TOKEN} holderName="Ada" canCorrectName={false} canPassOn />);
       fill();
       fireEvent.click(await screen.findByRole("button", { name: "Yes, pass it on" }));
-      expect(await screen.findByText("Enter a different email address: this ticket already belongs to that one.")).toBeInTheDocument();
+      expect(await screen.findByText("Changes to this ticket are closed.")).toBeInTheDocument();
       expect(screen.getByLabelText("New holder's name")).toBeInTheDocument();
       expect(router.refresh).not.toHaveBeenCalled();
     });

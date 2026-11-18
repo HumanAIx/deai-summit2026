@@ -20,6 +20,29 @@ const type = (over: Partial<PublicType> = {}): PublicType => ({
   ...over,
 });
 
+describe("resolveCards with no cards (the section lists every public type)", () => {
+  const types = [type(), type({ id: B, name: "Student pass", priceCents: 5000 })];
+
+  it("returns one card per public type in catalogue order: id = type id, title = type name, empty copy", () => {
+    const resolved = resolveCards({ cards: [], types });
+    expect(resolved.map((r) => r.type?.id)).toEqual([A, B]);
+    expect(resolved[1]?.card).toEqual({ id: B, ticketTypeId: B, title: "Student pass", hl: "", kicker: "", incl: "", feats: [], btn: "", featured: false });
+    expect(resolved[0]?.type).toBe(types[0]);
+  });
+
+  it("types still loading (null) gives []", () => {
+    expect(resolveCards({ cards: [], types: null })).toEqual([]);
+  });
+
+  it("in the editor an empty list stays empty", () => {
+    expect(resolveCards({ cards: [], types, editor: true })).toEqual([]);
+  });
+
+  it("a non-empty list is not expanded", () => {
+    expect(resolveCards({ cards: [card()], types }).map((r) => r.card.id)).toEqual(["c1"]);
+  });
+});
+
 describe("resolveCards", () => {
   it("leaves out a card with no ticket type, even before the live types arrive", () => {
     expect(resolveCards({ cards: [card({ ticketTypeId: "" })], types: null })).toEqual([]);

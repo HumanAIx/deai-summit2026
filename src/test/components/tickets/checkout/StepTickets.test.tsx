@@ -80,3 +80,69 @@ describe("StepTickets — the real reason a discount code was rejected (DASH-236
     expect(screen.getByText(text)).toBeInTheDocument();
   });
 });
+
+describe("StepTickets — which discount won (stackNote)", () => {
+  const CODE_WINS = "Your discount code gives more than the newsletter's 5%, so only the code applies.";
+  const NEWSLETTER_WINS = "The newsletter's 5% gives more than your discount code, so only the newsletter discount applies.";
+
+  function mount({ newsletter = true, appliedCode = "VIP10" as string | null, codeStatus = "valid" as CodeStatus, status = "ready" as "ready" | "loading", amounts = {} as { codeDiscountCents?: number; newsletterDiscountCents?: number } }) {
+    const result = { totals: { ...totals, ...amounts }, currency: "EUR", codeStatus };
+    const props: StepTicketsProps = {
+      types: [typeA],
+      config: checkoutConfig,
+      cart: {},
+      flagged: {},
+      onQuantity: noop,
+      conflict: null,
+      onClearAndAdd: noop,
+      onKeepCart: noop,
+      codeInput: "VIP10",
+      onCodeInput: noop,
+      appliedCode,
+      codeError: null,
+      onApplyCode: noop,
+      onRemoveCode: noop,
+      newsletter,
+      onNewsletter: noop,
+      quote: { status, result },
+      quoteError: null,
+      canContinue: false,
+      onContinue: noop,
+    };
+    return render(<StepTickets {...props} />);
+  }
+
+  it("code discount > 0: the code wins", () => {
+    mount({ amounts: { codeDiscountCents: 1000, newsletterDiscountCents: 0 } });
+    expect(screen.getByText(CODE_WINS)).toBeInTheDocument();
+    expect(screen.queryByText(NEWSLETTER_WINS)).not.toBeInTheDocument();
+  });
+
+  it("only a newsletter discount > 0: the newsletter wins", () => {
+    mount({ amounts: { codeDiscountCents: 0, newsletterDiscountCents: 750 } });
+    expect(screen.getByText(NEWSLETTER_WINS)).toBeInTheDocument();
+    expect(screen.queryByText(CODE_WINS)).not.toBeInTheDocument();
+  });
+
+  it("no note when neither discount is reported", () => {
+    mount({ amounts: {} });
+    expect(screen.queryByText(CODE_WINS)).not.toBeInTheDocument();
+    expect(screen.queryByText(NEWSLETTER_WINS)).not.toBeInTheDocument();
+  });
+
+  it("no note when the code is not valid", () => {
+    mount({ codeStatus: "unknown", amounts: { codeDiscountCents: 1000 } });
+    expect(screen.queryByText(CODE_WINS)).not.toBeInTheDocument();
+  });
+
+  it("no note when the newsletter box is off, when no code is applied, or while the quote is loading", () => {
+    const { unmount } = mount({ newsletter: false, amounts: { codeDiscountCents: 1000 } });
+    expect(screen.queryByText(CODE_WINS)).not.toBeInTheDocument();
+    unmount();
+    const second = mount({ appliedCode: null, amounts: { codeDiscountCents: 1000 } });
+    expect(screen.queryByText(CODE_WINS)).not.toBeInTheDocument();
+    second.unmount();
+    mount({ status: "loading", amounts: { codeDiscountCents: 1000 } });
+    expect(screen.queryByText(CODE_WINS)).not.toBeInTheDocument();
+  });
+});

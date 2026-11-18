@@ -8,6 +8,7 @@ import {
   extendResultSchema,
   holderEditResultSchema,
   nameResultSchema,
+  passOnCheckResultSchema,
   passOnResultSchema,
   refundRequestResultSchema,
   linkTypeSchema,
@@ -31,6 +32,7 @@ import {
   type NameBody,
   type OrderStatusAnswer,
   type PassOnBody,
+  type PassOnCheckBody,
   type PublicTypes,
   type QuoteBody,
   type QuoteResult,
@@ -234,6 +236,20 @@ export async function putMyTicketProfile({ token, body, ...common }: Common & { 
     headers: { ...clientIpHeaders({ ip: common.ip }), "x-ticket-token": token },
   });
   return profileBlockSchema.parse(raw);
+}
+
+/**
+ * `POST /tickets/my/ticket/pass-on/check` — the same refusals as the pass-on itself (same email, transfers off, change
+ * window closed, an open refund request naming the ticket), without changing anything (holder token).
+ */
+export async function postMyTicketPassOnCheck({ token, body, ...common }: Common & { token: string; body: PassOnCheckBody }): Promise<z.infer<typeof passOnCheckResultSchema>> {
+  const raw = await epFetch<unknown>("/tickets/my/ticket/pass-on/check", {
+    ...base(common),
+    method: "POST",
+    body,
+    headers: { ...clientIpHeaders({ ip: common.ip }), "x-ticket-token": token },
+  });
+  return passOnCheckResultSchema.parse(raw);
 }
 
 /** `POST /tickets/my/ticket/pass-on` — pass the ticket on to someone else (holder token). */

@@ -54,6 +54,14 @@ export function StepTickets(props: StepTicketsProps) {
   }, [conflict]);
 
   const result = quote.status === "ready" || quote.status === "loading" || quote.status === "error" ? quote.result : undefined;
+  // Code + newsletter never add up: ep-api applies only the bigger one. Say which one won, from the quote itself.
+  const stackNote = ((): string | null => {
+    if (!props.newsletter || !props.appliedCode || result?.codeStatus !== "valid" || quote.status !== "ready") return null;
+    const pct = config.newsletterOffer.pct;
+    if ((result.totals?.codeDiscountCents ?? 0) > 0) return t("newsletter.codeWins", { pct });
+    if ((result.totals?.newsletterDiscountCents ?? 0) > 0) return t("newsletter.newsletterWins", { pct });
+    return null;
+  })();
   const codeStatus = result?.codeStatus;
   // One message per reason ep-api gives; the dates of "not valid now" are shown in the page locale.
   const rejectedMessage = ((): string | null => {
@@ -147,7 +155,14 @@ export function StepTickets(props: StepTicketsProps) {
       {config.newsletterOffer.on ? (
         <label htmlFor={`${uid}-checkout-newsletter`} className={`${TICKETS_CARD} flex min-h-11 cursor-pointer items-start gap-3 text-sm`}>
           <input id={`${uid}-checkout-newsletter`} type="checkbox" aria-labelledby={`${uid}-checkout-newsletter-label`} checked={props.newsletter} onChange={(event) => props.onNewsletter(event.target.checked)} className="mt-0.5 size-5 shrink-0 accent-primary" />
-          <span id={`${uid}-checkout-newsletter-label`}>{t("newsletter.label", { pct: config.newsletterOffer.pct })}</span>
+          <span className="flex flex-col gap-1">
+            <span id={`${uid}-checkout-newsletter-label`}>{t("newsletter.label", { pct: config.newsletterOffer.pct })}</span>
+            {stackNote ? (
+              <span role="status" className="text-muted">
+                {stackNote}
+              </span>
+            ) : null}
+          </span>
         </label>
       ) : null}
 

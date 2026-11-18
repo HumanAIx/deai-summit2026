@@ -4,6 +4,7 @@ import { useForm } from "react-hook-form";
 import { TICKETS_BUTTON, TICKETS_BUTTON_OUTLINE, TICKETS_CARD } from "../tickets-classes";
 import { useId, useMemo } from "react";
 import { CaptchaWidget } from "@/components/tickets/CaptchaWidget";
+import type { CaptchaProvider } from "./hooks";
 import type { ExtraQuestions } from "@/lib/tickets/checkout-questions";
 import { buildHoldersSchema, EMPTY_HOLDER, type HolderValues, type HoldersFormValues } from "./forms";
 import { HolderQuestions } from "./HolderQuestions";
@@ -11,7 +12,7 @@ import { TextField } from "./TextField";
 
 /** The captcha of the order: the widget is shown only when the site has one, and Place order waits for its token. */
 export interface HoldersCaptcha {
-  provider: "recaptcha" | "hcaptcha";
+  provider: CaptchaProvider;
   /** Changes to draw a fresh widget (a token is single-use: after any attempt, or a refusal, the buyer solves again). */
   resetKey: number;
   solved: boolean;
@@ -106,7 +107,10 @@ export function HoldersStep({
           <HolderQuestions index={index} questions={questions} register={register} control={control} message={message} />
         </fieldset>
       ))}
-      {captcha ? (
+      {captcha?.provider === "recaptcha-v3" ? (
+        // Invisible: nothing to solve, Place order waits only for the token it fetches by itself.
+        <CaptchaWidget key={captcha.resetKey} provider={captcha.provider} onToken={captcha.onToken} onUnavailable={captcha.onUnavailable} />
+      ) : captcha ? (
         <div className={`${TICKETS_CARD} flex flex-col gap-3`}>
           <CaptchaWidget key={captcha.resetKey} provider={captcha.provider} onToken={captcha.onToken} onUnavailable={captcha.onUnavailable} />
           {captcha.solved ? null : <p className="text-sm text-muted">{t("captcha.hint")}</p>}

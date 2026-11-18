@@ -9,7 +9,7 @@ import { useTranslations } from "@/lib/tickets/i18n";
 import { useRouter } from "next/navigation";
 import { useEffect, useRef, useState } from "react";
 import { useForm, useWatch } from "react-hook-form";
-import { requestNameCorrection, requestPassOn } from "@/lib/tickets/self-service-client";
+import { requestNameCorrection, requestPassOn, requestPassOnCheck } from "@/lib/tickets/self-service-client";
 import { TextField } from "./checkout/TextField";
 import { nameFormSchema, passOnFormSchema, type NameFormValues, type PassOnFormValues } from "./self-service-forms";
 import { MT_BUTTON, MT_BUTTON_GHOST, MT_BUTTON_OUTLINE, MT_CARD, MT_INPUT, MT_INPUT_ERROR, MT_INPUT_OK } from "./my-ticket-classes";
@@ -102,6 +102,20 @@ function PassOnForm({ token, onDone }: { token: string; onDone: () => void }) {
     queueMicrotask(() => openButton.current?.focus());
   }
 
+  // Before the "cannot be undone" question: ep-api's pre-check, so a pass-on it would refuse (the same email, transfers
+  // off, changes closed, an open refund request) is shown on the form and never reaches the confirm step.
+  async function check(values: PassOnFormValues) {
+    setSubmitting(true);
+    setFailure(null);
+    const result = await requestPassOnCheck({ token, body: { email: values.email } });
+    setSubmitting(false);
+    if (!result.ok) {
+      setFailure({ code: result.code });
+      return;
+    }
+    setPending(values);
+  }
+
   // The irreversible step: only after the confirm question.
   async function confirm() {
     if (!pending) return;
@@ -150,7 +164,7 @@ function PassOnForm({ token, onDone }: { token: string; onDone: () => void }) {
           </div>
         </div>
       ) : open ? (
-        <form onSubmit={handleSubmit((values) => setPending(values))} noValidate aria-labelledby="pass-on-heading" className="flex flex-col gap-2.5">
+        <form onSubmit={handleSubmit(check)} noValidate aria-labelledby="pass-on-heading" className="flex flex-col gap-2.5">
           <div className="grid grid-cols-[repeat(auto-fit,minmax(200px,1fr))] gap-2.5">
             <div className="flex flex-col gap-1">
               <input

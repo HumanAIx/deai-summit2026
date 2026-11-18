@@ -94,7 +94,7 @@ export function WaitlistJoin({
           labelledBy={headingId}
           onClose={() => setOpen(false)}
           initialFocusRef={status.kind === "joined" ? closeRef : nameRef}
-          backdropClassName="fixed inset-0 z-50 flex items-start justify-center overflow-y-auto bg-scrim/50 p-4 sm:items-center sm:p-6"
+          backdropClassName="fixed inset-0 z-[60] flex items-start justify-center overflow-y-auto bg-scrim/50 p-4 sm:items-center sm:p-6"
           className="w-full max-w-md rounded-(--radius) border border-(--color-border) bg-background p-5 shadow-(--shadow) sm:p-6"
         >
           <h2 id={headingId} className="font-heading text-xl font-semibold [overflow-wrap:anywhere]">

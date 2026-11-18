@@ -148,7 +148,7 @@ export function CheckoutPopup({ open, onOpenChange, onResumable, startTypeId, ty
     <div
       hidden={!shown}
       role="presentation"
-      className={shown ? "fixed inset-0 z-50 flex items-stretch justify-center overflow-y-auto bg-scrim/50 sm:items-center sm:p-6" : "hidden"}
+      className={shown ? "fixed inset-0 z-[60] flex items-stretch justify-center overflow-y-auto bg-scrim/50 sm:items-center sm:p-6" : "hidden"}
       onClick={(event) => {
         // The backdrop only; never while paying (a stray click must not interrupt the card form).
         if (event.target === event.currentTarget && !paying) requestClose();
