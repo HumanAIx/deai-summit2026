@@ -1,51 +1,84 @@
 import type { Metadata } from 'next';
 import { notFound } from 'next/navigation';
-import { DetailPageLayout } from '@/components/DetailPageLayout';
+import { CmsPageRenderer } from '@/components/cms/CmsPageRenderer';
 import { TicketsPageView } from '@/components/TicketsPageView';
-import { siteConfig } from '@/config/site';
+import { TicketsIntro } from '@/components/tickets/TicketsIntro';
+import { TicketsPageBody } from '@/components/tickets/TicketsPageBody';
+import { isTicketsSectionBlock } from '@/lib/tickets/cms-section';
+import { ticketsCheckoutEnabled } from '@/lib/tickets/feature-flag';
 import { parseCmsBlocks } from '@/lib/cmsBlocks';
-import {
-  mapNavigationData,
-  prefetchCMSPage,
-  prefetchNavigation,
-  prefetchSocials,
-} from '@/lib/prefetch';
+import { prefetchCaptchaConfig, prefetchCMSPage, prefetchDocumentsGateForms } from '@/lib/prefetch';
 import { parseTicketsPage } from '@/lib/tickets-page';
 import { generatePageMetadata, SEO_DEFAULTS } from '@/lib/seo-defaults';
 
+/** Stock and prices are live on every request; the CMS read is no-store too. */
 export const dynamic = 'force-dynamic';
 
 const BASE_URL = process.env.NEXT_PUBLIC_SITE_URL || 'https://deaisummit.org';
 
-export async function generateMetadata(): Promise<Metadata> {
-  const cmsPage = await prefetchCMSPage('tickets');
-  if (!cmsPage) return { title: `Tickets - ${SEO_DEFAULTS.siteName}` };
-  return generatePageMetadata(cmsPage.seo || null, 'tickets', BASE_URL, {
-    title: `${cmsPage.page_title} - ${SEO_DEFAULTS.siteName}`,
-    description: SEO_DEFAULTS.defaultDescription,
-  });
+type SearchParams = Record<string, string | string[] | undefined>;
+
+const first = (value: string | string[] | undefined): string | undefined => (Array.isArray(value) ? value[0] : value);
+
+export async function generateMetadata({ searchParams }: { searchParams: Promise<SearchParams> }): Promise<Metadata> {
+  const [cmsPage, params] = await Promise.all([prefetchCMSPage('tickets'), searchParams]);
+  const base: Metadata = cmsPage
+    ? generatePageMetadata(cmsPage.seo || null, 'tickets', BASE_URL, {
+        title: `${cmsPage.page_title} - ${SEO_DEFAULTS.siteName}`,
+        description: SEO_DEFAULTS.defaultDescription,
+      })
+    : { title: `Tickets - ${SEO_DEFAULTS.siteName}` };
+  // A legacy private link (`?link=`) carries a secret: never indexed, never sent on as a referrer. The middleware
+  // already 308s it to `/tickets/l/{token}`; this is the belt to that brace.
+  return first(params.link) ? { ...base, robots: { index: false, follow: false }, referrer: 'no-referrer' } : base;
 }
 
-export default async function TicketsPage() {
-  const [cmsPage, apiNav, socials] = await Promise.all([
-    prefetchCMSPage('tickets'),
-    prefetchNavigation(),
-    prefetchSocials(),
-  ]);
+/**
+ * `/tickets`
+ *
+ * - Checkout off (`TICKETS_CHECKOUT_ENABLED` not `true`): the CMS `tickets` page with its Luma links, as before.
+ * - Checkout on, and the CMS `tickets` page has a Tickets section (dashboard › CMS › block › add-on Sales › Tickets):
+ *   that page is rendered, so organisers design it; its cards read live prices and open the checkout pop-up.
+ * - Checkout on otherwise (or a filtered / private link): the built-in live list + 4-step checkout, under the CMS
+ *   page's heading texts.
+ */
+export default async function TicketsPage({ searchParams }: { searchParams: Promise<SearchParams> }) {
+  const [cmsPage, params] = await Promise.all([prefetchCMSPage('tickets'), searchParams]);
+  const blocks = cmsPage ? parseCmsBlocks(cmsPage) : [];
 
-  if (!cmsPage) notFound();
+  if (!ticketsCheckoutEnabled()) {
+    if (!cmsPage) notFound();
+    return <TicketsPageView content={parseTicketsPage(blocks)} />;
+  }
 
-  const content = parseTicketsPage(parseCmsBlocks(cmsPage));
-  const navigationData = apiNav ? mapNavigationData(apiNav) : siteConfig.navigation;
+  const filtered = Boolean(first(params.link) ?? first(params.schedule) ?? first(params.event));
+  if (!filtered && blocks.some(isTicketsSectionBlock)) {
+    const [captchaConfig, formConfigs] = await Promise.all([
+      prefetchCaptchaConfig(),
+      prefetchDocumentsGateForms(blocks, cmsPage?.content?.formConfigs || null),
+    ]);
+    return (
+      <div className="-mt-[140px] bg-[#040A1E] pt-[140px]">
+        <CmsPageRenderer
+          blocks={blocks}
+          pageTitle={cmsPage?.page_title}
+          formConfigs={formConfigs}
+          captchaSiteKey={captchaConfig.site_key}
+          captchaDisabled={captchaConfig.disabled === true}
+          captchaProvider={captchaConfig.provider}
+        />
+      </div>
+    );
+  }
 
+  const heading = cmsPage ? parseTicketsPage(blocks) : null;
   return (
-    <DetailPageLayout
-      navigationData={navigationData}
-      navigationAPIData={apiNav || undefined}
-      socials={socials}
-      navTone="light"
-    >
-      <TicketsPageView content={content} />
-    </DetailPageLayout>
+    <TicketsPageBody
+      rawLink={first(params.link)}
+      rawSchedule={first(params.schedule)}
+      rawEvent={first(params.event)}
+      rawType={first(params.type)}
+      intro={heading?.titleLead || heading?.accentWord ? <TicketsIntro {...heading} /> : undefined}
+    />
   );
 }

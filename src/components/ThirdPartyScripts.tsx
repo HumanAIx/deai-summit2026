@@ -2,6 +2,7 @@
 
 import { useEffect } from 'react';
 import { isLumaTicketUrl } from '@/lib/lumaTicket';
+import { isPrivateTicketPath } from '@/lib/tickets/tickets-route';
 
 type ThirdPartyScriptsProps = {
   gtmId?: string;
@@ -111,6 +112,10 @@ export function ThirdPartyScripts({
   redditBoot,
 }: ThirdPartyScriptsProps) {
   useEffect(() => {
+    // A private ticket page (`/tickets/{t|order|l|w|me}/{token}`) has a secret in its URL: no tag, pixel or widget
+    // loads there. The checkout opens those pages with a full page load, so this check runs on each of them.
+    if (isPrivateTicketPath({ pathname: window.location.pathname })) return;
+
     // Ticket buttons only: early-bird, each pass, and the closing ticket button.
     if (googleAdsId) document.addEventListener('click', trackLumaTicketClick, true);
 

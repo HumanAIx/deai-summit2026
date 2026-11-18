@@ -13,6 +13,8 @@ import { getCompanyPublicPath } from '@/lib/company-public-path';
 import { resolvePublicCardHasDarkBg } from '@/lib/companyLogo';
 import { blockListType, blockMarkdownBody, documentDisplayTitle, formatDocumentPageCount, formatDocumentSize, isCompaniesListBlock, isDocumentsListBlock, isMembersListBlock, resolveBlockDocuments, resolveDocumentsGateForm } from '@/lib/cmsBlocks';
 import { youtubeToEmbed } from '@/lib/utils';
+import { TicketsSection } from '@/components/tickets/TicketsSection';
+import { isTicketsSectionBlock } from '@/lib/tickets/cms-section';
 import type {
   CMSBlock,
   CMSButton,
@@ -613,6 +615,10 @@ function BlockRouter({
   const layout = (block as { layout?: string }).layout;
   const addon = block.addon;
 
+  // Before every other rule, the "first block = hero" one included: a Tickets section at the top stays cards.
+  if (isTicketsSectionBlock(block)) {
+    return <TicketsSection block={block} />;
+  }
   if (isDocumentsListBlock(block) || addon === 'documents-list') {
     return <DocumentsSection block={block} captcha={captcha} formConfigs={formConfigs} />;
   }

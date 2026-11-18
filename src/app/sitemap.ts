@@ -47,6 +47,8 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     { url: `${BASE_URL}/team`, changeFrequency: 'weekly', priority: 0.7 },
     { url: `${BASE_URL}/partners`, changeFrequency: 'weekly', priority: 0.9 },
     { url: `${BASE_URL}/agenda`, changeFrequency: 'weekly', priority: 0.8 },
+    // Public ticket list only; the private token pages under /tickets/* are never listed (robots.txt disallows them).
+    { url: `${BASE_URL}/tickets`, changeFrequency: 'daily', priority: 0.9 },
     { url: `${BASE_URL}/blog`, changeFrequency: 'weekly', priority: 0.8 },
     { url: `${BASE_URL}/terms`, changeFrequency: 'monthly', priority: 0.3 },
     { url: `${BASE_URL}/privacy`, changeFrequency: 'monthly', priority: 0.3 },

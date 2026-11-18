@@ -847,3 +847,40 @@
 .blog-card-shadow:hover {
   box-shadow: 0 12px 40px rgba(0, 176, 194, 0.15);
 }
+/* ── Ticket pages and the CMS Tickets section ──────────────────────────────
+ * The ticket components are ported from GConf.ai's renderer and paint with
+ * these semantic tokens (bg-surface, text-muted, bg-primary …). One place to
+ * restyle every ticket page: the DeAI navy / blue → cyan look of the CMS
+ * tickets page (TicketsPageView). `static` so the raw `var(--color-border)`
+ * references resolve even where no utility names the token. */
+@theme static {
+  --color-background: #040A1E;
+  --color-surface: #0B1636;
+  --color-surface-raised: #111E44;
+  --color-text: #FFFFFF;
+  --color-muted: #9AA3B8;
+  --color-border: #1F2A4A;
+  --color-control-border: #56638A;
+  --color-primary: #1E6BF0;
+  --color-primary-hover: #3A80F5;
+  --color-on-primary: #FFFFFF;
+  --color-primary-text: #2CC7D9;
+  --color-secondary: #08B5C6;
+  --color-accent: #08B5C6;
+  --color-danger: #F97066;
+  --color-success: #47CD89;
+  --color-warning: #FFC107;
+  --color-warning-emphasis: #FFDA6A;
+  --color-ticket-accent: #2CC7D9;
+  --color-ticket-accent-2: #08B5C6;
+  --font-heading: var(--font-display);
+  --font-body: var(--font-sans);
+}
+
+.deai-tickets {
+  --radius: 0.75rem;
+  --shadow: none;
+  --ticket-btn-bg: linear-gradient(90deg, #1E6BF0, #08B5C6);
+  --font-mono: var(--font-plex-mono), ui-monospace, monospace;
+  color-scheme: dark;
+}
