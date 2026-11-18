@@ -25,10 +25,10 @@ export const MT_TICKET_CARD = "relative overflow-hidden rounded-2xl border borde
 export const MT_CARD = "rounded-[14px] border border-(--color-border) bg-surface";
 export const MT_CARD_PAD = "p-[clamp(18px,4vw,24px)]";
 
-/** Primary pill button (solid primary: readable on every theme). */
+/** Primary pill button: DeAI's blue → cyan gradient, as in the "My Ticket" prototype (`--ticket-btn-bg`, solid primary as fallback). */
 export const MT_BUTTON =
-  "inline-flex min-h-11 items-center justify-center rounded-full bg-primary px-5 text-sm font-semibold text-on-primary hover:bg-primary-hover disabled:cursor-not-allowed disabled:opacity-45";
-export const MT_BUTTON_LG = "inline-flex min-h-12 items-center justify-center rounded-full bg-primary px-6.5 text-[15px] font-semibold text-on-primary hover:bg-primary-hover disabled:cursor-not-allowed disabled:opacity-45";
+  "inline-flex min-h-11 items-center justify-center rounded-full [background:var(--ticket-btn-bg,var(--color-primary))] hover:brightness-110 px-5 text-sm font-semibold text-on-primary disabled:cursor-not-allowed disabled:opacity-45 disabled:hover:brightness-100";
+export const MT_BUTTON_LG = "inline-flex min-h-12 items-center justify-center rounded-full [background:var(--ticket-btn-bg,var(--color-primary))] hover:brightness-110 px-6.5 text-[15px] font-semibold text-on-primary disabled:cursor-not-allowed disabled:opacity-45 disabled:hover:brightness-100";
 
 /** Outlined pill button (wallet / calendar row, "Pass on", "Change"). */
 export const MT_BUTTON_OUTLINE =

@@ -1,6 +1,6 @@
 import { getFormatter, getTranslations } from "@/lib/tickets/i18n-server";
-import { formatMoney, formatPlainDate } from "@/lib/tickets/format";
-import type { HolderAnswersView, MyOrder } from "@/lib/tickets/schemas";
+import { formatEventWhen, formatMoney, formatPlainDate } from "@/lib/tickets/format";
+import type { HolderAnswersView, MyOrder, MyTicket } from "@/lib/tickets/schemas";
 import { HolderEditor } from "./HolderEditor";
 import { MT_BUTTON_OUTLINE, MT_CARD, MT_GRADIENT_TEXT, MT_KICKER, MT_KICKER_RULE, MT_PILL, MT_PILL_OFF, MT_PILL_OK, MT_PILL_WAIT } from "./my-ticket-classes";
 import { RefundRequestForm } from "./RefundRequestForm";
@@ -42,7 +42,23 @@ function OrderTitle({ lines }: { lines: MyOrder["lines"] }) {
  * booking fee, VAT, total) — every figure ep-api's integer cents in the visitor's locale, no money arithmetic. Documents are
  * downloaded through our own `/tickets/order/{token}/documents/{id}` handler, never ep-api directly. Cards stack on a phone.
  */
-export async function OrderView({ order, token, ticketHrefs = {} }: { order: MyOrder; token: string; ticketHrefs?: Readonly<Record<string, string>> }) {
+/** "MFCC Malta" from the venue: its name, else ep-api's ready label. */
+function venueName({ venue }: { venue: MyTicket["source"]["venue"] }): string | null {
+  return venue?.name?.trim() || venue?.label?.trim() || null;
+}
+
+export async function OrderView({
+  order,
+  token,
+  ticketHrefs = {},
+  eventSource = null,
+}: {
+  order: MyOrder;
+  token: string;
+  ticketHrefs?: Readonly<Record<string, string>>;
+  /** DeAI: the event of the order (read from the buyer's own ticket; ep-api's order answer has none), for the subtitle. */
+  eventSource?: MyTicket["source"] | null;
+}) {
   const [t, tTicket, tq, format] = await Promise.all([getTranslations("tickets.order"), getTranslations("tickets.ticket"), getTranslations("tickets.checkout.questions"), getFormatter()]);
   const money = (cents: number) => formatMoney({ format, cents, currency: order.currency });
   const orderStatus = ORDER_STATUS_KEYS[order.status] ?? "unknown";
@@ -51,6 +67,9 @@ export async function OrderView({ order, token, ticketHrefs = {} }: { order: MyO
   const changesClose = order.changesCloseAt
     ? format.dateTime(new Date(order.changesCloseAt), { dateStyle: "full", timeStyle: "short", ...(order.timeZone ? { timeZone: order.timeZone } : {}) })
     : null;
+  const eventParts = eventSource
+    ? [eventSource.name?.trim() || null, formatEventWhen({ format, source: eventSource }), venueName({ venue: eventSource.venue })].filter((part): part is string => Boolean(part))
+    : [];
   const holders = Array.isArray(order.holders) ? order.holders : [];
   const named = holders.filter((holder) => Boolean(holder.name?.trim())).length;
   const refundable = holders.filter((holder) => holder.status === "valid" && holder.id).map((holder) => ({ id: holder.id as string, label: holder.name ?? t("holderUnnamed"), code: holder.ticketCode }));
@@ -91,8 +110,12 @@ export async function OrderView({ order, token, ticketHrefs = {} }: { order: MyO
             <span className="sr-only">{`${t("heading")}:`}</span>{" "}
             <OrderTitle lines={order.lines} />
           </h1>
-          <p className="text-[15px] text-muted">
-            {order.paidAt ? t("paidAmountOn", { amount: money(order.totals.totalCents), date: formatPlainDate({ format, value: order.paidAt }) }) : t(`status.${orderStatus}`)}
+          <p className="text-[15px] text-muted [overflow-wrap:anywhere]">
+            {/* As in the prototype: "DeAI Summit 2026 · 25–26 Nov 2026 · MFCC Malta · paid €567 on 23 Oct 2026". */}
+            {[
+              ...eventParts,
+              order.paidAt ? t(eventParts.length > 0 ? "paidAmountOnShort" : "paidAmountOn", { amount: money(order.totals.totalCents), date: formatPlainDate({ format, value: order.paidAt }) }) : t(`status.${orderStatus}`),
+            ].join(" · ")}
           </p>
           {order.isTest === true ? (
             <p role="status" className="inline-block self-start rounded-full border border-warning-emphasis bg-surface px-3 py-1 text-sm font-medium text-text">

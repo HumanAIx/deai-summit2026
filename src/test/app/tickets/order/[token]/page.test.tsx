@@ -1,7 +1,7 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
-const { fetchMyOrder } = vi.hoisted(() => ({ fetchMyOrder: vi.fn() }));
-vi.mock("@/lib/tickets/api", () => ({ fetchMyOrder }));
+const { fetchMyOrder, fetchMyTicket } = vi.hoisted(() => ({ fetchMyOrder: vi.fn(), fetchMyTicket: vi.fn() }));
+vi.mock("@/lib/tickets/api", () => ({ fetchMyOrder, fetchMyTicket }));
 vi.mock("react/jsx-dev-runtime", async () => (await import("../../../../helpers/jsx-stub")).jsxStub);
 vi.mock("react/jsx-runtime", async () => (await import("../../../../helpers/jsx-stub")).jsxStub);
 vi.mock("next/headers", () => ({ headers: async () => new Headers({ "x-forwarded-for": "203.0.113.9" }) }));
@@ -37,7 +37,10 @@ function findByType(node: unknown, type: unknown): { props: Record<string, unkno
   return null;
 }
 
-beforeEach(() => fetchMyOrder.mockReset());
+beforeEach(() => {
+  fetchMyOrder.mockReset();
+  fetchMyTicket.mockReset();
+});
 
 describe("/tickets/order/[token] page", () => {
   it("is private: force-dynamic, noindex/nofollow, no referrer", async () => {
@@ -78,5 +81,28 @@ describe("/tickets/order/[token] page", () => {
     const element = await call({ token: "short", o: ORDER_ID });
     expect(element.type).toBe(InvalidLinkState);
     expect(fetchMyOrder).not.toHaveBeenCalled();
+  });
+
+  it("the subtitle's event comes from the buyer's own ticket: one extra read, its source passed as eventSource", async () => {
+    const OWN = "c".repeat(43);
+    const source = { kind: "schedule", id: "s1", name: "DeAI Summit 2026", startDate: "2026-11-25", endDate: "2026-11-26", timeZone: "Europe/Malta", startsAt: null, venue: { name: "MFCC Malta", city: "Ta' Qali", label: null } };
+    fetchMyOrder.mockResolvedValue({ state: "ok", data: { orderNo: 7, holders: [{ ticketCode: "T-0", name: "Other", ticketToken: undefined }, { ticketCode: "T-1", name: "Buyer", ticketToken: OWN }] } });
+    fetchMyTicket.mockResolvedValue({ state: "ok", data: { source } });
+    const element = await call();
+    expect(fetchMyTicket).toHaveBeenCalledTimes(1);
+    expect(fetchMyTicket).toHaveBeenCalledWith({ token: OWN, locale: "en", ip: "203.0.113.9" });
+    expect(element.props.eventSource).toEqual(source);
+  });
+
+  it("no own ticket: no extra read and no event; a failed or invalid ticket read leaves the event out", async () => {
+    fetchMyOrder.mockResolvedValue({ state: "ok", data: { orderNo: 7, holders: [{ ticketCode: "T-0", name: "Other" }] } });
+    expect((await call()).props.eventSource).toBeNull();
+    expect(fetchMyTicket).not.toHaveBeenCalled();
+
+    fetchMyOrder.mockResolvedValue({ state: "ok", data: { orderNo: 7, holders: [{ ticketCode: "T-1", ticketToken: "c".repeat(43) }] } });
+    fetchMyTicket.mockRejectedValue(new Error("down"));
+    expect((await call()).props.eventSource).toBeNull();
+    fetchMyTicket.mockResolvedValue({ state: "invalid" });
+    expect((await call()).props.eventSource).toBeNull();
   });
 });

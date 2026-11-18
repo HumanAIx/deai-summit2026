@@ -6,6 +6,7 @@
 import { useTranslations } from "@/lib/tickets/i18n";
 import { useCallback, useEffect, useId, useRef, useState, useSyncExternalStore, type RefObject } from "react";
 import { createPortal } from "react-dom";
+import { plexMono } from "../ticket-fonts";
 import { useDialogA11y } from "@/components/tickets/ui/useDialogA11y";
 import { TICKETS_BUTTON, TICKETS_BUTTON_OUTLINE } from "../tickets-classes";
 import { PopupConfirmation } from "./PopupConfirmation";
@@ -148,7 +149,7 @@ export function CheckoutPopup({ open, onOpenChange, onResumable, startTypeId, ty
     <div
       hidden={!shown}
       role="presentation"
-      className={shown ? "fixed inset-0 z-[60] flex items-stretch justify-center overflow-y-auto bg-scrim/50 sm:items-center sm:p-6" : "hidden"}
+      className={shown ? `deai-tickets ${plexMono.variable} fixed inset-0 z-[60] flex items-stretch justify-center overflow-y-auto bg-scrim/50 font-body text-text sm:items-center sm:p-6` : "hidden"}
       onClick={(event) => {
         // The backdrop only; never while paying (a stray click must not interrupt the card form).
         if (event.target === event.currentTarget && !paying) requestClose();

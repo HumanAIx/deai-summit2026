@@ -287,7 +287,8 @@
       "invoiceWrong": "Wrong company details? An issued invoice can't be edited.",
       "invoiceAskUs": "Ask us",
       "invoiceAskUsAfter": "and we send a credit note and a corrected invoice.",
-      "summaryHeading": "Order summary"
+      "summaryHeading": "Order summary",
+      "paidAmountOnShort": "paid {amount} on {date}"
     },
     "confirming": {
       "pendingHeading": "Confirming your payment…",

@@ -6,7 +6,7 @@ import { OrderConfirming } from "@/components/tickets/OrderConfirming";
 import { OrderView } from "@/components/tickets/OrderView";
 import { TicketsShell } from "@/components/tickets/TicketsShell";
 import { localizeHref } from "@/lib/tickets/localized-href";
-import { fetchMyOrder } from "@/lib/tickets/api";
+import { fetchMyOrder, fetchMyTicket } from "@/lib/tickets/api";
 import { forwardedClientIp } from "@/lib/tickets/client-ip";
 import { ticketsLocaleCtx } from "@/lib/tickets/locale-ctx";
 import { orderIdSchema, ticketTokenSchema } from "@/lib/tickets/schemas";
@@ -46,7 +46,14 @@ export default async function MyOrderPage({
     const ticketHrefs = Object.fromEntries(
       (Array.isArray(result.data.holders) ? result.data.holders : []).flatMap((holder) => (holder.ticketToken ? [[holder.ticketCode, localizeHref({ href: `/tickets/t/${encodeURIComponent(holder.ticketToken)}`, ctx })]] : [])),
     );
-    return <OrderView order={result.data} token={token.data} ticketHrefs={ticketHrefs} />;
+    // The event line of the subtitle (name, dates, venue): ep-api's order answer has no event, the buyer's own ticket
+    // does. One extra no-store read, only when the buyer holds a ticket; any failure just leaves the line out.
+    const ownTicketToken = (Array.isArray(result.data.holders) ? result.data.holders : []).find((holder) => holder.ticketToken)?.ticketToken;
+    const ownTicket = ownTicketToken
+      ? await fetchMyTicket({ token: ownTicketToken, locale, ip: forwardedClientIp({ headers: requestHeaders }) }).catch(() => null)
+      : null;
+    const eventSource = ownTicket?.state === "ok" ? ownTicket.data.source : null;
+    return <OrderView order={result.data} token={token.data} ticketHrefs={ticketHrefs} eventSource={eventSource} />;
   }
 
   const orderId = orderIdSchema.safeParse(Array.isArray(o) ? o[0] : o);

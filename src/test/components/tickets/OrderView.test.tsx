@@ -2,7 +2,7 @@ import { describe, expect, it, vi } from "vitest";
 import { axeViolations, describeViolations } from "../../helpers/axe";
 import { resolveServerElement } from "../../helpers/resolve-server";
 import { fireEvent, render, screen, within } from "../../test-utils";
-import type { MyOrder } from "../../../lib/tickets/schemas";
+import type { MyOrder, MyTicket } from "../../../lib/tickets/schemas";
 
 vi.mock("next/navigation", () => ({ useRouter: () => ({ push: vi.fn(), refresh: vi.fn() }) }));
 
@@ -29,8 +29,8 @@ const ORDER: MyOrder = {
   seller: { name: "Acme Events Ltd", vatNumber: "MT12345678", replyTo: null },
 };
 
-async function renderOrder(order: MyOrder, ticketHrefs: Record<string, string> = {}) {
-  const ui = await resolveServerElement(<OrderView order={order} token={TOKEN} ticketHrefs={ticketHrefs} />);
+async function renderOrder(order: MyOrder, ticketHrefs: Record<string, string> = {}, eventSource: MyTicket["source"] | null = null) {
+  const ui = await resolveServerElement(<OrderView order={order} token={TOKEN} ticketHrefs={ticketHrefs} eventSource={eventSource} />);
   return render(<>{ui}</>);
 }
 
@@ -71,6 +71,18 @@ describe("OrderView", () => {
     expect(screen.getByRole("heading", { level: 1, name: "Your order: 2 × Full pass" })).toBeInTheDocument();
     expect(screen.getByText("Order #42 · Paid")).toBeInTheDocument();
     expect(screen.getByText("Paid €193 on November 12, 2026")).toBeInTheDocument();
+  });
+
+  it("with the event known, the subtitle reads like the prototype: event · dates · venue · paid amount on date", async () => {
+    const source: MyTicket["source"] = { kind: "schedule", id: "s1", name: "DeAI Summit 2026", startDate: "2026-11-25", endDate: "2026-11-26", timeZone: "Europe/Malta", startsAt: null, venue: { name: "MFCC Malta", city: "Ta' Qali", label: null } } as MyTicket["source"];
+    await renderOrder(ORDER, {}, source);
+    expect(screen.getByText(/^DeAI Summit 2026 · November 25\s?–\s?26, 2026 · MFCC Malta · paid €193 on November 12, 2026$/)).toBeInTheDocument();
+  });
+
+  it("an event without dates or venue keeps only what it has", async () => {
+    const source = { kind: "event", id: "e1", name: "DeAI Summit 2026", startDate: null, endDate: null, timeZone: "Europe/Malta", startsAt: null, venue: null } as MyTicket["source"];
+    await renderOrder(ORDER, {}, source);
+    expect(screen.getByText("DeAI Summit 2026 · paid €193 on November 12, 2026")).toBeInTheDocument();
   });
 
   it("several lines make a combined title", async () => {
