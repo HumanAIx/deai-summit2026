@@ -122,6 +122,15 @@ describe("/tickets page, checkout ON", () => {
     expect(intro.props).toMatchObject({ eyebrow: expect.any(String), titleLead: expect.any(String) });
   });
 
+  it("passes the CMS page's Luma link to the intro as the 'Buy on Luma' option; none without a Luma link", async () => {
+    const pass = { id: "p", type: "simple", title: "VIP Pass", description: "€189.00", buttons: [{ id: "b", text: "Buy Ticket", link: "https://luma.com/phjit31c" }] };
+    prefetchCMSPage.mockResolvedValue(cms([{ id: "h", type: "simple", subtitle: "TICKETS", title: "Get your pass" }, pass]));
+    expect(((await render()).props.intro as El).props.lumaHref).toBe("https://luma.com/phjit31c");
+
+    prefetchCMSPage.mockResolvedValue(cms([{ id: "h", type: "simple", subtitle: "TICKETS", title: "Get your pass" }]));
+    expect(((await render()).props.intro as El).props.lumaHref).toBeNull();
+  });
+
   it("without a CMS page there is no intro, and no 404 (the checkout is still sold)", async () => {
     prefetchCMSPage.mockResolvedValue(null);
     const el = await render();

@@ -5,6 +5,7 @@ import { TicketsPageView } from '@/components/TicketsPageView';
 import { TicketsIntro } from '@/components/tickets/TicketsIntro';
 import { TicketsPageBody } from '@/components/tickets/TicketsPageBody';
 import { isTicketsSectionBlock } from '@/lib/tickets/cms-section';
+import { lumaHrefOf } from '@/lib/tickets/luma-fallback';
 import { ticketsCheckoutEnabled } from '@/lib/tickets/feature-flag';
 import { parseCmsBlocks } from '@/lib/cmsBlocks';
 import { prefetchCaptchaConfig, prefetchCMSPage, prefetchDocumentsGateForms } from '@/lib/prefetch';
@@ -80,7 +81,7 @@ export default async function TicketsPage({ searchParams }: { searchParams: Prom
       rawSchedule={first(params.schedule)}
       rawEvent={first(params.event)}
       rawType={first(params.type)}
-      intro={heading?.titleLead || heading?.accentWord ? <TicketsIntro {...heading} /> : undefined}
+      intro={heading?.titleLead || heading?.accentWord ? <TicketsIntro {...heading} lumaHref={lumaHrefOf({ content: heading })} /> : undefined}
     />
   );
 }

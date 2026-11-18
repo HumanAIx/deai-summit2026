@@ -339,6 +339,11 @@
         "notYet": "Not on sale yet",
         "ended": "Sales ended",
         "unknown": "Unavailable"
+      },
+      "luma": {
+        "prompt": "Prefer Luma?",
+        "link": "Buy your ticket on Luma",
+        "newTab": "(opens in a new tab)"
       }
     },
     "errors": {
