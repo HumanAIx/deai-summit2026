@@ -254,7 +254,9 @@ export interface CMSBlock {
 }
 
 export interface CMSButton {
-  label: string;
+  /** Older shape. The dashboard CMS editor saves the caption as `text`; read both through `buttonLabel()`. */
+  label?: string;
+  text?: string;
   link?: string;
   action?: string;
   formId?: string;
