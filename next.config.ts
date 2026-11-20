@@ -31,6 +31,15 @@ const nextConfig: NextConfig = {
     ],
     ...(isLocal && { unoptimized: true }),
   },
+  async redirects() {
+    return [
+      {
+        source: '/agenda',
+        destination: '/schedule',
+        statusCode: 301,
+      },
+    ];
+  },
   async headers() {
     return [
       {
