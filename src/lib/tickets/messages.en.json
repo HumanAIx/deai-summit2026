@@ -35,7 +35,8 @@
       "banner": {
         "checkedIn": "This ticket has already been scanned at the entrance.",
         "refunded": "This ticket was refunded and can no longer be used.",
-        "void": "This ticket is void and can no longer be used.",
+        "cancelled": "This ticket was cancelled and can no longer be used.",
+        "blocked": "This ticket was blocked by the organiser and can no longer be used.",
         "passedOn": "This ticket was passed on and can no longer be used.",
         "passedOnTo": "This ticket was passed on to {name} and can no longer be used.",
         "unknown": "This ticket cannot be used."
@@ -357,6 +358,7 @@
       "notOnSale": "Those tickets are not on sale right now.",
       "priceChanged": "The price changed. Please review your order.",
       "codeInvalid": "That discount code cannot be used.",
+      "codeUnknown": "We don't recognise that code. Check the spelling.",
       "tooManyOpenOrders": "You already have open orders. Finish or wait for them to expire first.",
       "linkNotFound": "This link is not valid.",
       "orderNotFound": "We could not find that order.",

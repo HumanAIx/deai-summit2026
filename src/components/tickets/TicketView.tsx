@@ -20,7 +20,9 @@ function statusKey({ status }: { status: string }): (typeof STATUS_KEYS)[KnownSt
 
 function Banner({ ticket, t }: { ticket: MyTicket; t: Translator }) {
   if (ticket.status === "valid" || ticket.status === "passed_on") return null;
-  const text = ticket.status === "checked_in" ? t("banner.checkedIn") : ticket.status === "refunded" ? t("banner.refunded") : ticket.status === "void" ? t("banner.void") : t("banner.unknown");
+  // `void` is a holder's cancel, or an organiser block (`blocked`); an older ep-api sends no flag, and then "cancelled" is the likelier reading.
+  const voidText = ticket.blocked ? t("banner.blocked") : t("banner.cancelled");
+  const text = ticket.status === "checked_in" ? t("banner.checkedIn") : ticket.status === "refunded" ? t("banner.refunded") : ticket.status === "void" ? voidText : t("banner.unknown");
   const neutral = ticket.status === "checked_in";
   return (
     <p role="status" className={`rounded-[14px] border px-4 py-3 text-sm font-medium ${neutral ? "border-(--color-border) bg-surface text-text" : "border-danger bg-surface text-danger"}`}>

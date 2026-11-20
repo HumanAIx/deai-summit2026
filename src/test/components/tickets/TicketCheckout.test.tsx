@@ -137,7 +137,7 @@ describe("step 01 — tickets and the live quote", () => {
     await waitForQuote();
     fireEvent.change(screen.getByLabelText("Discount code"), { target: { value: "badcode" } });
     fireEvent.click(screen.getByRole("button", { name: "Apply" }));
-    expect(await screen.findByText("That discount code cannot be used.")).toBeInTheDocument();
+    expect(await screen.findByText("We don't recognise that code. Check the spelling.")).toBeInTheDocument();
     await waitForQuote();
 
     fireEvent.click(screen.getByRole("button", { name: "Continue" }));
@@ -157,7 +157,7 @@ describe("step 01 — tickets and the live quote", () => {
     const before = api.callsTo("/api/tickets/quote").length;
     fireEvent.change(screen.getByLabelText("Discount code"), { target: { value: "no spaces!" } });
     fireEvent.click(screen.getByRole("button", { name: "Apply" }));
-    expect(await screen.findByText("That discount code cannot be used.")).toBeInTheDocument();
+    expect(await screen.findByText("We don't recognise that code. Check the spelling.")).toBeInTheDocument();
     expect(api.callsTo("/api/tickets/quote")).toHaveLength(before);
   });
 
@@ -772,6 +772,7 @@ describe("keeping the cart: links that leave the checkout open in a new tab", ()
     expect(clickHeader()).toBe("_blank"); // an order is pending: still protected
     fireEvent.click(screen.getByRole("button", { name: "Pay €123.45" }));
     await waitFor(() => expect(openPage).toHaveBeenCalledWith(`/tickets/order/${BUYER_TOKEN}?o=${ORDER_ID}`));
-    expect(clickHeader()).toBeNull();
+    // The leave guard is dropped in a state update after openPage runs: wait for it (a busy CI runner asserted too early).
+    await waitFor(() => expect(clickHeader()).toBeNull());
   });
 });

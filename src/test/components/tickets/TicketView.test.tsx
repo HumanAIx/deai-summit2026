@@ -92,9 +92,17 @@ describe("TicketView", () => {
     expect(screen.getByText(/· Refunded/)).toBeInTheDocument();
   });
 
+  it("a void ticket the organiser blocked says blocked; one the holder cancelled says cancelled", async () => {
+    const blocked = await renderTicket({ ...withoutQr(TICKET), status: "void", blocked: true });
+    expect(screen.getByRole("status")).toHaveTextContent("This ticket was blocked by the organiser and can no longer be used.");
+    blocked.unmount();
+    await renderTicket({ ...withoutQr(TICKET), status: "void", blocked: false });
+    expect(screen.getByRole("status")).toHaveTextContent("This ticket was cancelled and can no longer be used.");
+  });
+
   it("void, checked-in and an unknown status each get a clear banner", async () => {
     for (const [status, text] of [
-      ["void", "This ticket is void and can no longer be used."],
+      ["void", "This ticket was cancelled and can no longer be used."],
       ["checked_in", "This ticket has already been scanned at the entrance."],
       ["brand_new_state", "This ticket cannot be used."],
     ] as const) {

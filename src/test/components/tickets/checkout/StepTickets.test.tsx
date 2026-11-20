@@ -9,11 +9,13 @@ const totals = { lines: [], subtotalCents: 0, discountCents: 0, feeCents: 0, tot
 const checkoutConfig = { ...config, extraQuestions: NO_EXTRA_QUESTIONS };
 const noop = () => undefined;
 
-function renderStep({ codeStatus, validFrom, validUntil, codeError = null }: { codeStatus: CodeStatus; validFrom?: string | null; validUntil?: string | null; codeError?: string | null }) {
+type StepOptions = { codeStatus: CodeStatus; validFrom?: string | null; validUntil?: string | null; codeError?: string | null; timeZone?: string; types?: StepTicketsProps["types"]; cart?: StepTicketsProps["cart"] };
+
+function renderStep({ codeStatus, validFrom, validUntil, codeError = null, timeZone, types, cart = {} }: StepOptions) {
   const props: StepTicketsProps = {
-    types: [typeA],
+    types: types ?? [timeZone ? { ...typeA, source: { ...typeA.source, timeZone } } : typeA],
     config: checkoutConfig,
-    cart: {},
+    cart,
     flagged: {},
     onQuantity: noop,
     conflict: null,
@@ -38,7 +40,7 @@ function renderStep({ codeStatus, validFrom, validUntil, codeError = null }: { c
 describe("StepTickets — the real reason a discount code was rejected (DASH-236 TK-04)", () => {
   it("unknown code", () => {
     renderStep({ codeStatus: "unknown" });
-    expect(screen.getByText("That discount code cannot be used.")).toBeInTheDocument();
+    expect(screen.getByText("We don't recognise that code. Check the spelling.")).toBeInTheDocument();
   });
 
   it("not for this ticket", () => {
@@ -64,13 +66,48 @@ describe("StepTickets — the real reason a discount code was rejected (DASH-236
     expect(screen.getByText("That discount code is not valid right now.")).toBeInTheDocument();
   });
 
+  it("shows the code window in the event's time zone, with the zone name", () => {
+    renderStep({ codeStatus: "not_valid_now", validFrom: "2099-12-01T00:00:00Z", validUntil: null, timeZone: "Asia/Kolkata" });
+    const text = screen.getByRole("status").textContent ?? "";
+    expect(text).toMatch(/5:30\s?AM/);
+    expect(text).toMatch(/GMT\+5:30|IST/);
+  });
+
+  it("with types from several events, uses the zone of the event whose tickets are in the cart", () => {
+    const malta = { ...typeA, id: "type-malta", source: { ...typeA.source, timeZone: "Europe/Malta" } };
+    const newYork = { ...typeA, id: "type-new-york", source: { ...typeA.source, timeZone: "America/New_York" } };
+    renderStep({ codeStatus: "not_valid_now", validFrom: "2099-12-01T00:00:00Z", validUntil: null, types: [malta, newYork], cart: { [newYork.id]: 1 } });
+    const text = screen.getByRole("status").textContent ?? "";
+    expect(text).toMatch(/7:00\s?PM/);
+    expect(text).toMatch(/EST|GMT-5/);
+  });
+
+  it("with nothing in the cart, falls back to the first listed type with a valid zone", () => {
+    const unreadable = { ...typeA, id: "type-bad", source: { ...typeA.source, timeZone: "Not/AZone" } };
+    const malta = { ...typeA, id: "type-malta", source: { ...typeA.source, timeZone: "Europe/Malta" } };
+    const newYork = { ...typeA, id: "type-new-york", source: { ...typeA.source, timeZone: "America/New_York" } };
+    renderStep({ codeStatus: "not_valid_now", validFrom: "2099-12-01T00:00:00Z", validUntil: null, types: [unreadable, malta, newYork] });
+    const text = screen.getByRole("status").textContent ?? "";
+    expect(text).toMatch(/1:00\s?AM/);
+    expect(text).toMatch(/CET|GMT\+1/);
+  });
+
+  it("still renders when no event time zone is known, or it is unreadable", () => {
+    const first = renderStep({ codeStatus: "not_valid_now", validFrom: "2099-12-01T00:00:00Z", validUntil: null });
+    expect(screen.getByRole("status")).toHaveTextContent(/not valid yet\. It starts on .*2099/);
+    first.unmount();
+    renderStep({ codeStatus: "not_valid_now", validFrom: "2099-12-01T00:00:00Z", validUntil: null, timeZone: "Not/AZone" });
+    expect(screen.getByRole("status")).toHaveTextContent(/not valid yet\. It starts on .*2099/);
+  });
+
   it("a valid code shows no error, only the applied line", () => {
     renderStep({ codeStatus: "valid" });
     expect(screen.getByText("Discount code VIP10 applied.")).toBeInTheDocument();
   });
 
   it.each([
-    ["codeInvalid", "That discount code cannot be used."],
+    ["codeInvalid", "We don't recognise that code. Check the spelling."],
+    ["codeSomethingNew", "That discount code cannot be used."],
     ["codeNotValidNow", "That discount code is not valid right now."],
     ["codeNotApplicable", "That discount code does not apply to the tickets in your order."],
     ["codeUsedUp", "That discount code has been used up."],

@@ -6,6 +6,23 @@ import { OrderSummary } from "./OrderSummary";
 import { TicketCards } from "./TicketCards";
 import type { CheckoutConfig, PublicType, QuoteState } from "./types";
 
+/** True for an IANA zone name the runtime knows. */
+function isTimeZone(zone: string): boolean {
+  try {
+    new Intl.DateTimeFormat("en", { timeZone: zone });
+    return true;
+  } catch {
+    return false;
+  }
+}
+
+/** The zone the code window is shown in: the event of the tickets in the cart, else the first listed type with a valid zone. */
+function codeWindowTimeZone({ types, cart }: { types: readonly PublicType[]; cart: Cart }): string | undefined {
+  const inCart = types.filter((type) => (cart[type.id] ?? 0) > 0);
+  const candidates = inCart.length > 0 ? inCart : types;
+  return candidates.map((type) => type.source.timeZone).find((zone) => zone && isTimeZone(zone)) ?? undefined;
+}
+
 export interface SourceConflict {
   type: PublicType;
   quantity: number;
@@ -63,16 +80,23 @@ export function StepTickets(props: StepTicketsProps) {
     return null;
   })();
   const codeStatus = result?.codeStatus;
-  // One message per reason ep-api gives; the dates of "not valid now" are shown in the page locale.
+  // One message per reason ep-api gives; the dates of "not valid now" are shown in the event's time zone.
   const rejectedMessage = ((): string | null => {
     if (!props.appliedCode || quote.status !== "ready") return null;
+    // One event per order: types may span events, so the zone comes from the cart's tickets first.
+    const timeZone = codeWindowTimeZone({ types: props.types, cart: props.cart });
     const when = (value: string | null | undefined) => {
       const date = value ? new Date(value) : null;
-      return date && !Number.isNaN(date.getTime()) ? { date, text: format.dateTime(date, { dateStyle: "medium", timeStyle: "short" }) } : null;
+      if (!date || Number.isNaN(date.getTime())) return null;
+      // `dateStyle`/`timeStyle` cannot be combined with `timeZoneName`, so the zone variant spells the fields out.
+      const text = timeZone
+        ? format.dateTime(date, { year: "numeric", month: "short", day: "numeric", hour: "numeric", minute: "2-digit", timeZone, timeZoneName: "short" })
+        : format.dateTime(date, { dateStyle: "medium", timeStyle: "short" });
+      return { date, text };
     };
     switch (codeStatus) {
       case "unknown":
-        return te("codeInvalid");
+        return te("codeUnknown");
       case "not_applicable":
         return te("codeNotApplicable");
       case "used_up":
@@ -88,7 +112,9 @@ export function StepTickets(props: StepTicketsProps) {
         return null;
     }
   })();
-  const codeMessage = props.codeError !== null ? (te.has(props.codeError) ? te(props.codeError) : te("codeInvalid")) : rejectedMessage;
+  // At order create ep-api answers `codeInvalid` only for a code it does not know: say so, not the generic text.
+  const orderCodeKey = props.codeError === "codeInvalid" ? "codeUnknown" : props.codeError;
+  const codeMessage = orderCodeKey !== null ? (te.has(orderCodeKey) ? te(orderCodeKey) : te("codeInvalid")) : rejectedMessage;
   const codeApplied = props.appliedCode !== null && quote.status === "ready" && codeStatus === "valid";
 
   function applyCode(event: FormEvent) {

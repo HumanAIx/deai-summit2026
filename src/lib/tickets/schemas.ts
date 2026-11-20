@@ -122,6 +122,8 @@ export type ProfileBody = z.infer<typeof profileBodySchema>;
 export const myTicketSchema = z.object({
   code: z.string(),
   status: z.string(),
+  /** `void` because the organiser blocked it (ep-api `blocked_at`), not because the holder cancelled. Absent on older ep-api builds = not blocked. */
+  blocked: z.boolean().optional(),
   /** A test-mode ticket (Stripe test keys): the page shows a "Test ticket" badge. Absent on older ep-api builds = not a test ticket. */
   isTest: z.boolean().optional(),
   holder: z.object({ name: nullableString, email: nullableString }),
