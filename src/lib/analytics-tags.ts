@@ -11,16 +11,34 @@ export interface PublicAnalyticsTagsResolved {
   redditPixelId: string;
   redditContactLeadId: string;
   redditSpeakerLeadId: string;
+  /** First enabled Meta Pixel from `tags`. The API has no flat key for it. */
+  metaPixelId: string;
 }
 
-export type AnalyticsTagsPartial = Partial<PublicAnalyticsTagsResolved>;
+export type AnalyticsTagsPartial = Partial<Omit<PublicAnalyticsTagsResolved, 'metaPixelId'>> & {
+  tags?: Array<{ provider?: unknown; value?: unknown; enabled?: unknown }>;
+};
 
 function nz(s: unknown): string {
   return typeof s === 'string' ? s.trim() : '';
 }
 
+/** Meta's pixel id is digits only. Reject anything else before it reaches the page. */
+const META_PIXEL_ID = /^\d{8,20}$/;
+
+function firstEnabledTag(api: AnalyticsTagsPartial | null | undefined, provider: string): string {
+  const tags = Array.isArray(api?.tags) ? api.tags : [];
+  for (const tag of tags) {
+    if (!tag || tag.provider !== provider || tag.enabled === false) continue;
+    const value = nz(tag.value);
+    if (value) return value;
+  }
+  return '';
+}
+
 /** Normalize API payload from `/settings/public/analytics-tags` (omit empty strings). */
 export function resolveAnalyticsTagsFromApi(api: AnalyticsTagsPartial | null | undefined): PublicAnalyticsTagsResolved {
+  const metaPixelId = firstEnabledTag(api, 'meta_pixel');
   return {
     gtmId: nz(api?.gtmId),
     ga4MeasurementId: nz(api?.ga4MeasurementId),
@@ -29,6 +47,7 @@ export function resolveAnalyticsTagsFromApi(api: AnalyticsTagsPartial | null | u
     redditPixelId: nz(api?.redditPixelId),
     redditContactLeadId: nz(api?.redditContactLeadId),
     redditSpeakerLeadId: nz(api?.redditSpeakerLeadId),
+    metaPixelId: META_PIXEL_ID.test(metaPixelId) ? metaPixelId : '',
   };
 }
 
