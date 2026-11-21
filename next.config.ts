@@ -9,6 +9,9 @@ const nextConfig: NextConfig = {
   // and `@import "tailwindcss"` fails to resolve from there.
   turbopack: { root: __dirname },
   serverExternalPackages: ['sharp'],
+  experimental: {
+    agentUpgrade: 'security',
+  },
   images: {
     // SECURITY NOTE: `hostname: '**'` accepts any HTTPS host and turns
     // /_next/image into a public open image proxy. Replace with an explicit
