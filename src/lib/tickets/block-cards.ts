@@ -23,9 +23,8 @@ export interface ResolvedCard {
  * they made as a placeholder instead of it vanishing. The public site never passes it.
  */
 export function resolveCards({ cards, types, editor = false }: { cards: readonly TicketCard[]; types: readonly PublicType[] | null; editor?: boolean }): ResolvedCard[] {
-  // DeAI: a Tickets section with no cards lists every public type of the site, in the catalogue's order (the
-  // contract of the CMS add-on: "no cards = all public types"). Its copy is the type's own name; the rest stays empty.
-  if ((!Array.isArray(cards) || cards.length === 0) && !editor) return (types ?? []).map((type) => ({ card: cardForType({ type }), type }));
+  // DeAI (2026-11-23): only the tickets an organiser picked as cards are on sale on a CMS page. A section with no cards
+  // shows nothing; it never falls back to every public type.
   const byId = new Map((types ?? []).map((type) => [type.id, type] as const));
   const resolved: ResolvedCard[] = [];
   for (const card of Array.isArray(cards) ? cards : []) {
@@ -41,11 +40,6 @@ export function resolveCards({ cards, types, editor = false }: { cards: readonly
     if (type || editor) resolved.push({ card, type: type ?? null });
   }
   return resolved;
-}
-
-/** The card a type gets when the section names none: the type's name as its title, nothing else. */
-function cardForType({ type }: { type: PublicType }): TicketCard {
-  return { id: type.id, ticketTypeId: type.id, title: type.name, hl: "", kicker: "", incl: "", feats: [], btn: "", featured: false };
 }
 
 /** Columns for `count` cards: 1–3 in one row, 4 as 2 + 2, 5 or more three per row. */

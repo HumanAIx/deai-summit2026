@@ -1,7 +1,7 @@
 "use client"; // reads live prices and stock in the browser (mount, tab refocus, Retry): the CMS page itself is cached for 60 s
 import Link from "next/link";
 import { useLocale, useFormatter, useTranslations } from "@/lib/tickets/i18n";
-import { useCallback, useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState, type ReactNode } from "react";
 import type { TicketCard } from "@/lib/tickets/block-schema";
 import { NO_TICKETS_CODES, requestBlockTypes } from "@/lib/tickets/block-types-client";
 import {
@@ -94,18 +94,31 @@ const WAITLIST_BUTTON =
  * no ticket type, or one the site no longer sells, shows as a placeholder so the author can see it (the public site
  * leaves it out).
  */
-export function TicketsBlock({ cards, buyHref, editable = false }: { cards: readonly TicketCard[]; buyHref: string; editable?: boolean }) {
+export function TicketsBlock({
+  cards,
+  buyHref,
+  editable = false,
+  frame = (content) => content,
+}: {
+  cards: readonly TicketCard[];
+  buyHref: string;
+  editable?: boolean;
+  /** DeAI: wraps the cards (the section and its heading), so a section with nothing on sale disappears as a whole. */
+  frame?: (content: ReactNode) => ReactNode;
+}) {
   const t = useTranslations("block.ticketsBlock");
   const locale = useLocale();
   const { live, retry } = useLiveTypes({ locale });
   const resolved = resolveCards({ cards, types: live.status === "ready" ? live.data.types : null, editor: editable });
   if (resolved.length === 0) return null;
+  // DeAI: the checkout a card opens offers exactly this section's tickets (the picked types that are on the public list).
+  const offeredIds = resolved.flatMap((entry) => (entry.type ? [entry.type.id] : entry.card.ticketTypeId ? [entry.card.ticketTypeId] : []));
 
   const featured = featuredIndex({ resolved });
   const salesOpen = live.status === "ready" ? live.data.checkout.salesOpen : false;
   const feePayer = live.status === "ready" ? live.data.checkout.feePayer : "";
 
-  return (
+  return frame(
     // On a template site the template's own palette wins (`--t-accent-text` is its contrast-checked accent text and
     // follows toned sections; `--t-btn` / `--t-on-btn` is its primary button pair); elsewhere the block's derived tokens.
     <div
@@ -115,7 +128,7 @@ export function TicketsBlock({ cards, buyHref, editable = false }: { cards: read
       <ul className="mx-auto grid list-none gap-4 p-0" style={gridStyle({ count: resolved.length })} aria-busy={live.status === "loading"}>
         {resolved.map((entry, index) => (
           <li key={entry.card.id} className="flex min-w-0">
-            <TicketCardView entry={entry} featured={index === featured} live={live} salesOpen={salesOpen} feePayer={feePayer} buyHref={buyHref} editable={editable} />
+            <TicketCardView entry={entry} featured={index === featured} live={live} salesOpen={salesOpen} feePayer={feePayer} buyHref={buyHref} offeredIds={offeredIds} editable={editable} />
           </li>
         ))}
       </ul>
@@ -138,6 +151,7 @@ function TicketCardView({
   salesOpen,
   feePayer,
   buyHref,
+  offeredIds,
   editable,
 }: {
   entry: ResolvedCard;
@@ -146,6 +160,7 @@ function TicketCardView({
   salesOpen: boolean;
   feePayer: string;
   buyHref: string;
+  offeredIds: readonly string[];
   editable: boolean;
 }) {
   const t = useTranslations("block.ticketsBlock");
@@ -250,7 +265,7 @@ function TicketCardView({
       </ul>
 
       {type && state ? (
-        <CardButton state={state} featured={featured} label={card.btn !== "" ? card.btn : t("buy")} opensText={opensText} buyHref={buyHref} editable={editable} type={type} />
+        <CardButton state={state} featured={featured} label={card.btn !== "" ? card.btn : t("buy")} opensText={opensText} buyHref={buyHref} offeredIds={offeredIds} editable={editable} type={type} />
       ) : placeholder ? (
         <div aria-hidden className={`${BUTTON_BASE} cursor-default border border-dashed border-(--color-control-border) text-muted`}>
           {t("editorPickType")}
@@ -272,6 +287,7 @@ function CardButton({
   label,
   opensText,
   buyHref,
+  offeredIds,
   editable,
   type,
 }: {
@@ -280,6 +296,7 @@ function CardButton({
   label: string;
   opensText: string | null;
   buyHref: string;
+  offeredIds: readonly string[];
   editable: boolean;
   type: PublicType;
 }) {
@@ -318,8 +335,9 @@ function CardButton({
     );
   }
   return (
-    // DeAI: buying always happens on the full `/tickets` page (never in a pop-up), with this card's type preselected.
-    <Link href={`${buyHref}?type=${encodeURIComponent(type.id)}`} className={`${BUTTON_BASE} ${look}`}>
+    // DeAI: buying always happens on the full `/tickets` page (never in a pop-up), with this card's type preselected and
+    // only this section's tickets on offer (`types`).
+    <Link href={`${buyHref}?type=${encodeURIComponent(type.id)}&types=${offeredIds.map(encodeURIComponent).join(",")}`} className={`${BUTTON_BASE} ${look}`}>
       {label}
       {arrow}
     </Link>

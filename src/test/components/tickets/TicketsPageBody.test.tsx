@@ -34,6 +34,11 @@ describe("TicketsPageBody — the CMS-picked ticket types", () => {
     expect(el.props.data.types.map((t) => t.id)).toEqual([B]);
   });
 
+  it("an empty list means nothing on sale (only picked tickets are sold)", async () => {
+    const el = (await TicketsPageBody({ allowedTypeIds: [] })) as unknown as El;
+    expect(el.props.data.types).toEqual([]);
+  });
+
   it("offers every public type without a list", async () => {
     const el = (await TicketsPageBody({ allowedTypeIds: null })) as unknown as El;
     expect(el.props.data.types.map((t) => t.id)).toEqual([A, B, C]);

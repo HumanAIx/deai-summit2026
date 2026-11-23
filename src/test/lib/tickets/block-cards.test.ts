@@ -20,14 +20,11 @@ const type = (over: Partial<PublicType> = {}): PublicType => ({
   ...over,
 });
 
-describe("resolveCards with no cards (the section lists every public type)", () => {
+describe("resolveCards with no cards (only picked tickets are sold)", () => {
   const types = [type(), type({ id: B, name: "Student pass", priceCents: 5000 })];
 
-  it("returns one card per public type in catalogue order: id = type id, title = type name, empty copy", () => {
-    const resolved = resolveCards({ cards: [], types });
-    expect(resolved.map((r) => r.type?.id)).toEqual([A, B]);
-    expect(resolved[1]?.card).toEqual({ id: B, ticketTypeId: B, title: "Student pass", hl: "", kicker: "", incl: "", feats: [], btn: "", featured: false });
-    expect(resolved[0]?.type).toBe(types[0]);
+  it("returns no card at all, never every public type", () => {
+    expect(resolveCards({ cards: [], types })).toEqual([]);
   });
 
   it("types still loading (null) gives []", () => {

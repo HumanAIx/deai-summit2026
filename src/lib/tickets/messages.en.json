@@ -498,7 +498,8 @@
         "detailsLater": "Each ticket holder adds their job title, company and dietary needs on their own ticket page after the purchase. We email them the link."
       },
       "captcha": {
-        "hint": "Please solve the check above to continue."
+        "hint": "Please solve the check above to continue.",
+        "unavailable": "The security check could not load. You can still try to place your order; if it is refused, reload the page or try again later."
       },
       "pay": {
         "holdLabel": "Your tickets are reserved for",

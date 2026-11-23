@@ -116,9 +116,9 @@ export type CheckoutCaptcha = { status: "loading" } | { status: "off" } | { stat
  * the captcha provider's script and the extra request never reach a visitor who only browses the tickets. Any failure reads as `off`: the widget cannot be
  * shown, and ep-api's own answer then decides (a refusal is turned into a message, never a blocked button).
  */
-function providerOf(stored: string | undefined): CaptchaProvider {
-  if (stored === "hcaptcha" || stored === "recaptcha-v3") return stored;
-  return "recaptcha";
+/** The three providers ep-api verifies; anything else (a future or misspelt value) is `null` = no captcha, never a guess. */
+function providerOf(stored: string | undefined): CaptchaProvider | null {
+  return stored === "recaptcha" || stored === "hcaptcha" || stored === "recaptcha-v3" ? stored : null;
 }
 
 export function useCheckoutCaptcha({ active }: { active: boolean }): CheckoutCaptcha {
@@ -130,8 +130,9 @@ export function useCheckoutCaptcha({ active }: { active: boolean }): CheckoutCap
     fetch("/api/captcha-site-key")
       .then((response) => (response.ok ? response.json() : null))
       .then((body: { provider?: string; site_key?: string; disabled?: boolean } | null) => {
-        const usable = body !== null && !body.disabled && Boolean(body.site_key);
-        setState(usable ? { status: "on", provider: providerOf(body?.provider) } : { status: "off" });
+        const provider = providerOf(body?.provider);
+        const usable = body !== null && !body.disabled && Boolean(body.site_key) && provider !== null;
+        setState(usable && provider ? { status: "on", provider } : { status: "off" });
       })
       .catch(() => setState({ status: "off" }));
   }, [active]);

@@ -36,8 +36,8 @@ export async function TicketsPageBody({
   /** DeAI: the CMS heading shown instead of the plain "Tickets" title. */
   intro?: ReactNode;
   /**
-   * DeAI: only these ticket types are offered (the cards picked on the CMS `tickets` page, in that order); `null` = every
-   * public type. A private link is never narrowed: it names its one hidden type itself.
+   * DeAI: only these ticket types are offered (the tickets picked for sale in the CMS, in that order; `[]` = none);
+   * `null` = every public type. A private link is never narrowed: it names its one hidden type itself.
    */
   allowedTypeIds?: readonly string[] | null;
 }) {

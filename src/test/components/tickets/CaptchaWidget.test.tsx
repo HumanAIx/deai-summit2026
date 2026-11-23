@@ -35,7 +35,7 @@ describe("CaptchaWidget, reCAPTCHA v3", () => {
     return { onToken, onUnavailable, execute, ...view };
   }
 
-  it("loads api.js?render=<siteKey> (encoded), then grecaptcha.ready → execute(siteKey, { action: 'ticket_checkout' }) and reports the token", async () => {
+  it("loads api.js?render=<siteKey> (encoded), then grecaptcha.ready → execute(siteKey, { action: 'ticket_order' }) and reports the token", async () => {
     const { onToken, execute, container } = mountV3();
     await flush();
     const [script] = scripts();
@@ -44,7 +44,7 @@ describe("CaptchaWidget, reCAPTCHA v3", () => {
       script?.onload?.(new Event("load"));
       await vi.advanceTimersByTimeAsync(0);
     });
-    expect(execute).toHaveBeenCalledWith("SITE KEY/1", { action: "ticket_checkout" });
+    expect(execute).toHaveBeenCalledWith("SITE KEY/1", { action: "ticket_order" });
     expect(onToken).toHaveBeenCalledWith("tok-1");
     expect(container).toBeEmptyDOMElement(); // invisible: renders nothing
   });
@@ -74,7 +74,8 @@ describe("CaptchaWidget, reCAPTCHA v3", () => {
     expect(execute).toHaveBeenCalledTimes(2);
   });
 
-  it("an execute rejection calls onUnavailable (fail open) and reports no token", async () => {
+  it("an execute rejection (e.g. a refused key) fails open, says so in words and logs it; no token", async () => {
+    const warn = vi.spyOn(console, "warn").mockImplementation(() => undefined);
     const { onToken, onUnavailable, container } = mountV3({ execute: vi.fn().mockRejectedValue(new Error("nope")) });
     await flush();
     await act(async () => {
@@ -83,7 +84,9 @@ describe("CaptchaWidget, reCAPTCHA v3", () => {
     });
     expect(onUnavailable).toHaveBeenCalledTimes(1);
     expect(onToken).not.toHaveBeenCalled();
-    expect(container).toBeEmptyDOMElement();
+    expect(container.querySelector('[role="alert"]')?.textContent).toMatch(/security check could not load/);
+    expect(warn).toHaveBeenCalledWith(expect.stringContaining("recaptcha-v3 could not run"));
+    warn.mockRestore();
   });
 
   it("a script that fails to load calls onUnavailable", async () => {
@@ -111,5 +114,47 @@ describe("CaptchaWidget, the other providers keep their explicit render script",
     await flush();
     expect(scripts()[0]?.src).toBe("https://www.google.com/recaptcha/api.js?render=explicit");
     expect(view.container.querySelector('[role="group"]')).not.toBeNull();
+  });
+
+  type V2 = { ready: (cb: () => void) => void; render: ReturnType<typeof vi.fn> };
+  async function mountV2(renderImpl: (el: HTMLElement, params: Record<string, unknown>) => number) {
+    const v2 = win as unknown as { grecaptcha?: V2 };
+    v2.grecaptcha = { ready: (cb) => cb(), render: vi.fn(renderImpl) };
+    const onUnavailable = vi.fn();
+    const view = render(<CaptchaWidget provider="recaptcha" onToken={vi.fn()} onUnavailable={onUnavailable} />);
+    await flush();
+    await act(async () => {
+      scripts()[0]?.onload?.(new Event("load"));
+      await vi.advanceTimersByTimeAsync(0);
+    });
+    return { onUnavailable, view, render: v2.grecaptcha.render };
+  }
+
+  it("v2: the provider's error-callback (e.g. 'Invalid key type') replaces the box with a message, logged, fail open", async () => {
+    const warn = vi.spyOn(console, "warn").mockImplementation(() => undefined);
+    let params: Record<string, unknown> = {};
+    const { onUnavailable, view } = await mountV2((_el, p) => {
+      params = p;
+      return 0;
+    });
+    expect(typeof params["error-callback"]).toBe("function");
+    await act(async () => {
+      (params["error-callback"] as () => void)();
+    });
+    expect(onUnavailable).toHaveBeenCalledTimes(1);
+    expect(view.container.querySelector('[role="group"]')).toBeNull();
+    expect(view.container.querySelector('[role="alert"]')?.textContent).toMatch(/security check could not load/);
+    expect(warn).toHaveBeenCalled();
+    warn.mockRestore();
+  });
+
+  it("v2: a render that throws (a key the provider refuses outright) is the same message, never a dead box", async () => {
+    const warn = vi.spyOn(console, "warn").mockImplementation(() => undefined);
+    const { onUnavailable, view } = await mountV2(() => {
+      throw new Error("Invalid site key");
+    });
+    expect(onUnavailable).toHaveBeenCalledTimes(1);
+    expect(view.container.querySelector('[role="alert"]')).not.toBeNull();
+    warn.mockRestore();
   });
 });

@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import type { CMSBlock } from "../../../lib/api-types";
-import { allowedTypeIdsOf, isTicketsSectionBlock, ticketCardsOf } from "../../../lib/tickets/cms-section";
+import { allowedTypeIdsOf, isTicketsSectionBlock, offeredTypesParam, ticketCardsOf } from "../../../lib/tickets/cms-section";
 
 const block = (extra: Record<string, unknown> = {}): CMSBlock => ({ id: "b1", type: "section", ...extra }) as CMSBlock;
 const card = (id: string, extra: Record<string, unknown> = {}) => ({ id, ticketTypeId: "", title: `Card ${id}`, ...extra });
@@ -60,18 +60,40 @@ describe("allowedTypeIdsOf (which types /tickets offers)", () => {
     expect(allowedTypeIdsOf([hero, section([card("c1", B), card("c2", A)]), section([card("c3", A), card("c4", C)])])).toEqual([B, A, C]);
   });
 
-  it("null (every public type) with no Tickets section", () => {
-    expect(allowedTypeIdsOf([hero])).toBeNull();
-    expect(allowedTypeIdsOf([])).toBeNull();
+  it("nothing on offer ([]) with no Tickets section: only picked tickets are sold", () => {
+    expect(allowedTypeIdsOf([hero])).toEqual([]);
+    expect(allowedTypeIdsOf([])).toEqual([]);
   });
 
-  it("null when a section has no cards (the add-on's 'all public types' rule), even next to a section with cards", () => {
-    expect(allowedTypeIdsOf([section(undefined)])).toBeNull();
-    expect(allowedTypeIdsOf([section([])])).toBeNull();
-    expect(allowedTypeIdsOf([section([card("c1", A)]), section([])])).toBeNull();
+  it("a section without cards adds nothing; the other sections' picks still count", () => {
+    expect(allowedTypeIdsOf([section(undefined)])).toEqual([]);
+    expect(allowedTypeIdsOf([section([])])).toEqual([]);
+    expect(allowedTypeIdsOf([section([card("c1", A)]), section([])])).toEqual([A]);
   });
 
-  it("null when the cards name no type yet (never an empty checkout)", () => {
-    expect(allowedTypeIdsOf([section([card("c1", "")])])).toBeNull();
+  it("cards that name no type yet add nothing", () => {
+    expect(allowedTypeIdsOf([section([card("c1", "")])])).toEqual([]);
+  });
+});
+
+describe("offeredTypesParam (the ?types= list of a card's Buy button)", () => {
+  const A = "11111111-1111-4111-8111-111111111111";
+  const B = "22222222-2222-4222-8222-222222222222";
+
+  it("reads well-formed ids in order, without repeats", () => {
+    expect(offeredTypesParam(`${A},${B},${A}`)).toEqual([A, B]);
+    expect(offeredTypesParam(` ${A} , ${B} `)).toEqual([A, B]);
+  });
+
+  it("drops anything that is not an id, and keeps at most 12", () => {
+    expect(offeredTypesParam(`${A},nope,<script>,${B}`)).toEqual([A, B]);
+    const many = Array.from({ length: 15 }, (_, i) => `00000000-0000-4000-8000-${String(i).padStart(12, "0")}`).join(",");
+    expect(offeredTypesParam(many)).toHaveLength(12);
+  });
+
+  it("is null without a usable list (the tickets page then decides)", () => {
+    expect(offeredTypesParam(undefined)).toBeNull();
+    expect(offeredTypesParam("")).toBeNull();
+    expect(offeredTypesParam("nope,also-nope")).toBeNull();
   });
 });

@@ -43,7 +43,15 @@ describe("TicketsBlock — status to button", () => {
     answer(live([type()]));
     show([card({ btn: "Get in" })]);
     const link = await screen.findByRole("link", { name: /Get in/ });
-    expect(link).toHaveAttribute("href", `/fr/tickets?type=${type().id}`);
+    expect(link).toHaveAttribute("href", `/fr/tickets?type=${type().id}&types=${type().id}`);
+  });
+
+  it("each Buy link names the section's tickets on sale (picked and public), so the checkout offers only those", async () => {
+    const second = "8f3c1b2a-6d4e-4f5a-9b8c-7d6e5f4a3b2c";
+    answer(live([type(), type({ id: second, name: "Second pass" })]));
+    show([card({ btn: "First" }), card({ id: "c2", ticketTypeId: second, btn: "Second" }), card({ id: "c3", ticketTypeId: "11111111-2222-4333-8444-555555555555", btn: "Gone" })]);
+    const link = await screen.findByRole("link", { name: /First/ });
+    expect(link.getAttribute("href")).toBe(`/fr/tickets?type=${type().id}&types=${type().id},${second}`);
   });
 
   it("buying never opens a pop-up: a plain click is a normal navigation (no dialog, nothing prevented)", async () => {

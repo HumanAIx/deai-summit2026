@@ -4,7 +4,7 @@ import { CmsPageRenderer } from '@/components/cms/CmsPageRenderer';
 import { TicketsPageView } from '@/components/TicketsPageView';
 import { TicketsIntro } from '@/components/tickets/TicketsIntro';
 import { TicketsPageBody } from '@/components/tickets/TicketsPageBody';
-import { allowedTypeIdsOf, isTicketsSectionBlock } from '@/lib/tickets/cms-section';
+import { allowedTypeIdsOf, isTicketsSectionBlock, offeredTypesParam } from '@/lib/tickets/cms-section';
 import { lumaHrefOf } from '@/lib/tickets/luma-fallback';
 import { ticketsCheckoutEnabled } from '@/lib/tickets/feature-flag';
 import { parseCmsBlocks } from '@/lib/cmsBlocks';
@@ -41,17 +41,19 @@ export async function generateMetadata({ searchParams }: { searchParams: Promise
  * - Checkout on, and the CMS `tickets` page has a Tickets section (dashboard › CMS › block › add-on Sales › Tickets):
  *   that page is rendered, so organisers design it; its cards read live prices and link to this page's checkout with the type preselected.
  * - Checkout on otherwise (or a filtered / private link, or `?type=` from a card's Buy button): the built-in live list +
- *   4-step checkout, under the CMS page's heading texts. It offers only the ticket types picked as cards in the CMS
- *   page's Tickets section(s); with no section, or a section without cards, every public type.
+ *   4-step checkout, under the CMS page's heading texts. It offers only the tickets picked for sale: those of the
+ *   section the buyer's Buy button sits in (`?types=`), else the cards on this CMS page; none picked = nothing on sale.
+ * - No published CMS `tickets` page: 404.
  */
 export default async function TicketsPage({ searchParams }: { searchParams: Promise<SearchParams> }) {
   const [cmsPage, params] = await Promise.all([prefetchCMSPage('tickets'), searchParams]);
   const blocks = cmsPage ? parseCmsBlocks(cmsPage) : [];
 
-  if (!ticketsCheckoutEnabled()) {
-    if (!cmsPage) notFound();
-    return <TicketsPageView content={parseTicketsPage(blocks)} />;
-  }
+  // DECISION (Vimal, 2026-11-23): no published CMS `tickets` page = no /tickets page (404), like any unpublished page,
+  // with the checkout on or off. Only /tickets itself: the private pages under /tickets/* that ticket emails link to
+  // keep working.
+  if (!cmsPage) notFound();
+  if (!ticketsCheckoutEnabled()) return <TicketsPageView content={parseTicketsPage(blocks)} />;
 
   // A filtered or private link, or a card's Buy button (`?type=`), always opens the checkout itself: a CMS page here
   // would send the buyer in a circle.
@@ -75,14 +77,16 @@ export default async function TicketsPage({ searchParams }: { searchParams: Prom
     );
   }
 
-  const heading = cmsPage ? parseTicketsPage(blocks) : null;
+  const heading = parseTicketsPage(blocks);
   return (
     <TicketsPageBody
       rawLink={first(params.link)}
       rawSchedule={first(params.schedule)}
       rawEvent={first(params.event)}
       rawType={first(params.type)}
-      allowedTypeIds={allowedTypeIdsOf(blocks)}
+      // The tickets the buyer came for: the section their Buy button sits in (`types`), else the ones picked on this
+      // CMS page. Only picked tickets are sold; none picked = nothing on offer.
+      allowedTypeIds={offeredTypesParam(first(params.types)) ?? allowedTypeIdsOf(blocks)}
       intro={heading?.titleLead || heading?.accentWord ? <TicketsIntro {...heading} lumaHref={lumaHrefOf({ content: heading })} /> : undefined}
     />
   );

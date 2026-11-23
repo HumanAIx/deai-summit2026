@@ -107,7 +107,7 @@ describe("/tickets page, checkout ON", () => {
   });
 
   it("passes link, schedule, event and type through to TicketsPageBody (first value of an array)", async () => {
-    prefetchCMSPage.mockResolvedValue(null);
+    prefetchCMSPage.mockResolvedValue(cms([heroBlock]));
     const el = await render({ link: ["a", "b"], schedule: "s", event: "e", type: "t" });
     expect(el.type).toBe(TicketsPageBody);
     expect(el.props).toMatchObject({ rawLink: "a", rawSchedule: "s", rawEvent: "e", rawType: "t" });
@@ -137,16 +137,28 @@ describe("/tickets page, checkout ON", () => {
     prefetchCMSPage.mockResolvedValue(cms([heroBlock, picked]));
     expect((await render({ type: A })).props.allowedTypeIds).toEqual([A]);
     prefetchCMSPage.mockResolvedValue(cms([heroBlock]));
-    expect((await render()).props.allowedTypeIds).toBeNull();
+    expect((await render()).props.allowedTypeIds).toEqual([]); // nothing picked = nothing on sale
   });
 
-  it("without a CMS page there is no intro, and no 404 (the checkout is still sold)", async () => {
-    prefetchCMSPage.mockResolvedValue(null);
-    const el = await render();
-    expect(el.type).toBe(TicketsPageBody);
-    expect(el.props.intro).toBeUndefined();
-    expect(notFound).not.toHaveBeenCalled();
+  it("a card's Buy button (?types=) offers that section's tickets, whatever the tickets page picks", async () => {
+    const A = "11111111-1111-4111-8111-111111111111";
+    const B = "22222222-2222-4222-8222-222222222222";
+    const picked = { id: "tk", type: "content", addon: "tickets", title: "Choose", ticketCards: [{ id: "c1", ticketTypeId: A, title: "VIP" }] };
+    prefetchCMSPage.mockResolvedValue(cms([heroBlock, picked]));
+    expect((await render({ type: B, types: `${B},${A}` })).props.allowedTypeIds).toEqual([B, A]);
+    // A list with nothing usable falls back to the tickets page's own picks.
+    expect((await render({ type: A, types: "nope" })).props.allowedTypeIds).toEqual([A]);
   });
+
+  // DECISION (Vimal, 2026-11-23): an unpublished or missing CMS `tickets` page means no /tickets page, checkout on too.
+  it.each([{}, { type: "11111111-1111-4111-8111-111111111111" }, { schedule: "s1" }, { link: "tok" }])(
+    "without a published CMS page /tickets is a 404, also with %j",
+    async (params) => {
+      prefetchCMSPage.mockResolvedValue(null);
+      await expect(render(params)).rejects.toThrow();
+      expect(notFound).toHaveBeenCalled();
+    },
+  );
 });
 
 describe("/tickets generateMetadata", () => {

@@ -18,7 +18,7 @@
 // same-origin `fetch()`, exactly like `PublicForm`'s own submit call.
 
 import { useTranslations } from "@/lib/tickets/i18n";
-import { useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 
 /**
  * The two providers' explicit-render APIs. Read through `captchaApis()` instead of a `declare global`, because
@@ -46,8 +46,8 @@ const SCRIPT_SRC: Record<Provider, (siteKey: string) => string> = {
 
 /** A v3 token is valid for 2 minutes: a fresh one is fetched well before that while the buyer is on the step. */
 const V3_REFRESH_MS = 90_000;
-/** The v3 action name ep-api's siteverify sees for ticket orders. */
-const V3_ACTION = "ticket_checkout";
+/** The v3 action ep-api checks for ticket orders (handoff 2026-11-23: `ticket_order`; a token for another action is refused). */
+export const V3_ACTION = "ticket_order";
 
 /** Width of the providers' "normal" checkbox (reCAPTCHA 304px, hCaptcha 303px). */
 const NORMAL_WIDGET_WIDTH = 304;
@@ -96,6 +96,19 @@ export function CaptchaWidget({
   const containerRef = useRef<HTMLDivElement>(null);
   const [siteKey, setSiteKey] = useState<string | null>(null);
   const [failed, setFailed] = useState(false);
+  // A check that should be there but cannot run (script blocked, key refused by the provider) is said in words and
+  // logged, never left as a box nobody can solve. `failed` alone (no message) = the site has no captcha.
+  const [broken, setBroken] = useState(false);
+  const t = useTranslations("tickets.checkout.captcha");
+  const breakDown = useCallback(
+    (reason: string) => {
+      console.warn(`[CaptchaWidget] ${provider} could not run: ${reason}`);
+      setBroken(true);
+      setFailed(true);
+      onUnavailable();
+    },
+    [provider, onUnavailable],
+  );
 
   useEffect(() => {
     let cancelled = false;
@@ -136,9 +149,7 @@ export function CaptchaWidget({
           if (!cancelled) onToken(token);
         })
         .catch(() => {
-          if (cancelled) return;
-          setFailed(true);
-          onUnavailable();
+          if (!cancelled) breakDown("execute() was refused");
         });
     };
 
@@ -153,16 +164,14 @@ export function CaptchaWidget({
         });
       })
       .catch(() => {
-        if (cancelled) return;
-        setFailed(true);
-        onUnavailable();
+        if (!cancelled) breakDown("the script did not load");
       });
 
     return () => {
       cancelled = true;
       if (timer) clearInterval(timer);
     };
-  }, [siteKey, provider, onToken, onUnavailable]);
+  }, [siteKey, provider, onToken, breakDown]);
 
   useEffect(() => {
     if (!siteKey || provider === "recaptcha-v3") return;
@@ -172,15 +181,21 @@ export function CaptchaWidget({
       if (cancelled || !containerRef.current) return;
       const api = provider === "recaptcha" ? captchaApis().grecaptcha : captchaApis().hcaptcha;
       if (!api) return;
-      api.render(containerRef.current, {
-        sitekey: siteKey,
-        // Both providers draw a fixed ~304px checkbox that overflows a phone
-        // form column; their own "compact" size (~164px) fits. Picked once, at
-        // render — the widget can't switch size afterwards.
-        size: containerRef.current.clientWidth < NORMAL_WIDGET_WIDTH ? "compact" : "normal",
-        callback: (token: string) => onToken(token),
-        "expired-callback": () => onToken(null),
-      });
+      try {
+        api.render(containerRef.current, {
+          sitekey: siteKey,
+          // Both providers draw a fixed ~304px checkbox that overflows a phone
+          // form column; their own "compact" size (~164px) fits. Picked once, at
+          // render — the widget can't switch size afterwards.
+          size: containerRef.current.clientWidth < NORMAL_WIDGET_WIDTH ? "compact" : "normal",
+          callback: (token: string) => onToken(token),
+          "expired-callback": () => onToken(null),
+          // The provider reports a problem it cannot recover from (e.g. a refused key): say so, never a dead box.
+          "error-callback": () => breakDown("the provider reported an error"),
+        });
+      } catch (error) {
+        breakDown(error instanceof Error ? error.message : "render failed");
+      }
     };
 
     loadCaptchaScript(provider, siteKey)
@@ -194,16 +209,21 @@ export function CaptchaWidget({
         }
       })
       .catch(() => {
-        if (cancelled) return;
-        setFailed(true);
-        onUnavailable();
+        if (!cancelled) breakDown("the script did not load");
       });
 
     return () => {
       cancelled = true;
     };
-  }, [siteKey, provider, onToken, onUnavailable]);
+  }, [siteKey, provider, onToken, breakDown]);
 
+  if (broken) {
+    return (
+      <p role="alert" className="text-sm text-danger">
+        {t("unavailable")}
+      </p>
+    );
+  }
   if (failed) return null;
   // v3 draws nothing here (Google shows its own badge); the empty group keeps the layout identical.
   if (provider === "recaptcha-v3") return null;

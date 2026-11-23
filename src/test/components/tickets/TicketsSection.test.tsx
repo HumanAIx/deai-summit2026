@@ -2,17 +2,25 @@ import { describe, expect, it, vi } from "vitest";
 import type { CMSBlock } from "../../../lib/api-types";
 import { render, screen } from "../../test-utils";
 
-const { TicketsBlock } = vi.hoisted(() => ({ TicketsBlock: vi.fn((props: { cards: unknown[]; buyHref: string }) => <div data-testid="tickets-block" data-count={props.cards.length} data-buy={props.buyHref} />) }));
+// The stub renders its cards inside the section's frame (heading + cards), as the real block does when it has cards to show.
+const { TicketsBlock } = vi.hoisted(() => ({
+  TicketsBlock: vi.fn((props: { cards: unknown[]; buyHref: string; frame?: (content: unknown) => unknown }) => {
+    const content = <div data-testid="tickets-block" data-count={props.cards.length} data-buy={props.buyHref} />;
+    return (props.frame ? props.frame(content) : content) as never;
+  }),
+}));
 vi.mock("@/components/tickets/TicketsBlock", () => ({ TicketsBlock }));
 
 const { TicketsSection } = await import("../../../components/tickets/TicketsSection");
 
 const block = (extra: Record<string, unknown> = {}) => ({ id: "b1", type: "section", addon: "tickets", ...extra }) as CMSBlock;
 const card = (id: string) => ({ id, ticketTypeId: "", title: `Card ${id}` });
+/** A section with one picked card (a section with none is not shown at all). */
+const withCard = (extra: Record<string, unknown>) => block({ ticketCards: [card("c1")], ...extra });
 
 describe("TicketsSection", () => {
   it("renders the kicker, the title with its accented last word and the meta line", () => {
-    render(<TicketsSection block={block({ subtitle: "TICKETS", title: "Choose your pass", description: "Nov 25 · Malta" })} />);
+    render(<TicketsSection block={withCard({ subtitle: "TICKETS", title: "Choose your pass", description: "Nov 25 · Malta" })} />);
     expect(screen.getByText("TICKETS")).toBeInTheDocument();
     const heading = screen.getByRole("heading", { level: 2 });
     expect(heading).toHaveTextContent("Choose your pass");
@@ -21,26 +29,26 @@ describe("TicketsSection", () => {
   });
 
   it("accents the block's `hl` word when the title contains it", () => {
-    render(<TicketsSection block={block({ title: "Get your summit ticket today", hl: "summit" })} />);
+    render(<TicketsSection block={withCard({ title: "Get your summit ticket today", hl: "summit" })} />);
     const heading = screen.getByRole("heading", { level: 2 });
     expect(heading.querySelector("span")).toHaveTextContent("summit");
     expect(heading).toHaveTextContent("Get your summit ticket today");
   });
 
   it("falls back to the last word when `hl` is not in the title", () => {
-    render(<TicketsSection block={block({ title: "Get tickets", hl: "missing" })} />);
+    render(<TicketsSection block={withCard({ title: "Get tickets", hl: "missing" })} />);
     expect(screen.getByRole("heading", { level: 2 }).querySelector("span")).toHaveTextContent("tickets");
   });
 
   it("does not accent a one-word title", () => {
-    render(<TicketsSection block={block({ title: "Tickets" })} />);
+    render(<TicketsSection block={withCard({ title: "Tickets" })} />);
     const heading = screen.getByRole("heading", { level: 2 });
     expect(heading).toHaveTextContent("Tickets");
     expect(heading.querySelector("span")).toBeNull();
   });
 
   it("renders no heading area when kicker, title and meta are all empty", () => {
-    render(<TicketsSection block={block({ title: "  ", subtitle: "" })} />);
+    render(<TicketsSection block={withCard({ title: "  ", subtitle: "" })} />);
     expect(screen.queryByRole("heading")).toBeNull();
     expect(screen.getByTestId("tickets-block")).toBeInTheDocument();
   });
@@ -54,9 +62,20 @@ describe("TicketsSection", () => {
     expect(screen.getByTestId("tickets-block")).toHaveAttribute("data-count", "2");
   });
 
-  it("passes an empty card list when the block has none (all public ticket types)", () => {
+  it("shows nothing at all when no tickets are picked (no cards, or only malformed ones)", () => {
     TicketsBlock.mockClear();
-    render(<TicketsSection block={block()} />);
-    expect((TicketsBlock.mock.calls[0]?.[0] as { cards: unknown[] }).cards).toEqual([]);
+    const empty = render(<TicketsSection block={block({ title: "Choose your pass" })} />);
+    expect(empty.container).toBeEmptyDOMElement();
+    empty.unmount();
+    const bad = render(<TicketsSection block={block({ title: "Choose your pass", ticketCards: [{ id: "bad id" }] })} />);
+    expect(bad.container).toBeEmptyDOMElement();
+    expect(TicketsBlock).not.toHaveBeenCalled();
+  });
+
+  it("the heading lives inside the block's frame, so a block with nothing on sale removes the heading too", () => {
+    TicketsBlock.mockClear();
+    TicketsBlock.mockImplementationOnce(() => null as never);
+    const view = render(<TicketsSection block={withCard({ title: "Choose your pass" })} />);
+    expect(view.container).toBeEmptyDOMElement();
   });
 });

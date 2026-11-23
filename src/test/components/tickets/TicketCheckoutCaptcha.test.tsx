@@ -143,13 +143,18 @@ describe("checkout captcha — provider mapping and reCAPTCHA v3", () => {
     ["recaptcha-v3", "recaptcha-v3"],
     ["hcaptcha", "hcaptcha"],
     ["recaptcha", "recaptcha"],
-    ["turnstile", "recaptcha"],
-    ["", "recaptcha"],
-  ])("the stored provider %j reaches the widget as %j (anything unknown is reCAPTCHA v2)", async (stored, expected) => {
+  ])("the stored provider %j reaches the widget as %j", async (stored, expected) => {
     withSiteKey({ provider: stored, site_key: "site-key", disabled: false });
     await toHolders();
     await screen.findByTestId("captcha-widget");
     expect(widget.props?.provider).toBe(expected);
+  });
+
+  it.each(["turnstile", ""])("an unknown stored provider %j is 'no captcha': no widget, and no token is sent", async (stored) => {
+    withSiteKey({ provider: stored, site_key: "site-key", disabled: false });
+    freeOrder();
+    await toHolders();
+    expect(screen.queryByTestId("captcha-widget")).toBeNull();
   });
 
   it("v3: no captcha card and no 'solve the check' hint, but Place order still waits for the token and sends it", async () => {
