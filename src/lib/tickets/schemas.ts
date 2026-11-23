@@ -286,6 +286,8 @@ export const checkoutBlockSchema = z.object({
   /** Holders add company / job title and dietary needs on their ticket page instead (ep-api T7). */
   detailsLater: z.boolean().optional(),
   newsletterOffer: z.object({ on: z.boolean(), pct: z.number() }).optional(),
+  /** The site's "Ticket pages address" (ep-api ≥ ep-api#522), null = the GConf.ai pages. Absent on older builds. */
+  ticketPagesUrl: nullableString.optional(),
 });
 export type CheckoutBlock = z.infer<typeof checkoutBlockSchema>;
 

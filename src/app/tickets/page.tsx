@@ -4,7 +4,7 @@ import { CmsPageRenderer } from '@/components/cms/CmsPageRenderer';
 import { TicketsPageView } from '@/components/TicketsPageView';
 import { TicketsIntro } from '@/components/tickets/TicketsIntro';
 import { TicketsPageBody } from '@/components/tickets/TicketsPageBody';
-import { isTicketsSectionBlock } from '@/lib/tickets/cms-section';
+import { allowedTypeIdsOf, isTicketsSectionBlock } from '@/lib/tickets/cms-section';
 import { lumaHrefOf } from '@/lib/tickets/luma-fallback';
 import { ticketsCheckoutEnabled } from '@/lib/tickets/feature-flag';
 import { parseCmsBlocks } from '@/lib/cmsBlocks';
@@ -41,7 +41,8 @@ export async function generateMetadata({ searchParams }: { searchParams: Promise
  * - Checkout on, and the CMS `tickets` page has a Tickets section (dashboard › CMS › block › add-on Sales › Tickets):
  *   that page is rendered, so organisers design it; its cards read live prices and link to this page's checkout with the type preselected.
  * - Checkout on otherwise (or a filtered / private link, or `?type=` from a card's Buy button): the built-in live list +
- *   4-step checkout, under the CMS page's heading texts.
+ *   4-step checkout, under the CMS page's heading texts. It offers only the ticket types picked as cards in the CMS
+ *   page's Tickets section(s); with no section, or a section without cards, every public type.
  */
 export default async function TicketsPage({ searchParams }: { searchParams: Promise<SearchParams> }) {
   const [cmsPage, params] = await Promise.all([prefetchCMSPage('tickets'), searchParams]);
@@ -81,6 +82,7 @@ export default async function TicketsPage({ searchParams }: { searchParams: Prom
       rawSchedule={first(params.schedule)}
       rawEvent={first(params.event)}
       rawType={first(params.type)}
+      allowedTypeIds={allowedTypeIdsOf(blocks)}
       intro={heading?.titleLead || heading?.accentWord ? <TicketsIntro {...heading} lumaHref={lumaHrefOf({ content: heading })} /> : undefined}
     />
   );

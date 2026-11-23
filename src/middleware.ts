@@ -2,6 +2,8 @@ import { NextResponse } from 'next/server';
 import type { NextRequest } from 'next/server';
 import { ticketsCheckoutEnabled } from '@/lib/tickets/feature-flag';
 import { legacyPrivateLinkRedirect, PATHNAME_HEADER } from '@/lib/tickets/tickets-route';
+import { mayBeTicketPage, ticketPageRedirect } from '@/lib/tickets/pages-base';
+import { loadTicketPagesBasePath } from '@/lib/tickets/pages-base-lookup';
 
 /** Everything the live ticket checkout added: the token pages under `/tickets/*` and the `/api/tickets/*` handlers. */
 function isTicketsCheckoutRoute(pathname: string): boolean {
@@ -19,7 +21,7 @@ function ticketsNotFound(request: NextRequest): NextResponse {
     return NextResponse.rewrite(new URL('/_tickets-off/not-found', request.url));
 }
 
-export function middleware(request: NextRequest) {
+export async function middleware(request: NextRequest) {
     const { pathname, searchParams } = request.nextUrl;
 
     // Check for a secret bypass query parameter or cookie
@@ -51,6 +53,21 @@ export function middleware(request: NextRequest) {
             response.headers.set('Referrer-Policy', 'no-referrer');
             response.headers.set('Cache-Control', 'no-store');
             return response;
+        }
+
+        // The dashboard's "Ticket pages address" may name another path than /tickets (e.g. /buy): ticket emails then
+        // link to /buy/t/{token} and so on. Send those to the canonical /tickets/… page. The address is looked up only
+        // for paths shaped like a ticket page (cached; see loadTicketPagesBasePath), so other pages cost nothing.
+        if (mayBeTicketPage(pathname)) {
+            const target = ticketPageRedirect({ pathname, basePath: await loadTicketPagesBasePath() });
+            if (target) {
+                const url = new URL(target, request.url);
+                url.search = request.nextUrl.search;
+                const response = NextResponse.redirect(url, 308);
+                response.headers.set('Referrer-Policy', 'no-referrer');
+                response.headers.set('Cache-Control', 'no-store');
+                return response;
+            }
         }
     }
 

@@ -26,6 +26,7 @@ export async function TicketsPageBody({
   rawEvent,
   rawType,
   intro,
+  allowedTypeIds = null,
 }: {
   rawLink?: string | undefined;
   rawSchedule?: string | undefined;
@@ -34,6 +35,11 @@ export async function TicketsPageBody({
   rawType?: string | undefined;
   /** DeAI: the CMS heading shown instead of the plain "Tickets" title. */
   intro?: ReactNode;
+  /**
+   * DeAI: only these ticket types are offered (the cards picked on the CMS `tickets` page, in that order); `null` = every
+   * public type. A private link is never narrowed: it names its one hidden type itself.
+   */
+  allowedTypeIds?: readonly string[] | null;
 }) {
   const [locale, requestHeaders, ctx] = await Promise.all([getLocale(), headers(), ticketsLocaleCtx()]);
   const localePrefix = localePrefixFor(ctx);
@@ -60,6 +66,7 @@ export async function TicketsPageBody({
     if (error instanceof EpApiError && (error.status === 409 || error.status === 404)) data = NOT_ON_SALE;
     else throw error;
   }
+  if (allowedTypeIds && !link?.success) data = onlyTypes({ data, ids: allowedTypeIds });
   const type = rawType ? sourceFilterIdSchema.safeParse(rawType) : null;
   return (
     <TicketTypeList
@@ -71,4 +78,10 @@ export async function TicketsPageBody({
       preselectTypeId={type?.success ? type.data : undefined}
     />
   );
+}
+
+/** The catalogue narrowed to `ids`, in that order (the CMS card order); ids the catalogue does not hold are skipped. */
+function onlyTypes({ data, ids }: { data: PublicTypes; ids: readonly string[] }): PublicTypes {
+  const byId = new Map(data.types.map((type) => [type.id, type] as const));
+  return { ...data, types: ids.flatMap((id) => byId.get(id) ?? []) };
 }

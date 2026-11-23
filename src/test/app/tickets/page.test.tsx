@@ -131,6 +131,15 @@ describe("/tickets page, checkout ON", () => {
     expect(((await render()).props.intro as El).props.lumaHref).toBeNull();
   });
 
+  it("offers only the ticket types picked on the CMS page; every type without a Tickets section", async () => {
+    const A = "11111111-1111-4111-8111-111111111111";
+    const picked = { id: "tk", type: "content", addon: "tickets", title: "Choose", ticketCards: [{ id: "c1", ticketTypeId: A, title: "VIP" }] };
+    prefetchCMSPage.mockResolvedValue(cms([heroBlock, picked]));
+    expect((await render({ type: A })).props.allowedTypeIds).toEqual([A]);
+    prefetchCMSPage.mockResolvedValue(cms([heroBlock]));
+    expect((await render()).props.allowedTypeIds).toBeNull();
+  });
+
   it("without a CMS page there is no intro, and no 404 (the checkout is still sold)", async () => {
     prefetchCMSPage.mockResolvedValue(null);
     const el = await render();
