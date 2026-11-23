@@ -54,8 +54,8 @@ const nextConfig: NextConfig = {
           { key: 'Referrer-Policy', value: 'strict-origin-when-cross-origin' },
           // microphone=(self) required for Bitpull voice widget (getUserMedia).
           // Empty microphone=() forces NotAllowedError even on HTTPS.
-          // payment: Stripe's Express Checkout (Apple Pay / Google Pay) in the ticket checkout, which can open on any
-          // page that carries a CMS Tickets section. `payment=()` would block the wallets; cards work either way.
+          // payment: Stripe's Express Checkout (Apple Pay / Google Pay) on the /tickets checkout page.
+          // `payment=()` would block the wallets; cards work either way.
           { key: 'Permissions-Policy', value: 'camera=(), microphone=(self), geolocation=(), payment=(self "https://js.stripe.com" "https://*.js.stripe.com"), usb=(), interest-cohort=()' },
         ],
       },

@@ -24,13 +24,13 @@ const playfair = Playfair_Display({
 const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL || "https://deaisummit.org";
 const GA4_MEASUREMENT_ID = "G-10XNHM2ZWW";
 const GOOGLE_ADS_ID = "AW-18489910387";
-const FACEBOOK_PIXEL_ID = "1588014588132810";
 
 /**
- * Meta base pixel. Runs from the document head on every page except the private ticket pages
- * (`/tickets/{t|order|l|w|me}/{token}`, same rule as `isPrivateTicketPath`): their URL holds a secret.
+ * Meta base pixel. The ID comes from the CMS Analytics tags Meta pixel field. Runs on every page except the private
+ * ticket pages (`/tickets/{t|order|l|w|me}/{token}`, same rule as `isPrivateTicketPath`): their URL holds a secret.
  */
-const facebookPixelBoot = `if(!/^\\/tickets\\/(t|order|l|w|me)\\/[^\\/]+/.test(location.pathname)){!function(f,b,e,v,n,t,s)
+function facebookPixelBoot(pixelId: string): string {
+  return `if(!/^\\/tickets\\/(t|order|l|w|me)\\/[^\\/]+/.test(location.pathname)){!function(f,b,e,v,n,t,s)
 {if(f.fbq)return;n=f.fbq=function(){n.callMethod?
 n.callMethod.apply(n,arguments):n.queue.push(arguments)};
 if(!f._fbq)f._fbq=n;n.push=n;n.loaded=!0;n.version='2.0';
@@ -38,8 +38,9 @@ n.queue=[];t=b.createElement(e);t.async=!0;
 t.src=v;s=b.getElementsByTagName(e)[0];
 s.parentNode.insertBefore(t,s)}(window,document,'script',
 'https://connect.facebook.net/en_US/fbevents.js');
-fbq('init', ${JSON.stringify(FACEBOOK_PIXEL_ID)});
+fbq('init', ${JSON.stringify(pixelId)});
 fbq('track', 'PageView');}`;
+}
 
 export async function generateMetadata(): Promise<Metadata> {
   const tags = await prefetchPublicAnalyticsTags();
@@ -68,13 +69,16 @@ export default async function RootLayout({
   const gtmId = tags.gtmId;
   const ga4Id = tags.ga4MeasurementId || GA4_MEASUREMENT_ID;
   const linkedinPid = tags.linkedinPartnerId;
+  const metaPixelId = tags.metaPixelId;
   const redditBoot = resolveRedditBootstrapId(tags);
 
   return (
     <html lang="en" suppressHydrationWarning>
       <head>
         <script dangerouslySetInnerHTML={{ __html: heroMenuScaleBoot }} />
-        <script dangerouslySetInnerHTML={{ __html: facebookPixelBoot }} />
+        {metaPixelId ? (
+          <script dangerouslySetInnerHTML={{ __html: facebookPixelBoot(metaPixelId) }} />
+        ) : null}
       </head>
       <body
         className={`${inter.variable} ${playfair.variable} antialiased`}
@@ -104,15 +108,17 @@ export default async function RootLayout({
           </noscript>
         ) : null}
 
-        <noscript>
-          <img
-            height="1"
-            width="1"
-            style={{ display: "none" }}
-            alt=""
-            src={`https://www.facebook.com/tr?id=${encodeURIComponent(FACEBOOK_PIXEL_ID)}&ev=PageView&noscript=1`}
-          />
-        </noscript>
+        {metaPixelId ? (
+          <noscript>
+            <img
+              height="1"
+              width="1"
+              style={{ display: "none" }}
+              alt=""
+              src={`https://www.facebook.com/tr?id=${encodeURIComponent(metaPixelId)}&ev=PageView&noscript=1`}
+            />
+          </noscript>
+        ) : null}
 
         {children}
         <NavigationLoader />
