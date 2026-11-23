@@ -19,7 +19,6 @@ vi.mock("@stripe/react-stripe-js", () => ({
   useStripe: () => ({ confirmPayment: vi.fn() }),
   useElements: () => ({}),
 }));
-vi.mock("../../../components/tickets/checkout/stripe-appearance", () => ({ buildStripeAppearance: () => ({ theme: "stripe" }) }));
 
 const { TicketCheckout } = await import("../../../components/tickets/checkout/TicketCheckout");
 

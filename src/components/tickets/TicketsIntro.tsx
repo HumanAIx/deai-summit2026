@@ -23,7 +23,6 @@ export function TicketsIntro({
   meta: string;
   lumaHref?: string | null;
 }) {
-  const t = useTranslations('tickets.list.luma');
   return (
     <div className="mx-auto mb-10 flex w-full max-w-3xl flex-col items-center gap-5 text-center sm:mb-14">
       {eyebrow ? (
@@ -43,22 +42,28 @@ export function TicketsIntro({
         ) : null}
       </h1>
       {meta ? <p className={`${plexMono.className} m-0 text-sm tracking-[0.22em] text-[#9AA3B8]`}>{meta}</p> : null}
-      {lumaHref ? (
-        <p className="m-0 text-sm text-[#9AA3B8]">
-          {t('prompt')}{' '}
-          <a
-            href={lumaHref}
-            target="_blank"
-            rel="noopener noreferrer"
-            data-luma-ticket=""
-            className="font-medium text-[#2CC7D9] underline underline-offset-4 transition hover:text-white"
-          >
-            {t('link')}
-            <span aria-hidden="true"> ↗</span>
-            <span className="sr-only"> {t('newTab')}</span>
-          </a>
-        </p>
-      ) : null}
+      {lumaHref ? <LumaLine href={lumaHref} /> : null}
     </div>
+  );
+}
+
+/** "Prefer Luma? Buy your ticket on Luma ↗": new tab (a cart here is never lost), tracked as a Luma click. */
+export function LumaLine({ href }: { href: string }) {
+  const t = useTranslations('tickets.list.luma');
+  return (
+    <p className="m-0 text-sm text-[#9AA3B8]">
+      {t('prompt')}{' '}
+      <a
+        href={href}
+        target="_blank"
+        rel="noopener noreferrer"
+        data-luma-ticket=""
+        className="font-medium text-[#2CC7D9] underline underline-offset-4 transition hover:text-white"
+      >
+        {t('link')}
+        <span aria-hidden="true"> ↗</span>
+        <span className="sr-only"> {t('newTab')}</span>
+      </a>
+    </p>
   );
 }

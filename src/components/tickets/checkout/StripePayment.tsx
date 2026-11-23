@@ -4,11 +4,10 @@
 // is only ever reached through a dynamic import() from `PayStep`, so Stripe's SDK is not part of any other chunk.
 
 import { ExpressCheckoutElement, Elements, PaymentElement, useElements, useStripe } from "@stripe/react-stripe-js";
-import { loadStripe, type Appearance, type Stripe, type StripeElementLocale } from "@stripe/stripe-js";
+import { loadStripe, type Stripe, type StripeElementLocale } from "@stripe/stripe-js";
 import { useTranslations } from "@/lib/tickets/i18n";
-import { useEffect, useMemo, useRef, useState } from "react";
-import { TICKETS_BUTTON } from "../tickets-classes";
-import { buildStripeAppearance } from "./stripe-appearance";
+import { useMemo, useRef, useState } from "react";
+import { TICKETS_BUTTON, TICKETS_STRIPE_DANGER, TICKETS_STRIPE_MUTED } from "../tickets-classes";
 
 export interface StripePaymentProps {
   /** From the ORDER answer of ep-api (never env). Public by design. */
@@ -32,23 +31,6 @@ const STRIPE_LOCALES: ReadonlySet<string> = new Set(
 function stripeLocale({ locale }: { locale: string }): StripeElementLocale {
   const base = locale.toLowerCase().split("-")[0] ?? "";
   return STRIPE_LOCALES.has(base) ? (base as StripeElementLocale) : "auto";
-}
-
-/** Re-reads the theme tokens when the visitor flips light / dark (an explicit toggle or the OS setting). */
-function useAppearance(): Appearance {
-  const [appearance, setAppearance] = useState<Appearance>(() => buildStripeAppearance());
-  useEffect(() => {
-    const refresh = () => setAppearance(buildStripeAppearance());
-    const observer = new MutationObserver(refresh);
-    observer.observe(document.documentElement, { attributes: true, attributeFilter: ["class", "data-theme", "style"] });
-    const media = window.matchMedia?.("(prefers-color-scheme: dark)");
-    media?.addEventListener?.("change", refresh);
-    return () => {
-      observer.disconnect();
-      media?.removeEventListener?.("change", refresh);
-    };
-  }, []);
-  return appearance;
 }
 
 function PayForm({ returnUrl, beforePay, onSucceeded, payLabel }: Omit<StripePaymentProps, "publishableKey" | "locale" | "clientSecret">) {
@@ -109,7 +91,7 @@ function PayForm({ returnUrl, beforePay, onSucceeded, payLabel }: Omit<StripePay
         }}
       />
       {expressShown ? (
-        <p className="text-center text-sm text-muted" aria-hidden="true">
+        <p className={`text-center text-sm ${TICKETS_STRIPE_MUTED}`} aria-hidden="true">
           {t("pay.orCard")}
         </p>
       ) : null}
@@ -122,7 +104,7 @@ function PayForm({ returnUrl, beforePay, onSucceeded, payLabel }: Omit<StripePay
         noValidate
       >
         <PaymentElement options={{ layout: "tabs" }} />
-        <div role="alert" className="text-sm text-danger">
+        <div role="alert" className={`text-sm ${TICKETS_STRIPE_DANGER}`}>
           {message}
         </div>
         <button type="submit" disabled={!stripe || !elements || busy} aria-busy={busy} className={`${TICKETS_BUTTON} disabled:opacity-50`}>
@@ -133,11 +115,14 @@ function PayForm({ returnUrl, beforePay, onSucceeded, payLabel }: Omit<StripePay
   );
 }
 
+/**
+ * Stripe's own default look and loader (no `appearance`): Stripe keeps its Elements current, legible and familiar to
+ * buyers, so the site does not restyle them. PayStep sets them on a white panel, which the default theme is made for.
+ */
 export default function StripePayment({ publishableKey, locale, ...rest }: StripePaymentProps) {
-  const appearance = useAppearance();
   // Stripe.js is requested once per key; `loadStripe` loads js.stripe.com on first call only.
   const stripePromise = useMemo<Promise<Stripe | null>>(() => loadStripe(publishableKey, { locale: stripeLocale({ locale }) }), [publishableKey, locale]);
-  const options = useMemo(() => ({ clientSecret: rest.clientSecret, appearance }), [rest.clientSecret, appearance]);
+  const options = useMemo(() => ({ clientSecret: rest.clientSecret }), [rest.clientSecret]);
   return (
     <Elements stripe={stripePromise} options={options}>
       <PayForm {...rest} />

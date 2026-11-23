@@ -1,4 +1,4 @@
-import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
+import { beforeEach, describe, expect, it, vi } from "vitest";
 
 const { prefetchCMSPage, prefetchCaptchaConfig, prefetchDocumentsGateForms, notFound } = vi.hoisted(() => ({
   prefetchCMSPage: vi.fn(),
@@ -15,13 +15,13 @@ vi.mock("@/lib/prefetch", () => ({ prefetchCMSPage, prefetchCaptchaConfig, prefe
 vi.mock("@/components/tickets/TicketsPageBody", () => ({ TicketsPageBody: function TicketsPageBody() { return null; } }));
 vi.mock("@/components/TicketsPageView", () => ({ TicketsPageView: function TicketsPageView() { return null; } }));
 vi.mock("@/components/cms/CmsPageRenderer", () => ({ CmsPageRenderer: function CmsPageRenderer() { return null; } }));
-vi.mock("@/components/tickets/TicketsIntro", () => ({ TicketsIntro: function TicketsIntro() { return null; } }));
+vi.mock("@/components/tickets/TicketsIntro", () => ({ TicketsIntro: function TicketsIntro() { return null; }, LumaLine: function LumaLine() { return null; } }));
 
 const page = await import("../../../app/tickets/page");
 const { TicketsPageBody } = await import("../../../components/tickets/TicketsPageBody");
 const { TicketsPageView } = await import("../../../components/TicketsPageView");
 const { CmsPageRenderer } = await import("../../../components/cms/CmsPageRenderer");
-const { TicketsIntro } = await import("../../../components/tickets/TicketsIntro");
+const { LumaLine, TicketsIntro } = await import("../../../components/tickets/TicketsIntro");
 
 type El = { type: unknown; props: Record<string, unknown> };
 const render = async (params: Record<string, string | string[] | undefined> = {}) => (await page.default({ searchParams: Promise.resolve(params) })) as unknown as El;
@@ -38,51 +38,49 @@ beforeEach(() => {
   prefetchCaptchaConfig.mockResolvedValue({ site_key: "cap-key", disabled: false, provider: "turnstile" });
   prefetchDocumentsGateForms.mockResolvedValue({ f1: { id: "f1" } });
 });
-afterEach(() => vi.unstubAllEnvs());
 
-describe("/tickets page, checkout OFF", () => {
-  beforeEach(() => vi.stubEnv("TICKETS_CHECKOUT_ENABLED", ""));
+const luma = "https://luma.com/phjit31c";
+const lumaPass = { id: "p", type: "simple", title: "VIP Pass", description: "€189.00", buttons: [{ id: "b", text: "Buy Ticket", link: luma }] };
 
+/** The CMS-page branch wraps CmsPageRenderer (and the Luma line) in a dark backdrop. */
+const childrenOf = (wrapper: El) => ([] as unknown[]).concat(wrapper.props.children).filter(Boolean) as El[];
+
+describe("/tickets page", () => {
   it("is dynamic", () => {
     expect(page.dynamic).toBe("force-dynamic");
   });
 
-  it("renders the Luma view for the CMS page", async () => {
-    prefetchCMSPage.mockResolvedValue(cms([heroBlock]));
+  it("without a Tickets section on the CMS page: the Luma view, as before the live checkout", async () => {
+    prefetchCMSPage.mockResolvedValue(cms([heroBlock, lumaPass]));
     const el = await render();
     expect(el.type).toBe(TicketsPageView);
-    expect(el.props.content).toMatchObject({ passes: [] });
+    expect(el.props.content).toMatchObject({ passes: [{ id: "p" }] });
     expect(prefetchCMSPage).toHaveBeenCalledWith("tickets");
   });
 
-  it("stays on the Luma view even when the CMS page has a Tickets section or a private link", async () => {
-    prefetchCMSPage.mockResolvedValue(cms([heroBlock, ticketsBlock]));
-    expect((await render()).type).toBe(TicketsPageView);
-    expect((await render({ link: "abc" })).type).toBe(TicketsPageView);
-  });
-
-  it("is a 404 when there is no CMS page", async () => {
-    prefetchCMSPage.mockResolvedValue(null);
-    await expect(render()).rejects.toThrow("NEXT_NOT_FOUND");
-    expect(notFound).toHaveBeenCalled();
-  });
-});
-
-describe("/tickets page, checkout ON", () => {
-  beforeEach(() => vi.stubEnv("TICKETS_CHECKOUT_ENABLED", "true"));
-
   it("a CMS page with a Tickets section (addon: tickets) renders through CmsPageRenderer with the captcha config", async () => {
     prefetchCMSPage.mockResolvedValue(cms([heroBlock, ticketsBlock]));
-    const wrapper = await render();
-    const el = wrapper.props.children as El;
-    expect(el.type).toBe(CmsPageRenderer);
-    expect((el.props.blocks as { id: string }[]).map((b) => b.id)).toEqual(["hero", "tk"]);
-    expect(el.props).toMatchObject({ pageTitle: "Tickets", captchaSiteKey: "cap-key", captchaDisabled: false, captchaProvider: "turnstile", formConfigs: { f1: { id: "f1" } } });
+    const [el, ...rest] = childrenOf(await render());
+    expect(el?.type).toBe(CmsPageRenderer);
+    expect((el?.props.blocks as { id: string }[]).map((b) => b.id)).toEqual(["hero", "tk"]);
+    expect(el?.props).toMatchObject({ pageTitle: "Tickets", captchaSiteKey: "cap-key", captchaDisabled: false, captchaProvider: "turnstile", formConfigs: { f1: { id: "f1" } } });
+    expect(rest).toEqual([]); // no Luma link on the page = no Luma line
+  });
+
+  // Production code before the live checkout still shows the Luma pass blocks: organisers add the Tickets section
+  // first and never have to unpublish them, so the live page leaves them out and keeps one "Prefer Luma?" line.
+  it("with a Tickets section, leaves the old Luma pass blocks out and offers Luma as one line", async () => {
+    prefetchCMSPage.mockResolvedValue(cms([heroBlock, ticketsBlock, lumaPass]));
+    const [el, line] = childrenOf(await render());
+    expect((el?.props.blocks as { id: string }[]).map((b) => b.id)).toEqual(["hero", "tk"]);
+    const lumaLine = (line?.props.children as El | undefined) ?? null;
+    expect(lumaLine?.type).toBe(LumaLine);
+    expect(lumaLine?.props.href).toBe(luma);
   });
 
   it("a block of type `tickets` counts as a Tickets section too", async () => {
     prefetchCMSPage.mockResolvedValue(cms([{ id: "tk", type: "tickets" }]));
-    expect(((await render()).props.children as El).type).toBe(CmsPageRenderer);
+    expect(childrenOf(await render())[0]?.type).toBe(CmsPageRenderer);
   });
 
   it("?schedule= shows the built-in checkout even with a Tickets block", async () => {
@@ -113,9 +111,9 @@ describe("/tickets page, checkout ON", () => {
     expect(el.props).toMatchObject({ rawLink: "a", rawSchedule: "s", rawEvent: "e", rawType: "t" });
   });
 
-  it("without a Tickets section: TicketsPageBody with an intro built from the CMS heading", async () => {
+  it("the built-in checkout gets an intro built from the CMS heading", async () => {
     prefetchCMSPage.mockResolvedValue(cms([{ id: "h", type: "section", subtitle: "TICKETS", title: "Get your pass", description: "25-26 NOV" }]));
-    const el = await render();
+    const el = await render({ schedule: "s" });
     expect(el.type).toBe(TicketsPageBody);
     const intro = el.props.intro as El;
     expect(intro.type).toBe(TicketsIntro);
@@ -123,21 +121,20 @@ describe("/tickets page, checkout ON", () => {
   });
 
   it("passes the CMS page's Luma link to the intro as the 'Buy on Luma' option; none without a Luma link", async () => {
-    const pass = { id: "p", type: "simple", title: "VIP Pass", description: "€189.00", buttons: [{ id: "b", text: "Buy Ticket", link: "https://luma.com/phjit31c" }] };
-    prefetchCMSPage.mockResolvedValue(cms([{ id: "h", type: "simple", subtitle: "TICKETS", title: "Get your pass" }, pass]));
-    expect(((await render()).props.intro as El).props.lumaHref).toBe("https://luma.com/phjit31c");
+    prefetchCMSPage.mockResolvedValue(cms([{ id: "h", type: "simple", subtitle: "TICKETS", title: "Get your pass" }, lumaPass]));
+    expect(((await render({ schedule: "s" })).props.intro as El).props.lumaHref).toBe(luma);
 
     prefetchCMSPage.mockResolvedValue(cms([{ id: "h", type: "simple", subtitle: "TICKETS", title: "Get your pass" }]));
-    expect(((await render()).props.intro as El).props.lumaHref).toBeNull();
+    expect(((await render({ schedule: "s" })).props.intro as El).props.lumaHref).toBeNull();
   });
 
-  it("offers only the ticket types picked on the CMS page; every type without a Tickets section", async () => {
+  it("offers only the ticket types picked on the CMS page; none picked = nothing on sale", async () => {
     const A = "11111111-1111-4111-8111-111111111111";
     const picked = { id: "tk", type: "content", addon: "tickets", title: "Choose", ticketCards: [{ id: "c1", ticketTypeId: A, title: "VIP" }] };
     prefetchCMSPage.mockResolvedValue(cms([heroBlock, picked]));
     expect((await render({ type: A })).props.allowedTypeIds).toEqual([A]);
     prefetchCMSPage.mockResolvedValue(cms([heroBlock]));
-    expect((await render()).props.allowedTypeIds).toEqual([]); // nothing picked = nothing on sale
+    expect((await render({ schedule: "s" })).props.allowedTypeIds).toEqual([]);
   });
 
   it("a card's Buy button (?types=) offers that section's tickets, whatever the tickets page picks", async () => {
@@ -150,7 +147,7 @@ describe("/tickets page, checkout ON", () => {
     expect((await render({ type: A, types: "nope" })).props.allowedTypeIds).toEqual([A]);
   });
 
-  // DECISION (Vimal, 2026-11-23): an unpublished or missing CMS `tickets` page means no /tickets page, checkout on too.
+  // DECISION (Vimal, 2026-11-23): an unpublished or missing CMS `tickets` page means no /tickets page.
   it.each([{}, { type: "11111111-1111-4111-8111-111111111111" }, { schedule: "s1" }, { link: "tok" }])(
     "without a published CMS page /tickets is a 404, also with %j",
     async (params) => {

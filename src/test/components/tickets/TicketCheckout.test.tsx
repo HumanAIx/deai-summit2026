@@ -49,7 +49,6 @@ vi.mock("@stripe/react-stripe-js", () => ({
   useStripe: () => stripe,
   useElements: () => ({}),
 }));
-vi.mock("../../../components/tickets/checkout/stripe-appearance", () => ({ buildStripeAppearance: () => ({ theme: "stripe" }) }));
 
 const { TicketCheckout } = await import("../../../components/tickets/checkout/TicketCheckout");
 const { loadStripe } = await import("@stripe/stripe-js");

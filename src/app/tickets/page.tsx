@@ -2,11 +2,10 @@ import type { Metadata } from 'next';
 import { notFound } from 'next/navigation';
 import { CmsPageRenderer } from '@/components/cms/CmsPageRenderer';
 import { TicketsPageView } from '@/components/TicketsPageView';
-import { TicketsIntro } from '@/components/tickets/TicketsIntro';
+import { LumaLine, TicketsIntro } from '@/components/tickets/TicketsIntro';
 import { TicketsPageBody } from '@/components/tickets/TicketsPageBody';
 import { allowedTypeIdsOf, isTicketsSectionBlock, offeredTypesParam } from '@/lib/tickets/cms-section';
 import { lumaHrefOf } from '@/lib/tickets/luma-fallback';
-import { ticketsCheckoutEnabled } from '@/lib/tickets/feature-flag';
 import { parseCmsBlocks } from '@/lib/cmsBlocks';
 import { prefetchCaptchaConfig, prefetchCMSPage, prefetchDocumentsGateForms } from '@/lib/prefetch';
 import { parseTicketsPage } from '@/lib/tickets-page';
@@ -37,47 +36,60 @@ export async function generateMetadata({ searchParams }: { searchParams: Promise
 /**
  * `/tickets`
  *
- * - Checkout off (`TICKETS_CHECKOUT_ENABLED` not `true`): the CMS `tickets` page with its Luma links, as before.
- * - Checkout on, and the CMS `tickets` page has a Tickets section (dashboard › CMS › block › add-on Sales › Tickets):
- *   that page is rendered, so organisers design it; its cards read live prices and link to this page's checkout with the type preselected.
- * - Checkout on otherwise (or a filtered / private link, or `?type=` from a card's Buy button): the built-in live list +
- *   4-step checkout, under the CMS page's heading texts. It offers only the tickets picked for sale: those of the
- *   section the buyer's Buy button sits in (`?types=`), else the cards on this CMS page; none picked = nothing on sale.
+ * The CMS `tickets` page decides what this page is, so organisers switch to the live checkout from the dashboard:
+ * - No Tickets section on it (dashboard › CMS › block › add-on Sales › Tickets): the CMS page with its Luma links, as
+ *   before the live checkout existed.
+ * - A Tickets section on it: that CMS page with live cards. The old Luma pass blocks are left out (production code
+ *   before this change still shows them, so organisers never have to unpublish them first), and a "Prefer Luma?" line
+ *   keeps Luma as the second option while the page still has a Luma link.
+ * - A filtered or private link, or `?type=` from a card's Buy button: the built-in live list + 4-step checkout, under
+ *   the CMS page's heading texts. It offers only the tickets picked for sale: those of the section the buyer's Buy
+ *   button sits in (`?types=`), else the cards on this CMS page; none picked = nothing on sale.
  * - No published CMS `tickets` page: 404.
  */
 export default async function TicketsPage({ searchParams }: { searchParams: Promise<SearchParams> }) {
   const [cmsPage, params] = await Promise.all([prefetchCMSPage('tickets'), searchParams]);
-  const blocks = cmsPage ? parseCmsBlocks(cmsPage) : [];
 
-  // DECISION (Vimal, 2026-11-23): no published CMS `tickets` page = no /tickets page (404), like any unpublished page,
-  // with the checkout on or off. Only /tickets itself: the private pages under /tickets/* that ticket emails link to
-  // keep working.
+  // DECISION (Vimal, 2026-11-23): no published CMS `tickets` page = no /tickets page (404), like any unpublished page.
+  // Only /tickets itself: the private pages under /tickets/* that ticket emails link to keep working.
   if (!cmsPage) notFound();
-  if (!ticketsCheckoutEnabled()) return <TicketsPageView content={parseTicketsPage(blocks)} />;
+  const blocks = parseCmsBlocks(cmsPage);
+  const legacy = parseTicketsPage(blocks);
+  const lumaHref = lumaHrefOf({ content: legacy });
 
   // A filtered or private link, or a card's Buy button (`?type=`), always opens the checkout itself: a CMS page here
   // would send the buyer in a circle.
   const filtered = Boolean(first(params.link) ?? first(params.schedule) ?? first(params.event) ?? first(params.type));
-  if (!filtered && blocks.some(isTicketsSectionBlock)) {
+  const hasTicketsSection = blocks.some(isTicketsSectionBlock);
+
+  if (!filtered && !hasTicketsSection) return <TicketsPageView content={legacy} />;
+
+  if (!filtered) {
+    const lumaPassIds = new Set(legacy.passes.map((pass) => pass.id));
+    const liveBlocks = blocks.filter((block) => !lumaPassIds.has(block.id));
     const [captchaConfig, formConfigs] = await Promise.all([
       prefetchCaptchaConfig(),
-      prefetchDocumentsGateForms(blocks, cmsPage?.content?.formConfigs || null),
+      prefetchDocumentsGateForms(liveBlocks, cmsPage?.content?.formConfigs || null),
     ]);
     return (
       <div className="-mt-[140px] bg-[#040A1E] pt-[140px]">
         <CmsPageRenderer
-          blocks={blocks}
+          blocks={liveBlocks}
           pageTitle={cmsPage?.page_title}
           formConfigs={formConfigs}
           captchaSiteKey={captchaConfig.site_key}
           captchaDisabled={captchaConfig.disabled === true}
           captchaProvider={captchaConfig.provider}
         />
+        {lumaHref ? (
+          <div className="flex justify-center px-4 pb-20 text-center">
+            <LumaLine href={lumaHref} />
+          </div>
+        ) : null}
       </div>
     );
   }
 
-  const heading = parseTicketsPage(blocks);
   return (
     <TicketsPageBody
       rawLink={first(params.link)}
@@ -87,7 +99,7 @@ export default async function TicketsPage({ searchParams }: { searchParams: Prom
       // The tickets the buyer came for: the section their Buy button sits in (`types`), else the ones picked on this
       // CMS page. Only picked tickets are sold; none picked = nothing on offer.
       allowedTypeIds={offeredTypesParam(first(params.types)) ?? allowedTypeIdsOf(blocks)}
-      intro={heading?.titleLead || heading?.accentWord ? <TicketsIntro {...heading} lumaHref={lumaHrefOf({ content: heading })} /> : undefined}
+      intro={legacy.titleLead || legacy.accentWord ? <TicketsIntro {...legacy} lumaHref={lumaHref} /> : undefined}
     />
   );
 }

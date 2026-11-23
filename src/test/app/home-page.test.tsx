@@ -1,4 +1,4 @@
-import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
+import { beforeEach, describe, expect, it, vi } from "vitest";
 
 const { prefetchCMSPage } = vi.hoisted(() => ({ prefetchCMSPage: vi.fn() }));
 vi.mock("react/jsx-dev-runtime", async () => (await import("../helpers/jsx-stub")).jsxStub);
@@ -40,26 +40,17 @@ beforeEach(() => {
   prefetchCMSPage.mockReset();
   vi.spyOn(console, "error").mockImplementation(() => undefined);
 });
-afterEach(() => vi.unstubAllEnvs());
 
 describe("home page ticket passes", () => {
-  it("flag on + a tickets section among the home blocks: LandingPage gets ticketPasses = []", async () => {
-    vi.stubEnv("TICKETS_CHECKOUT_ENABLED", "true");
+  it("a tickets section among the home blocks: LandingPage gets ticketPasses = [] (the live cards replace them)", async () => {
     pages({ home: [ticketsSectionBlock], tickets: [passBlock] });
     expect((await renderHome()).props.ticketPasses).toEqual([]);
   });
 
-  it("flag off: the passes still come from the tickets page, as before (and the tickets section block stays in the plan)", async () => {
-    vi.stubEnv("TICKETS_CHECKOUT_ENABLED", "");
-    pages({ home: [ticketsSectionBlock], tickets: [passBlock] });
+  it("no tickets section on the home page: the passes still come from the tickets page, as before", async () => {
+    pages({ home: [{ id: "a", type: "simple", title: "About the summit" }], tickets: [passBlock] });
     const landing = await renderHome();
     expect(landing.props.ticketPasses).toHaveLength(1);
     expect(landing.props.ticketPasses[0]).toMatchObject({ title: "Full pass", href: "/tickets" });
-  });
-
-  it("flag on but no tickets section on the home page: passes stay", async () => {
-    vi.stubEnv("TICKETS_CHECKOUT_ENABLED", "true");
-    pages({ home: [{ id: "a", type: "simple", title: "About the summit" }], tickets: [passBlock] });
-    expect((await renderHome()).props.ticketPasses).toHaveLength(1);
   });
 });

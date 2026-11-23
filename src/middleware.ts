@@ -1,25 +1,8 @@
 import { NextResponse } from 'next/server';
 import type { NextRequest } from 'next/server';
-import { ticketsCheckoutEnabled } from '@/lib/tickets/feature-flag';
 import { legacyPrivateLinkRedirect, PATHNAME_HEADER } from '@/lib/tickets/tickets-route';
 import { mayBeTicketPage, ticketPageRedirect } from '@/lib/tickets/pages-base';
 import { loadTicketPagesBasePath } from '@/lib/tickets/pages-base-lookup';
-
-/** Everything the live ticket checkout added: the token pages under `/tickets/*` and the `/api/tickets/*` handlers. */
-function isTicketsCheckoutRoute(pathname: string): boolean {
-    return pathname.startsWith('/tickets/') || pathname.startsWith('/api/tickets/') || pathname === '/api/captcha-site-key';
-}
-
-function ticketsNotFound(request: NextRequest): NextResponse {
-    if (request.nextUrl.pathname.startsWith('/api/')) {
-        return NextResponse.json(
-            { success: false, error: 'Request failed. Please try again.', code: 'notFound' },
-            { status: 404, headers: { 'Cache-Control': 'no-store' } },
-        );
-    }
-    // No route has two segments under `/_tickets-off`, so Next answers its own 404 page without any API call.
-    return NextResponse.rewrite(new URL('/_tickets-off/not-found', request.url));
-}
 
 export async function middleware(request: NextRequest) {
     const { pathname, searchParams } = request.nextUrl;
@@ -39,35 +22,28 @@ export async function middleware(request: NextRequest) {
     //     return NextResponse.rewrite(new URL('/coming-soon', request.url));
     // }
 
-    // Tickets checkout off: the new ticket routes do not exist (the Luma `/tickets` page itself stays).
-    if (isTicketsCheckoutRoute(pathname) && !ticketsCheckoutEnabled()) {
-        return ticketsNotFound(request);
-    }
-
     // The legacy private link `/tickets?link={token}` keeps its secret in the query string, where the analytics gate
     // cannot see it: move it to `/tickets/l/{token}` before anything renders.
-    if (ticketsCheckoutEnabled()) {
-        const legacy = legacyPrivateLinkRedirect({ pathname, searchParams });
-        if (legacy) {
-            const response = NextResponse.redirect(new URL(legacy, request.url), 308);
+    const legacy = legacyPrivateLinkRedirect({ pathname, searchParams });
+    if (legacy) {
+        const response = NextResponse.redirect(new URL(legacy, request.url), 308);
+        response.headers.set('Referrer-Policy', 'no-referrer');
+        response.headers.set('Cache-Control', 'no-store');
+        return response;
+    }
+
+    // The dashboard's "Ticket pages address" may name another path than /tickets (e.g. /buy): ticket emails then
+    // link to /buy/t/{token} and so on. Send those to the canonical /tickets/… page. The address is looked up only
+    // for paths shaped like a ticket page (cached; see loadTicketPagesBasePath), so other pages cost nothing.
+    if (mayBeTicketPage(pathname)) {
+        const target = ticketPageRedirect({ pathname, basePath: await loadTicketPagesBasePath() });
+        if (target) {
+            const url = new URL(target, request.url);
+            url.search = request.nextUrl.search;
+            const response = NextResponse.redirect(url, 308);
             response.headers.set('Referrer-Policy', 'no-referrer');
             response.headers.set('Cache-Control', 'no-store');
             return response;
-        }
-
-        // The dashboard's "Ticket pages address" may name another path than /tickets (e.g. /buy): ticket emails then
-        // link to /buy/t/{token} and so on. Send those to the canonical /tickets/… page. The address is looked up only
-        // for paths shaped like a ticket page (cached; see loadTicketPagesBasePath), so other pages cost nothing.
-        if (mayBeTicketPage(pathname)) {
-            const target = ticketPageRedirect({ pathname, basePath: await loadTicketPagesBasePath() });
-            if (target) {
-                const url = new URL(target, request.url);
-                url.search = request.nextUrl.search;
-                const response = NextResponse.redirect(url, 308);
-                response.headers.set('Referrer-Policy', 'no-referrer');
-                response.headers.set('Cache-Control', 'no-store');
-                return response;
-            }
         }
     }
 
@@ -80,7 +56,5 @@ export async function middleware(request: NextRequest) {
 export const config = {
     matcher: [
         '/((?!api|_next/static|_next/image|favicon.ico).*)',
-        '/api/tickets/:path*',
-        '/api/captcha-site-key',
     ],
 };

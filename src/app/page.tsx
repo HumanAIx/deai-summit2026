@@ -20,7 +20,6 @@ import { generatePageMetadata } from '@/lib/seo-defaults';
 import type { CMSBlock } from '@/lib/api-types';
 import type { OrganizerConfig } from '@/config/types';
 import { resolveGeneralLogoSrc, resolveScrollerLogoSrc } from '@/lib/companyLogo';
-import { ticketsCheckoutEnabled } from '@/lib/tickets/feature-flag';
 import { isTicketsSectionBlock } from '@/lib/tickets/cms-section';
 
 const BASE_URL = process.env.NEXT_PUBLIC_SITE_URL || 'https://deaisummit.org';
@@ -71,7 +70,7 @@ export default async function Home() {
       cmsBlocks = parseCmsBlocks(cmsPage).filter((block) => !isHomepageTicketBlock(block));
       // A live Tickets section on the home page replaces the text-only ticket banners (they repeat the
       // CMS tickets page, without prices).
-      if (ticketsCheckoutEnabled() && cmsBlocks.some(isTicketsSectionBlock)) ticketPasses = [];
+      if (cmsBlocks.some(isTicketsSectionBlock)) ticketPasses = [];
       cmsSections = extractHomeSections(cmsBlocks);
     }
   } catch (error) {

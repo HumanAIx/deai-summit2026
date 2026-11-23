@@ -1,6 +1,6 @@
 import { useTranslations } from "@/lib/tickets/i18n";
 import { lazy, Suspense } from "react";
-import { TICKETS_BUTTON_OUTLINE, TICKETS_CARD } from "../tickets-classes";
+import { TICKETS_BUTTON_OUTLINE, TICKETS_CARD, TICKETS_STRIPE_DANGER, TICKETS_STRIPE_MUTED, TICKETS_STRIPE_PANEL } from "../tickets-classes";
 import { HoldTimer } from "./HoldTimer";
 import { OrderSummary } from "./OrderSummary";
 import type { OrderState, PublicType } from "./types";
@@ -51,11 +51,11 @@ export function PayStep({
       </div>
       {/* What the buyer pays, from the order answer (never only "Pay €…"): lines, discounts, booking fee, VAT, total. */}
       <OrderSummary totals={order.totals} currency={order.currency} types={types} busy={false} />
-      <div className={TICKETS_CARD}>
+      <div className={TICKETS_STRIPE_PANEL}>
         {ready ? (
           <Suspense
             fallback={
-              <p role="status" className="text-sm text-muted">
+              <p role="status" className={`text-sm ${TICKETS_STRIPE_MUTED}`}>
                 {t("loading")}
               </p>
             }
@@ -71,7 +71,7 @@ export function PayStep({
             />
           </Suspense>
         ) : (
-          <p role="alert" className="text-sm text-danger">
+          <p role="alert" className={`text-sm ${TICKETS_STRIPE_DANGER}`}>
             {te("paymentUnavailable")}
           </p>
         )}
