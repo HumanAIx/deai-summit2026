@@ -1,6 +1,7 @@
 import { describe, expect, it, vi } from "vitest";
 import { render, screen } from "../../../test-utils";
-import { StepTickets, type StepTicketsProps } from "@/components/tickets/checkout/StepTickets";
+import { CartStep, type CartStepProps } from "@/components/tickets/checkout/CartStep";
+import { EMPTY_DETAILS } from "@/components/tickets/checkout/forms";
 import { NO_EXTRA_QUESTIONS } from "@/lib/tickets/checkout-questions";
 import type { CodeStatus } from "@/lib/tickets/schemas";
 import { config, typeA } from "../../../helpers/checkout-harness";
@@ -9,10 +10,10 @@ const totals = { lines: [], subtotalCents: 0, discountCents: 0, feeCents: 0, tot
 const checkoutConfig = { ...config, extraQuestions: NO_EXTRA_QUESTIONS };
 const noop = () => undefined;
 
-type StepOptions = { codeStatus: CodeStatus; validFrom?: string | null; validUntil?: string | null; codeError?: string | null; timeZone?: string; types?: StepTicketsProps["types"]; cart?: StepTicketsProps["cart"] };
+type StepOptions = { codeStatus: CodeStatus; validFrom?: string | null; validUntil?: string | null; codeError?: string | null; timeZone?: string; types?: CartStepProps["types"]; cart?: CartStepProps["cart"] };
 
 function renderStep({ codeStatus, validFrom, validUntil, codeError = null, timeZone, types, cart = {} }: StepOptions) {
-  const props: StepTicketsProps = {
+  const props: CartStepProps = {
     types: types ?? [timeZone ? { ...typeA, source: { ...typeA.source, timeZone } } : typeA],
     config: checkoutConfig,
     cart,
@@ -31,13 +32,18 @@ function renderStep({ codeStatus, validFrom, validUntil, codeError = null, timeZ
     onNewsletter: vi.fn(),
     quote: { status: "ready", result: { totals, currency: "EUR", codeStatus, validFrom, validUntil } },
     quoteError: null,
-    canContinue: false,
-    onContinue: noop,
+    header: null,
+    canOrder: false,
+    slots: [],
+    values: { ...EMPTY_DETAILS, holders: [] },
+    submitting: false,
+    placeLabel: "Continue to payment",
+    onSubmit: noop,
   };
-  return render(<StepTickets {...props} />);
+  return render(<CartStep {...props} />);
 }
 
-describe("StepTickets — the real reason a discount code was rejected (DASH-236 TK-04)", () => {
+describe("CartStep — the real reason a discount code was rejected (DASH-236 TK-04)", () => {
   it("unknown code", () => {
     renderStep({ codeStatus: "unknown" });
     expect(screen.getByText("We don't recognise that code. Check the spelling.")).toBeInTheDocument();
@@ -118,13 +124,13 @@ describe("StepTickets — the real reason a discount code was rejected (DASH-236
   });
 });
 
-describe("StepTickets — which discount won (stackNote)", () => {
+describe("CartStep — which discount won (stackNote)", () => {
   const CODE_WINS = "Your discount code gives more than the newsletter's 5%, so only the code applies.";
   const NEWSLETTER_WINS = "The newsletter's 5% gives more than your discount code, so only the newsletter discount applies.";
 
   function mount({ newsletter = true, appliedCode = "VIP10" as string | null, codeStatus = "valid" as CodeStatus, status = "ready" as "ready" | "loading", amounts = {} as { codeDiscountCents?: number; newsletterDiscountCents?: number } }) {
     const result = { totals: { ...totals, ...amounts }, currency: "EUR", codeStatus };
-    const props: StepTicketsProps = {
+    const props: CartStepProps = {
       types: [typeA],
       config: checkoutConfig,
       cart: {},
@@ -143,10 +149,15 @@ describe("StepTickets — which discount won (stackNote)", () => {
       onNewsletter: noop,
       quote: { status, result },
       quoteError: null,
-      canContinue: false,
-      onContinue: noop,
+      header: null,
+      canOrder: false,
+      slots: [],
+      values: { ...EMPTY_DETAILS, holders: [] },
+      submitting: false,
+      placeLabel: "Continue to payment",
+      onSubmit: noop,
     };
-    return render(<StepTickets {...props} />);
+    return render(<CartStep {...props} />);
   }
 
   it("code discount > 0: the code wins", () => {

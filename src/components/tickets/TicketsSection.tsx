@@ -42,6 +42,8 @@ export function TicketsSection({ block }: { block: CMSBlock }) {
     <TicketsBlock
       cards={cards}
       buyHref="/tickets"
+      // The old CMS pass tiles filled the 1180 px column (two ~540 px tiles); the block's default 380 px cap made them tiny.
+      maxCardPx={540}
       frame={(content) => (
         <section className={`deai-tickets ${plexMono.variable} relative bg-background py-16 font-body text-text md:py-24`} style={TICKETS_BACKDROP_STYLE}>
           <div className="relative mx-auto flex w-full max-w-[1180px] flex-col gap-10 px-4 sm:px-6 md:gap-14 md:px-14">

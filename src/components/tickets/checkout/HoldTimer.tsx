@@ -2,6 +2,7 @@ import { useState } from "react";
 import { useTranslations } from "@/lib/tickets/i18n";
 import { formatCountdown } from "@/lib/tickets/checkout-cart";
 import { useRemainingMs } from "./hooks";
+import { Icon } from "./ui";
 
 /** The last stretch of the hold: a warning shows, with an Extend button while the hold can still grow. */
 export const HOLD_WARNING_MS = 2 * 60_000;
@@ -18,7 +19,8 @@ export function HoldTimerView({ remainingMs }: { remainingMs: number }) {
   const minutesLeft = Math.ceil(remainingMs / 60_000);
   const announce = remainingMs > 0 && ANNOUNCE_AT_MINUTES.includes(minutesLeft);
   return (
-    <div className="flex flex-wrap items-baseline gap-x-2 text-sm">
+    <div className="flex flex-wrap items-center gap-x-2 text-sm">
+      <Icon name="timer" />
       <span>{t("holdLabel")}</span>
       <span role="timer" aria-live="off" className="font-semibold tabular-nums">
         {formatCountdown({ remainingMs })}
@@ -62,23 +64,24 @@ export function HoldTimer({
     if (!ok) setFailed(true);
   }
 
+  // Design: a tinted pill in the accent colour, amber in the last 2 minutes.
   return (
-    <div className="flex flex-col gap-2">
+    <div className={`flex flex-col gap-2 rounded-xl px-3.5 py-2.5 ${ending ? "bg-[color-mix(in_srgb,var(--tk-warn)_10%,transparent)] text-(--tk-warn)" : "bg-(--tk-tint) text-(--tk-soft)"}`}>
       <HoldTimerView remainingMs={remaining} />
       {ending ? (
         <div role="alert" className="flex flex-wrap items-center gap-x-3 gap-y-2 text-sm">
-          <span className="font-medium text-warning-emphasis">{canExtend ? t("holdEndingSoon") : t("holdEndingNoMore")}</span>
+          <span className="font-medium">{canExtend ? t("holdEndingSoon") : t("holdEndingNoMore")}</span>
           {canExtend && onExtend ? (
             <button
               type="button"
               onClick={() => void extend()}
               disabled={extending}
-              className="inline-flex min-h-11 items-center rounded-(--radius) border border-(--color-control-border) px-4 font-medium text-text hover:bg-surface disabled:opacity-50"
+              className="inline-flex min-h-11 items-center rounded-full border border-current px-4 font-semibold text-inherit hover:bg-[color-mix(in_srgb,currentColor_10%,transparent)] disabled:opacity-50"
             >
               {extending ? t("extending") : t("extend")}
             </button>
           ) : null}
-          {failed ? <span className="text-danger">{t("extendFailed")}</span> : null}
+          {failed ? <span className="text-(--tk-err)">{t("extendFailed")}</span> : null}
         </div>
       ) : null}
     </div>

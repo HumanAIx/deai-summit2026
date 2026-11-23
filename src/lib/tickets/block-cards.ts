@@ -56,13 +56,14 @@ export const GRID_GAP_PX = 16;
 /**
  * Inline grid style: never more than `columnCount` columns, cards never narrower than 260px (fewer columns on
  * tablets, one on phones), and a width cap so one or two cards do not stretch across the page. `min(100%, 260px)`
- * keeps a 320px viewport from overflowing (rule 29).
+ * keeps a 320px viewport from overflowing (rule 29). `maxCardPx` raises the cap where the cards are the page's main
+ * content (DeAI's `/tickets`).
  */
-export function gridStyle({ count }: { count: number }): { gridTemplateColumns: string; maxWidth: string } {
+export function gridStyle({ count, maxCardPx = MAX_CARD_PX }: { count: number; maxCardPx?: number }): { gridTemplateColumns: string; maxWidth: string } {
   const cols = columnCount({ count });
   return {
     gridTemplateColumns: `repeat(auto-fit, minmax(max(min(100%, ${MIN_CARD_PX}px), calc((100% - ${(cols - 1) * GRID_GAP_PX}px) / ${cols})), 1fr))`,
-    maxWidth: `${cols * MAX_CARD_PX + (cols - 1) * GRID_GAP_PX}px`,
+    maxWidth: `${cols * maxCardPx + (cols - 1) * GRID_GAP_PX}px`,
   };
 }
 

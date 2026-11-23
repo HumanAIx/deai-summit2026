@@ -16,9 +16,12 @@ export interface CheckoutConfig {
   newsletterOffer: { on: boolean; pct: number };
   /** Holders give company / job title and dietary needs on their ticket page, not here (ep-api T7): step 03 says so. */
   detailsLater?: boolean;
+  /** How long ep-api holds the tickets while the buyer pays (the cart's "held for N minutes" note); absent = not said. */
+  holdMinutes?: number | undefined;
 }
 
-export type Step = 1 | 2 | 3 | 4;
+/** 1 = Tickets & details (one page), 2 = Payment. The confirmation (3) is the order page the buyer is sent to. */
+export type Step = 1 | 2;
 
 export type QuoteState =
   | { status: "idle" }

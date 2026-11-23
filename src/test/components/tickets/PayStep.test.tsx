@@ -37,7 +37,7 @@ function order(overrides: Record<string, unknown> = {}) {
 
 function mount(props: Record<string, unknown> = {}) {
   const handlers = { onExpire: vi.fn(), beforePay: vi.fn().mockResolvedValue(true), onSucceeded: vi.fn(), onBack: vi.fn(), onExtend: vi.fn().mockResolvedValue(true) };
-  render(<PayStep order={order() as never} types={[typeA]} locale="en" returnUrl="https://x.test/return" testMode={false} payLabel="Pay €234.56" {...handlers} {...props} />);
+  render(<PayStep header={<h2>Payment</h2>} order={order() as never} types={[typeA]} locale="en" returnUrl="https://x.test/return" testMode={false} payLabel="Pay €234.56" {...handlers} {...props} />);
   return handlers;
 }
 
@@ -45,16 +45,15 @@ beforeEach(() => vi.useFakeTimers({ now: NOW, toFake: ["Date", "setInterval", "c
 afterEach(() => vi.useRealTimers());
 
 describe("PayStep", () => {
-  it("renders the order summary from order.totals (ep-api's numbers) above the payment", async () => {
+  it("renders the order summary from order.totals (ep-api's numbers) next to the payment", async () => {
     mount();
-    const summary = screen.getByRole("heading", { name: "Order summary" });
+    expect(screen.getByRole("heading", { name: "Your order" })).toBeInTheDocument();
     expect(screen.getByText("2 × Full pass")).toBeInTheDocument();
     expect(screen.getByText("€234.56")).toBeInTheDocument();
     await act(async () => {
       await vi.advanceTimersByTimeAsync(50);
     });
-    const payment = screen.getByTestId("stripe-payment");
-    expect(summary.compareDocumentPosition(payment) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
+    expect(screen.getByTestId("stripe-payment")).toBeInTheDocument();
   });
 
   it("offers Extend in the last 2 minutes while the hold is below holdMaxAt, and the click goes to onExtend", () => {
@@ -82,7 +81,7 @@ describe("PayStep", () => {
   it("shows the test-mode notice and the Back button", () => {
     const { onBack } = mount({ testMode: true });
     expect(screen.getByText(/Test mode/)).toBeInTheDocument();
-    fireEvent.click(screen.getByRole("button", { name: "Back to ticket holders" }));
+    fireEvent.click(screen.getByRole("button", { name: "Back to tickets" }));
     expect(onBack).toHaveBeenCalledTimes(1);
   });
 

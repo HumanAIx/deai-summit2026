@@ -105,8 +105,11 @@ export async function addTickets({ name, count = 1 }: { name: string; count?: nu
   for (let i = 0; i < count; i += 1) fireEvent.click(screen.getByRole("button", { name: `Add one ${name}` }));
 }
 
+/** The order button of the cart step ("Continue to payment", or "Get tickets" for a free order). */
+export const orderButton = () => screen.getByRole("button", { name: /^(Continue to payment|Get tickets)/ });
+
 export async function waitForQuote() {
-  await waitFor(() => expect(screen.getByRole("button", { name: "Continue" })).toBeEnabled());
+  await waitFor(() => expect(orderButton()).toBeEnabled());
 }
 
 export function fillDetails({ name = "Ada Lovelace", email = "ada@example.com", terms = true }: { name?: string; email?: string; terms?: boolean } = {}) {

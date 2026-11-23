@@ -7,7 +7,7 @@ import { ExpressCheckoutElement, Elements, PaymentElement, useElements, useStrip
 import { loadStripe, type Stripe, type StripeElementLocale } from "@stripe/stripe-js";
 import { useTranslations } from "@/lib/tickets/i18n";
 import { useMemo, useRef, useState } from "react";
-import { TICKETS_BUTTON, TICKETS_STRIPE_DANGER, TICKETS_STRIPE_MUTED } from "../tickets-classes";
+import { TICKETS_STRIPE_DANGER, TICKETS_STRIPE_MUTED, TK_BUTTON } from "../tickets-classes";
 
 export interface StripePaymentProps {
   /** From the ORDER answer of ep-api (never env). Public by design. */
@@ -107,7 +107,7 @@ function PayForm({ returnUrl, beforePay, onSucceeded, payLabel }: Omit<StripePay
         <div role="alert" className={`text-sm ${TICKETS_STRIPE_DANGER}`}>
           {message}
         </div>
-        <button type="submit" disabled={!stripe || !elements || busy} aria-busy={busy} className={`${TICKETS_BUTTON} disabled:opacity-50`}>
+        <button type="submit" disabled={!stripe || !elements || busy} aria-busy={busy} className={`${TK_BUTTON} w-full`}>
           {busy ? t("pay.processing") : payLabel}
         </button>
       </form>

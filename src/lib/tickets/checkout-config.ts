@@ -17,5 +17,6 @@ export function configOf({ checkout }: { checkout: CheckoutBlock }): CheckoutCon
     extraQuestions: extraQuestionsOf({ questionList: checkout.questionList }),
     newsletterOffer: checkout.newsletterOffer ?? { on: false, pct: 0 },
     detailsLater: checkout.detailsLater === true,
+    holdMinutes: checkout.holdMinutes,
   };
 }

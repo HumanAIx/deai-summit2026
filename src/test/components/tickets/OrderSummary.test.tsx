@@ -5,7 +5,7 @@ import { typeA } from "../../helpers/checkout-harness";
 import { render, screen } from "../../test-utils";
 
 const totals = {
-  lines: [{ ticketTypeId: typeA.id, quantity: 3, unitCents: 15000, discountCents: 0, feeCents: 0, grossCents: 1 }],
+  lines: [{ ticketTypeId: typeA.id, quantity: 3, unitCents: 15000, discountCents: 0, feeCents: 0, grossCents: 44444 }],
   subtotalCents: 11111,
   discountCents: 0,
   feeCents: 0,
@@ -17,10 +17,12 @@ describe("OrderSummary", () => {
   it("prints ep-api's numbers as given (the total is not the sum of anything shown) and hides zero discount / fee rows", async () => {
     const { container } = render(<OrderSummary totals={totals} currency="EUR" types={[typeA]} busy={false} />);
     expect(screen.getByText("3 × Full pass")).toBeInTheDocument();
+    // ep-api's unit price; the line total is never worked out here (and ep-api's line gross includes the booking fee)
     expect(screen.getByText("€150 each")).toBeInTheDocument();
-    expect(screen.getByText("€111.11")).toBeInTheDocument();
+    expect(screen.getByRole("heading", { name: "Your order" })).toBeInTheDocument();
     expect(screen.getByText("€222.22")).toBeInTheDocument();
-    expect(screen.getByText("€33.33")).toBeInTheDocument();
+    expect(screen.getByText("Incl. €33.33 VAT")).toBeInTheDocument();
+    expect(screen.queryByText("Subtotal")).not.toBeInTheDocument(); // the design has no subtotal row
     expect(screen.queryByText("Discount")).not.toBeInTheDocument();
     expect(screen.queryByText("Booking fees")).not.toBeInTheDocument();
     expect(describeViolations(await axeViolations({ container }))).toEqual([]);
@@ -30,6 +32,7 @@ describe("OrderSummary", () => {
     const { container } = render(<OrderSummary totals={{ ...totals, discountCents: 500, feeCents: 250, totalCents: 0 }} currency="EUR" types={[typeA]} busy />);
     expect(screen.getByText("−€5")).toBeInTheDocument();
     expect(screen.getByText("€2.50")).toBeInTheDocument();
+    expect(screen.getByText("Not refunded unless the event is cancelled.")).toBeInTheDocument();
     expect(screen.getByText("Free", { selector: "dd" })).toBeInTheDocument();
     expect(container.querySelector("section")).toHaveAttribute("aria-busy", "true");
   });

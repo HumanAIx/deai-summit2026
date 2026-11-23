@@ -73,6 +73,9 @@ describe("columnCount / gridStyle", () => {
     expect(gridStyle({ count: 1 }).maxWidth).toBe("380px");
     expect(gridStyle({ count: 4 }).maxWidth).toBe("776px");
   });
+  it("a wider card cap when asked (DeAI's /tickets: two ~540px tiles)", () => {
+    expect(gridStyle({ count: 2, maxCardPx: 540 }).maxWidth).toBe("1096px");
+  });
 });
 
 describe("featuredIndex / splitTitle / cardTitle", () => {

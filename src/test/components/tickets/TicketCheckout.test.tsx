@@ -59,16 +59,15 @@ function mountCheckout({ types = [typeA, typeC, typeB], linkToken }: { types?: t
   return render(<TicketCheckout types={types} config={config} linkToken={linkToken} locale="en" localePrefix="" />);
 }
 
+/** Tickets in the cart and the quote in: the details and holders are on the same page (design: "Tickets & details"). */
 async function toDetails({ count = 1 }: { count?: number } = {}) {
   addTickets({ name: "Full pass", count });
   await waitForQuote();
-  fireEvent.click(screen.getByRole("button", { name: "Continue" }));
 }
 async function toHolders({ count = 1 }: { count?: number } = {}) {
   await toDetails({ count });
   fillDetails();
-  fireEvent.click(screen.getByRole("button", { name: "Continue" }));
-  await screen.findByRole("heading", { level: 2, name: "Ticket holders" });
+  await screen.findByRole("heading", { level: 3, name: "03 · Ticket holders" });
 }
 async function placeOrder({ count = 1 }: { count?: number } = {}) {
   await toHolders({ count });
@@ -95,9 +94,10 @@ describe("step 01 — tickets and the live quote", () => {
   it("shows the cards with steppers, the step list, and an empty summary", () => {
     mountCheckout();
     expect(screen.getByRole("list", { name: "Checkout steps" })).toBeInTheDocument();
-    expect(screen.getByRole("heading", { level: 2, name: "Tickets" })).toBeInTheDocument();
+    expect(screen.getByRole("heading", { level: 2, name: "Your tickets" })).toBeInTheDocument();
+    expect(screen.getByRole("heading", { level: 3, name: "01 · Tickets" })).toBeInTheDocument();
     expect(screen.getByText("Choose at least one ticket.")).toBeInTheDocument();
-    expect(screen.getByRole("button", { name: "Continue" })).toBeDisabled();
+    expect(screen.getByRole("button", { name: "Continue to payment" })).toBeDisabled();
   });
 
   it("re-quotes (debounced) on a change and shows ep-api's totals exactly, with no money maths in the browser", async () => {
@@ -109,10 +109,10 @@ describe("step 01 — tickets and the live quote", () => {
     expect(api.callsTo("/api/tickets/quote")).toHaveLength(1);
     expect(api.callsTo("/api/tickets/quote")[0]?.body).toEqual({ lines: [{ ticketTypeId: TYPE_A_ID, quantity: 2 }], newsletter: false });
     // 12345 cents is NOT 2 x 150 + fees: whatever ep-api answers is what is shown
-    const summary = screen.getByRole("region", { name: "Order summary" });
+    const summary = screen.getByRole("region", { name: "Your order" });
     expect(within(summary).getByText("€123.45")).toBeInTheDocument();
-    expect(within(summary).getByText("€300")).toBeInTheDocument(); // subtotal 30000, whole amounts lose the decimals
-    expect(within(summary).getByText("€22.22")).toBeInTheDocument(); // VAT
+    expect(within(summary).getByText("€150 each")).toBeInTheDocument(); // ep-api's unit price, no line total worked out
+    expect(within(summary).getByText("Incl. €22.22 VAT")).toBeInTheDocument();
     expect(within(summary).getByText("€5")).toBeInTheDocument(); // booking fees 500
   });
 
@@ -139,10 +139,7 @@ describe("step 01 — tickets and the live quote", () => {
     expect(await screen.findByText("We don't recognise that code. Check the spelling.")).toBeInTheDocument();
     await waitForQuote();
 
-    fireEvent.click(screen.getByRole("button", { name: "Continue" }));
     fillDetails();
-    fireEvent.click(screen.getByRole("button", { name: "Continue" }));
-    await screen.findByRole("heading", { level: 2, name: "Ticket holders" });
     fillHolder({ index: 0, name: "Ada", email: "ada@example.com" });
     fireEvent.click(screen.getByRole("button", { name: "Continue to payment" }));
     await screen.findByTestId("payment-element");
@@ -165,7 +162,7 @@ describe("step 01 — tickets and the live quote", () => {
     mountCheckout();
     addTickets({ name: "Full pass" });
     expect(await screen.findAllByText("Tickets for different events cannot be ordered together. Please order them separately.")).not.toHaveLength(0);
-    expect(screen.getByRole("button", { name: "Continue" })).toBeDisabled();
+    expect(screen.getByRole("button", { name: "Continue to payment" })).toBeDisabled();
   });
 
   it("never goes past the per-order maximum or the stock", () => {
@@ -210,20 +207,21 @@ describe("one source per order", () => {
   });
 });
 
-describe("step 02 — your details", () => {
-  it("moves focus to the step heading; required fields, email and terms are validated in plain words", async () => {
+describe("02 · your details (same page)", () => {
+  it("one press shows every missing field at once in plain words: buyer, terms and holders", async () => {
     mountCheckout();
     await toDetails();
-    const heading = screen.getByRole("heading", { level: 2, name: "Your details" });
-    expect(heading).toHaveFocus();
+    expect(screen.getByRole("heading", { level: 3, name: "02 · Your details" })).toBeInTheDocument();
 
-    fireEvent.click(screen.getByRole("button", { name: "Continue" }));
+    fireEvent.click(screen.getByRole("button", { name: "Continue to payment" }));
     expect(await screen.findByText("Please accept the terms to continue.")).toBeInTheDocument();
     expect(screen.getAllByText("This field is required.")).not.toHaveLength(0);
     expect(screen.getByLabelText("Full name")).toHaveAttribute("aria-invalid", "true");
+    expect(screen.getByText("Check the highlighted fields to continue.")).toBeInTheDocument();
     fireEvent.change(screen.getByLabelText("Email address"), { target: { value: "nope" } });
-    fireEvent.click(screen.getByRole("button", { name: "Continue" }));
-    expect(await screen.findByText("Enter a valid email address.")).toBeInTheDocument();
+    fireEvent.click(screen.getByRole("button", { name: "Continue to payment" }));
+    expect((await screen.findAllByText("Enter a valid email address.")).length).toBeGreaterThan(0);
+    expect(api.callsTo("/api/tickets/orders")).toHaveLength(0);
   });
 
   it("terms and privacy are links only when they are plain http(s); javascript: URLs are never rendered", async () => {
@@ -235,7 +233,6 @@ describe("step 02 — your details", () => {
     render(<TicketCheckout types={[typeA]} config={{ ...config, termsUrl: "javascript:alert(1)", privacyUrl: null }} locale="en" localePrefix="" />);
     addTickets({ name: "Full pass" });
     await waitForQuote();
-    fireEvent.click(screen.getByRole("button", { name: "Continue" }));
     expect(screen.queryByRole("link", { name: /Terms/ })).not.toBeInTheDocument();
   });
 
@@ -258,34 +255,32 @@ describe("step 02 — your details", () => {
     await toDetails();
     fillDetails();
     fireEvent.click(screen.getByLabelText("I need an invoice for a company"));
-    fireEvent.click(screen.getByRole("button", { name: "Continue" }));
+    fireEvent.click(screen.getByRole("button", { name: "Continue to payment" }));
     expect(await screen.findAllByText("This field is required.")).not.toHaveLength(0);
+    expect(screen.getByLabelText("Company name")).toHaveAttribute("aria-invalid", "true");
 
     fireEvent.change(screen.getByLabelText("Company name"), { target: { value: "Acme Ltd" } });
     fireEvent.change(screen.getByLabelText("VAT number (optional)"), { target: { value: "mt 12.34-5678" } });
     fireEvent.change(screen.getByLabelText("Street and number"), { target: { value: "1 Main St" } });
     fireEvent.change(screen.getByLabelText("City"), { target: { value: "Valletta" } });
     fireEvent.change(screen.getByLabelText("Country"), { target: { value: "MT" } });
-    fireEvent.click(screen.getByRole("button", { name: "Continue" }));
-    await screen.findByRole("heading", { level: 2, name: "Ticket holders" });
     fillHolder({ index: 0, name: "Ada", email: "ada@example.com" });
     fireEvent.click(screen.getByRole("button", { name: "Continue to payment" }));
     await screen.findByTestId("payment-element");
     expect(api.callsTo("/api/tickets/orders")[0]?.body?.company).toEqual({ name: "Acme Ltd", vatNumber: "MT12345678", street: "1 Main St", city: "Valletta", countryCode: "MT" });
   });
 
-  it("Back keeps what was typed", async () => {
+  it("Back from the payment keeps what was typed", async () => {
     mountCheckout();
-    await toDetails();
-    fillDetails({ name: "Grace Hopper", email: "grace@example.com" });
-    fireEvent.click(screen.getByRole("button", { name: "Back" }));
-    await screen.findByRole("heading", { level: 2, name: "Tickets" });
-    fireEvent.click(screen.getByRole("button", { name: "Continue" }));
-    expect(await screen.findByDisplayValue("Grace Hopper")).toBeInTheDocument();
+    await reachPayStep();
+    fireEvent.click(screen.getByRole("button", { name: "Back to tickets" }));
+    await screen.findByRole("heading", { level: 2, name: "Your tickets" });
+    expect(screen.getByLabelText("Full name")).toHaveValue("Ada Lovelace");
+    expect(fieldById("holder-0-name")).toHaveValue("Holder 1");
   });
 });
 
-describe("step 03 — ticket holders", () => {
+describe("03 · ticket holders (same page)", () => {
   it("asks for one name + email per ticket (10+ stays usable), each in its own numbered fieldset", async () => {
     mountCheckout();
     await toHolders({ count: 10 });
@@ -295,13 +290,18 @@ describe("step 03 — ticket holders", () => {
     for (const input of screen.getAllByRole("textbox")) expect(input.className).toContain("min-h-11");
   });
 
-  it("'Same as buyer' fills the first ticket", async () => {
+  it("the first ticket follows the buyer until its own name or email is edited", async () => {
     mountCheckout();
     await toHolders({ count: 2 });
-    fireEvent.click(screen.getByRole("button", { name: "Same as buyer" }));
     await waitFor(() => expect(fieldById("holder-0-name")).toHaveValue("Ada Lovelace"));
     expect(fieldById("holder-0-email")).toHaveValue("ada@example.com");
     expect(fieldById("holder-1-name")).toHaveValue("");
+    expect(screen.getByText(/for you, unless changed/)).toBeInTheDocument();
+
+    fireEvent.change(fieldById("holder-0-name") as HTMLElement, { target: { value: "Someone else" } });
+    fireEvent.change(screen.getByLabelText("Full name"), { target: { value: "Ada L." } });
+    expect(fieldById("holder-0-name")).toHaveValue("Someone else");
+    expect(screen.queryByText(/for you, unless changed/)).not.toBeInTheDocument();
   });
 
   it("every holder needs a valid name and email before an order is created", async () => {
@@ -332,7 +332,7 @@ describe("creating the order", () => {
       linkToken: "L".repeat(24),
     });
     expect(body.idempotencyKey.length).toBeGreaterThanOrEqual(32);
-    expect(screen.getByRole("heading", { level: 2, name: "Pay" })).toHaveFocus();
+    expect(screen.getByRole("heading", { level: 2, name: "Payment" })).toHaveFocus();
     // the Pay button carries the ORDER answer's total
     expect(screen.getByRole("button", { name: "Pay €123.45" })).toBeEnabled();
     expect(screen.getByRole("timer")).toHaveTextContent(/^(09:5\d|10:00)$/);
@@ -350,13 +350,11 @@ describe("creating the order", () => {
     mountCheckout();
     addTickets({ name: "Full pass" });
     await waitForQuote();
-    fireEvent.click(screen.getByRole("button", { name: "Continue" }));
     fillDetails();
-    fireEvent.click(screen.getByRole("button", { name: "Continue" }));
-    await screen.findByRole("heading", { level: 2, name: "Ticket holders" });
     fillHolder({ index: 0, name: "Ada", email: "ada@example.com" });
-    expect(screen.getByRole("button", { name: "Place order" })).toBeInTheDocument();
-    fireEvent.click(screen.getByRole("button", { name: "Place order" }));
+    expect(screen.getByRole("button", { name: "Get tickets" })).toBeInTheDocument();
+    expect(screen.getByText("Free tickets: no payment needed.")).toBeInTheDocument();
+    fireEvent.click(screen.getByRole("button", { name: "Get tickets" }));
 
     await waitFor(() => expect(openPage).toHaveBeenCalledWith(`/tickets/order/${BUYER_TOKEN}`));
     expect(push).not.toHaveBeenCalled(); // a client-side route change would hand the token to the site's analytics
@@ -369,10 +367,7 @@ describe("creating the order", () => {
     render(<TicketCheckout types={[typeA]} config={config} locale="de" localePrefix="/de" />);
     addTickets({ name: "Full pass" });
     await waitForQuote();
-    fireEvent.click(screen.getByRole("button", { name: "Continue" }));
     fillDetails();
-    fireEvent.click(screen.getByRole("button", { name: "Continue" }));
-    await screen.findByRole("heading", { level: 2, name: "Ticket holders" });
     fillHolder({ index: 0, name: "Ada", email: "ada@example.com" });
     fireEvent.click(screen.getByRole("button", { name: "Continue to payment" }));
     await screen.findByTestId("payment-element");
@@ -386,7 +381,7 @@ describe("creating the order", () => {
     api.order = () => refusal({ code: "soldOut", ticketTypeId: TYPE_A_ID });
     mountCheckout();
     await placeOrder();
-    expect(await screen.findByRole("heading", { level: 2, name: "Tickets" })).toBeInTheDocument();
+    expect(await screen.findByRole("heading", { level: 2, name: "Your tickets" })).toBeInTheDocument();
     expect(screen.getAllByText("Sorry, those tickets are sold out.").length).toBeGreaterThan(0);
     expect(refresh).toHaveBeenCalled();
   });
@@ -399,14 +394,11 @@ describe("creating the order", () => {
     fireEvent.change(screen.getByLabelText("Discount code"), { target: { value: "VIP10" } });
     fireEvent.click(screen.getByRole("button", { name: "Apply" }));
     await screen.findByText("Discount code VIP10 applied.");
-    fireEvent.click(screen.getByRole("button", { name: "Continue" }));
     fillDetails();
-    fireEvent.click(screen.getByRole("button", { name: "Continue" }));
-    await screen.findByRole("heading", { level: 2, name: "Ticket holders" });
     fillHolder({ index: 0, name: "Ada", email: "ada@example.com" });
     fireEvent.click(screen.getByRole("button", { name: "Continue to payment" }));
     expect(await screen.findByText("That discount code has been used up.")).toBeInTheDocument();
-    expect(screen.getByRole("heading", { level: 2, name: "Tickets" })).toBeInTheDocument();
+    expect(screen.getByRole("heading", { level: 2, name: "Your tickets" })).toBeInTheDocument();
   });
 });
 
@@ -425,7 +417,8 @@ describe("idempotency", () => {
     mountCheckout();
     await toHolders();
     fillHolder({ index: 0, name: "Ada", email: "ada@example.com" });
-    const form = screen.getByRole("button", { name: "Continue to payment" }).closest("form") as HTMLFormElement;
+    // The order button sits in the order box, outside the form: it submits that form (`#…-cart`).
+    const form = document.querySelector('form[id$="-cart"]') as HTMLFormElement;
     fireEvent.submit(form);
     await waitFor(() => expect(orderRequests).toBe(1));
     fireEvent.submit(form);
@@ -472,8 +465,8 @@ describe("idempotency", () => {
     expect(keys[0]).not.toBe(keys[1]);
 
     // Back, then Continue with nothing changed: the pending order is kept, no second request
-    fireEvent.click(screen.getByRole("button", { name: "Back to ticket holders" }));
-    await screen.findByRole("heading", { level: 2, name: "Ticket holders" });
+    fireEvent.click(screen.getByRole("button", { name: "Back to tickets" }));
+    await screen.findByRole("heading", { level: 2, name: "Your tickets" });
     fireEvent.click(screen.getByRole("button", { name: "Continue to payment" }));
     await screen.findByTestId("payment-element");
     expect(api.callsTo("/api/tickets/orders")).toHaveLength(2);
@@ -482,15 +475,11 @@ describe("idempotency", () => {
   it("changing the cart after an order was created makes a NEW request with a new key", async () => {
     mountCheckout();
     await reachPayStep();
-    fireEvent.click(screen.getByRole("button", { name: "Back to ticket holders" }));
-    fireEvent.click(screen.getByRole("button", { name: "Back" }));
-    fireEvent.click(screen.getByRole("button", { name: "Back" }));
+    fireEvent.click(screen.getByRole("button", { name: "Back to tickets" }));
+    await screen.findByRole("heading", { level: 2, name: "Your tickets" });
     addTickets({ name: "Full pass" });
     await waitFor(() => expect(api.callsTo("/api/tickets/quote").at(-1)?.body?.lines).toEqual([{ ticketTypeId: TYPE_A_ID, quantity: 2 }]));
     await waitForQuote();
-    fireEvent.click(screen.getByRole("button", { name: "Continue" }));
-    fireEvent.click(await screen.findByRole("button", { name: "Continue" }));
-    await screen.findByRole("heading", { level: 2, name: "Ticket holders" });
     fillHolder({ index: 0, name: "Ada", email: "ada@example.com" });
     fillHolder({ index: 1, name: "Bob", email: "bob@example.com" });
     fireEvent.click(screen.getByRole("button", { name: "Continue to payment" }));
@@ -506,12 +495,11 @@ describe("the pay step: order summary and hold extension", () => {
     return { status: 201, body: { success: true, data: { ...order, ...(holdMaxMs ? { holdMaxAt: new Date(Date.now() + holdMaxMs).toISOString() } : {}) } } };
   };
 
-  it("shows the price summary from the order answer's totals (not Pay € alone) above the payment", async () => {
+  it("shows the price summary from the order answer's totals (not Pay € alone) next to the payment", async () => {
     mountCheckout();
-    const payment = await reachPayStep();
-    const heading = screen.getByRole("heading", { name: "Order summary" });
-    expect(heading.compareDocumentPosition(payment) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
-    expect(screen.getByText("€22.22")).toBeInTheDocument(); // the order vatCents, as given
+    await reachPayStep();
+    const summary = screen.getByRole("region", { name: "Your order" });
+    expect(within(summary).getByText("Incl. €22.22 VAT")).toBeInTheDocument(); // the order vatCents, as given
   });
 
   it("no warning with plenty of hold time left", async () => {
@@ -675,10 +663,7 @@ describe("paying", () => {
     render(<TicketCheckout types={[typeA]} config={{ ...config, testMode: true }} locale="en" localePrefix="" />);
     addTickets({ name: "Full pass" });
     await waitForQuote();
-    fireEvent.click(screen.getByRole("button", { name: "Continue" }));
     fillDetails();
-    fireEvent.click(screen.getByRole("button", { name: "Continue" }));
-    await screen.findByRole("heading", { level: 2, name: "Ticket holders" });
     fillHolder({ index: 0, name: "Ada", email: "ada@example.com" });
     fireEvent.click(screen.getByRole("button", { name: "Continue to payment" }));
     expect(await screen.findByText(/Test mode — no real payment/)).toBeInTheDocument();
@@ -694,18 +679,14 @@ describe("a11y", () => {
     await waitForQuote();
     expect(describeViolations(await axeViolations({ container }))).toEqual([]);
 
-    fireEvent.click(screen.getByRole("button", { name: "Continue" }));
-    fireEvent.click(await screen.findByLabelText("I need an invoice for a company"));
-    expect(describeViolations(await axeViolations({ container }))).toEqual([]);
     fireEvent.click(screen.getByLabelText("I need an invoice for a company"));
-    fireEvent.click(screen.getByRole("button", { name: "Continue" }));
+    expect(describeViolations(await axeViolations({ container }))).toEqual([]);
+    fireEvent.click(screen.getByRole("button", { name: "Continue to payment" }));
+    await screen.findByText("Check the highlighted fields to continue.");
     expect(describeViolations(await axeViolations({ container }))).toEqual([]); // with validation errors showing
+    fireEvent.click(screen.getByLabelText("I need an invoice for a company"));
 
     fillDetails();
-    fireEvent.click(screen.getByRole("button", { name: "Continue" }));
-    await screen.findByRole("heading", { level: 2, name: "Ticket holders" });
-    expect(describeViolations(await axeViolations({ container }))).toEqual([]);
-
     fillHolder({ index: 0, name: "Ada", email: "ada@example.com" });
     fillHolder({ index: 1, name: "Bob", email: "bob@example.com" });
     fireEvent.click(screen.getByRole("button", { name: "Continue to payment" }));

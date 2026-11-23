@@ -895,4 +895,21 @@
 .deai-tickets {
   --font-mono: var(--font-plex-mono), ui-monospace, monospace;
   color-scheme: dark;
+  /* The checkout's design tokens (EP-DASHBOARD design handoff, TICKETS_BLOCK.md, dark site theme). Every brand colour is
+     derived from the site's own accent / gradient tokens above, never written here: change those and the checkout follows. */
+  --tk-accent: var(--color-ticket-accent);
+  --tk-grad: var(--ticket-btn-bg);
+  --tk-ring: color-mix(in srgb, var(--tk-accent) 40%, transparent);
+  --tk-ring-soft: color-mix(in srgb, var(--tk-accent) 20%, transparent);
+  --tk-tint: color-mix(in srgb, var(--tk-accent) 7%, transparent);
+  --tk-glow: color-mix(in srgb, var(--color-secondary) 32%, transparent);
+  --tk-panel: #071026;
+  --tk-feat: linear-gradient(180deg, color-mix(in srgb, var(--tk-accent) 24%, #0A1630) 0%, #0A1630 100%);
+  --tk-line: rgba(255, 255, 255, 0.12);
+  --tk-field: rgba(255, 255, 255, 0.04);
+  --tk-text: #F4F7FB;
+  --tk-soft: #C9D2E0;
+  --tk-mut: #8B95A7;
+  --tk-warn: #FBBF24;
+  --tk-err: #FCA5A5;
 }

@@ -1,6 +1,6 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { act } from "react";
-import { addTickets, config, fillDetails, fillHolder, installFakeApi, orderAnswer, quoteAnswer, typeA, waitForQuote, type FakeApi } from "../../helpers/checkout-harness";
+import { addTickets, config, fillDetails, installFakeApi, orderAnswer, quoteAnswer, typeA, type FakeApi } from "../../helpers/checkout-harness";
 import { fireEvent, render, screen, waitFor } from "../../test-utils";
 
 const { openPage, widget } = vi.hoisted(() => ({
@@ -39,15 +39,14 @@ function withSiteKey(body: { provider: string; site_key: string; disabled: boole
   });
 }
 
+/** The one-page cart, filled in: a ticket, the buyer (the holder follows the buyer), and ep-api's quote landed. */
 async function toHolders() {
   render(<TicketCheckout types={[typeA]} config={config} locale="en" localePrefix="" />);
   addTickets({ name: "Full pass" });
-  await waitForQuote();
-  fireEvent.click(screen.getByRole("button", { name: "Continue" }));
   fillDetails();
-  fireEvent.click(screen.getByRole("button", { name: "Continue" }));
-  await screen.findByRole("heading", { level: 2, name: "Ticket holders" });
-  fillHolder({ index: 0, name: "Ada", email: "ada@example.com" });
+  await waitFor(() => expect(api.callsTo("/api/tickets/quote")).toHaveLength(1));
+  await waitFor(() => expect(screen.getByRole("region", { name: "Your order" })).toHaveAttribute("aria-busy", "false"));
+  await screen.findByRole("heading", { level: 3, name: "03 · Ticket holders" });
 }
 
 function freeOrder() {
@@ -75,8 +74,8 @@ describe("checkout captcha — site without a captcha", () => {
     freeOrder();
     await toHolders();
     expect(screen.queryByTestId("captcha-widget")).not.toBeInTheDocument();
-    await waitFor(() => expect(screen.getByRole("button", { name: "Place order" })).toBeEnabled());
-    fireEvent.click(screen.getByRole("button", { name: "Place order" }));
+    await waitFor(() => expect(screen.getByRole("button", { name: "Get tickets" })).toBeEnabled());
+    fireEvent.click(screen.getByRole("button", { name: "Get tickets" }));
     await waitFor(() => expect(api.callsTo("/api/tickets/orders")).toHaveLength(1));
     expect(api.callsTo("/api/tickets/orders")[0]?.body).not.toHaveProperty("captchaToken");
   });
@@ -91,11 +90,11 @@ describe("checkout captcha — site with a captcha", () => {
     expect(await screen.findByTestId("captcha-widget")).toBeInTheDocument();
     expect(widget.props?.provider).toBe("hcaptcha");
     expect(screen.getByText("Please solve the check above to continue.")).toBeInTheDocument();
-    expect(screen.getByRole("button", { name: "Place order" })).toBeDisabled();
+    expect(screen.getByRole("button", { name: "Get tickets" })).toBeDisabled();
 
     act(() => widget.props?.onToken("tok-123"));
     expect(screen.queryByText("Please solve the check above to continue.")).not.toBeInTheDocument();
-    fireEvent.click(screen.getByRole("button", { name: "Place order" }));
+    fireEvent.click(screen.getByRole("button", { name: "Get tickets" }));
     await waitFor(() => expect(api.callsTo("/api/tickets/orders")).toHaveLength(1));
     expect(api.callsTo("/api/tickets/orders")[0]?.body).toMatchObject({ captchaToken: "tok-123" });
     await waitFor(() => expect(openPage).toHaveBeenCalled());
@@ -132,7 +131,7 @@ describe("checkout captcha — site with a captcha", () => {
     await screen.findByTestId("captcha-widget");
     act(() => widget.props?.onUnavailable());
     expect(screen.queryByTestId("captcha-widget")).not.toBeInTheDocument();
-    fireEvent.click(screen.getByRole("button", { name: "Place order" }));
+    fireEvent.click(screen.getByRole("button", { name: "Get tickets" }));
     await waitFor(() => expect(api.callsTo("/api/tickets/orders")).toHaveLength(1));
     expect(api.callsTo("/api/tickets/orders")[0]?.body).not.toHaveProperty("captchaToken");
   });
@@ -157,18 +156,18 @@ describe("checkout captcha — provider mapping and reCAPTCHA v3", () => {
     expect(screen.queryByTestId("captcha-widget")).toBeNull();
   });
 
-  it("v3: no captcha card and no 'solve the check' hint, but Place order still waits for the token and sends it", async () => {
+  it("v3: no captcha card and no 'solve the check' hint, but Get tickets still waits for the token and sends it", async () => {
     withSiteKey({ provider: "recaptcha-v3", site_key: "site-key", disabled: false });
     freeOrder();
     await toHolders();
     expect(await screen.findByTestId("captcha-widget")).toBeInTheDocument();
     expect(screen.getByTestId("captcha-widget").parentElement?.className ?? "").not.toContain("flex-col gap-3");
     expect(screen.queryByText("Please solve the check above to continue.")).not.toBeInTheDocument();
-    expect(screen.getByRole("button", { name: "Place order" })).toBeDisabled();
+    expect(screen.getByRole("button", { name: "Get tickets" })).toBeDisabled();
 
     act(() => widget.props?.onToken("v3-token"));
-    expect(screen.getByRole("button", { name: "Place order" })).toBeEnabled();
-    fireEvent.click(screen.getByRole("button", { name: "Place order" }));
+    expect(screen.getByRole("button", { name: "Get tickets" })).toBeEnabled();
+    fireEvent.click(screen.getByRole("button", { name: "Get tickets" }));
     await waitFor(() => expect(api.callsTo("/api/tickets/orders")).toHaveLength(1));
     expect(api.callsTo("/api/tickets/orders")[0]?.body).toMatchObject({ captchaToken: "v3-token" });
   });
@@ -179,7 +178,7 @@ describe("checkout captcha — provider mapping and reCAPTCHA v3", () => {
     await toHolders();
     await screen.findByTestId("captcha-widget");
     act(() => widget.props?.onUnavailable());
-    fireEvent.click(screen.getByRole("button", { name: "Place order" }));
+    fireEvent.click(screen.getByRole("button", { name: "Get tickets" }));
     await waitFor(() => expect(api.callsTo("/api/tickets/orders")).toHaveLength(1));
     expect(api.callsTo("/api/tickets/orders")[0]?.body).not.toHaveProperty("captchaToken");
   });

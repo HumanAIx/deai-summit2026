@@ -43,8 +43,9 @@ describe("a waitlist offer in the checkout", () => {
   it("opens the checkout limited to the one offered type, pre-selected at the offered quantity and capped by it", async () => {
     installFakeApi();
     const { container } = await renderOffer();
-    expect(screen.getAllByRole("heading", { level: 4 })).toHaveLength(1);
-    expect(screen.getByRole("heading", { level: 4, name: "Full pass" })).toBeInTheDocument();
+    // One source: no source heading (its name is in the meta line), the ticket name is the row's h5.
+    expect(screen.getAllByRole("heading", { level: 5 })).toHaveLength(1);
+    expect(screen.getByRole("heading", { level: 5, name: "Full pass" })).toBeInTheDocument();
     expect(screen.getByText("3")).toBeInTheDocument();
     expect(screen.getByRole("button", { name: "Add one Full pass" })).toBeDisabled();
     fireEvent.click(screen.getByRole("button", { name: "Remove one Full pass" }));
@@ -60,10 +61,8 @@ describe("a waitlist offer in the checkout", () => {
 
     expect(api.callsTo("/api/tickets/quote")[0]?.body).toEqual({ lines: [{ ticketTypeId: TYPE_A_ID, quantity: 3 }], newsletter: false, offerToken: TOKEN });
 
-    fireEvent.click(screen.getByRole("button", { name: "Continue" }));
     fillDetails();
-    fireEvent.click(screen.getByRole("button", { name: "Continue" }));
-    await screen.findByRole("heading", { level: 2, name: "Ticket holders" });
+    await screen.findByRole("heading", { level: 3, name: "03 · Ticket holders" });
     for (let i = 0; i < 3; i += 1) fillHolder({ index: i, name: `Holder ${i + 1}`, email: `h${i + 1}@example.com` });
     fireEvent.click(screen.getByRole("button", { name: "Continue to payment" }));
     await waitFor(() => expect(api.callsTo("/api/tickets/orders")).toHaveLength(1));
@@ -79,10 +78,8 @@ describe("a waitlist offer in the checkout", () => {
     api.order = () => ({ status: 409, body: { success: false, error: "raw upstream text", code: "offerInUse" } });
     await renderOffer();
     await waitForQuote();
-    fireEvent.click(screen.getByRole("button", { name: "Continue" }));
     fillDetails();
-    fireEvent.click(screen.getByRole("button", { name: "Continue" }));
-    await screen.findByRole("heading", { level: 2, name: "Ticket holders" });
+    await screen.findByRole("heading", { level: 3, name: "03 · Ticket holders" });
     for (let i = 0; i < 3; i += 1) fillHolder({ index: i, name: `Holder ${i + 1}`, email: `h${i + 1}@example.com` });
     fireEvent.click(screen.getByRole("button", { name: "Continue to payment" }));
     expect(await screen.findByText(/Another order for this offer is already in progress/)).toBeInTheDocument();

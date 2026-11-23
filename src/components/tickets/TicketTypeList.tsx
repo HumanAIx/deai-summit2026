@@ -60,7 +60,7 @@ export async function TicketTypeList({
   const heldUntil = offer ? await heldUntilOf({ offer }) : null;
 
   return (
-    <TicketsShell>
+    <TicketsShell size="checkout">
       {intro ?? <h1 className="font-heading text-2xl font-semibold sm:text-3xl">{t("heading")}</h1>}
       {offer && heldUntil ? (
         <p role="status" className="mt-4 font-medium">

@@ -7,7 +7,7 @@ import { plexMono } from "./ticket-fonts";
  * token pages look like the rest of the ticket pages. One `<h1>` per page is the caller's job; 16 px side gutters at
  * 375 px, no fixed widths, so nothing overflows horizontally.
  */
-const SIZES = { default: "max-w-3xl", wide: "max-w-5xl", ticket: "max-w-[720px]", order: "max-w-[760px]", narrow: "max-w-[640px]" } as const;
+const SIZES = { default: "max-w-3xl", wide: "max-w-5xl", ticket: "max-w-[720px]", order: "max-w-[760px]", narrow: "max-w-[640px]", checkout: "max-w-[1200px]" } as const;
 
 export const TICKETS_BACKDROP_STYLE: CSSProperties = {
   backgroundImage:
@@ -15,7 +15,7 @@ export const TICKETS_BACKDROP_STYLE: CSSProperties = {
   backgroundSize: "auto, auto, 64px 64px, 64px 64px",
 };
 
-/** `size` follows the "My Ticket" design: ticket 720 px, order 760 px, sign-in / passed-on 640 px. `wide` is the older flag. */
+/** `size` follows the "My Ticket" design: ticket 720 px, order 760 px, sign-in / passed-on 640 px; the checkout panel 1200 px. `wide` is the older flag. */
 export function TicketsShell({ children, wide = false, size }: { children: ReactNode; wide?: boolean; size?: keyof typeof SIZES }) {
   const width = SIZES[size ?? (wide ? "wide" : "default")];
   return (

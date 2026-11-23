@@ -34,16 +34,16 @@ const withQuestions = (list: PublicQuestion[]): CheckoutConfig => ({ ...config, 
 let api: FakeApi;
 const mount = (cfg: CheckoutConfig) => render(<TicketCheckout types={[typeA]} config={cfg} locale="en" localePrefix="" />);
 
+/** One page: "02 · Your details" shows once the cart holds a ticket and the quote landed. */
 async function toDetails({ count = 1 }: { count?: number } = {}) {
   addTickets({ name: "Full pass", count });
   await waitForQuote();
-  fireEvent.click(screen.getByRole("button", { name: "Continue" }));
+  await screen.findByRole("heading", { level: 3, name: "02 · Your details" });
 }
 async function toHolders({ count = 1 }: { count?: number } = {}) {
   await toDetails({ count });
   fillDetails();
-  fireEvent.click(screen.getByRole("button", { name: "Continue" }));
-  await screen.findByRole("heading", { level: 2, name: "Ticket holders" });
+  await screen.findByRole("heading", { level: 3, name: "03 · Ticket holders" });
 }
 const choose = ({ id, value }: { id: string; value: string }) => fireEvent.change(fieldById(id) as HTMLElement, { target: { value } });
 const orderBody = () => api.callsTo("/api/tickets/orders")[0]?.body as { holders: Array<Record<string, unknown>>; heardFrom?: unknown };
@@ -61,8 +61,7 @@ describe("a site that asks no extra question", () => {
     await toDetails();
     expect(fieldById("heard-from")).toBeNull();
     fillDetails();
-    fireEvent.click(screen.getByRole("button", { name: "Continue" }));
-    await screen.findByRole("heading", { level: 2, name: "Ticket holders" });
+    await screen.findByRole("heading", { level: 3, name: "03 · Ticket holders" });
     expect(fieldById("holder-0-company")).toBeNull();
     expect(fieldById("holder-0-dietary")).toBeNull();
     expect(fieldById("holder-0-tshirt")).toBeNull();
@@ -74,7 +73,7 @@ describe("a site that asks no extra question", () => {
   });
 });
 
-describe("step 02 — how did you hear about us", () => {
+describe("02 · your details — how did you hear about us", () => {
   it("asks it (optional) when the site does, with the option labels in the visitor's language, and a text only for 'other'", async () => {
     mount(withQuestions(LIST));
     await toDetails();
@@ -102,8 +101,6 @@ describe("step 02 — how did you hear about us", () => {
     choose({ id: "heard-from", value: "other" });
     fireEvent.change(await screen.findByLabelText("Tell us where"), { target: { value: "a podcast" } });
     choose({ id: "heard-from", value: "friend" });
-    fireEvent.click(screen.getByRole("button", { name: "Continue" }));
-    await screen.findByRole("heading", { level: 2, name: "Ticket holders" });
     fillHolder({ index: 0, name: "Ada", email: "ada@example.com" });
     fireEvent.click(screen.getByRole("button", { name: "Continue to payment" }));
     await waitFor(() => expect(api.callsTo("/api/tickets/orders")).toHaveLength(1));
@@ -116,8 +113,6 @@ describe("step 02 — how did you hear about us", () => {
     fillDetails();
     choose({ id: "heard-from", value: "other" });
     fireEvent.change(await screen.findByLabelText("Tell us where"), { target: { value: "  a podcast " } });
-    fireEvent.click(screen.getByRole("button", { name: "Continue" }));
-    await screen.findByRole("heading", { level: 2, name: "Ticket holders" });
     fillHolder({ index: 0, name: "Ada", email: "ada@example.com" });
     fireEvent.click(screen.getByRole("button", { name: "Continue to payment" }));
     await waitFor(() => expect(api.callsTo("/api/tickets/orders")).toHaveLength(1));
@@ -130,13 +125,14 @@ describe("step 02 — how did you hear about us", () => {
     fillDetails();
     choose({ id: "heard-from", value: "other" });
     fireEvent.change(await screen.findByLabelText("Tell us where"), { target: { value: "x".repeat(201) } });
-    fireEvent.click(screen.getByRole("button", { name: "Continue" }));
+    fireEvent.click(screen.getByRole("button", { name: "Continue to payment" }));
     expect(await screen.findByText("This is too long.")).toBeInTheDocument();
-    expect(screen.getByRole("heading", { level: 2, name: "Your details" })).toBeInTheDocument();
+    expect(screen.getByRole("heading", { level: 2, name: "Your tickets" })).toBeInTheDocument();
+    expect(api.callsTo("/api/tickets/orders")).toHaveLength(0);
   });
 });
 
-describe("step 03 — per-holder questions", () => {
+describe("03 · ticket holders — per-holder questions", () => {
   it("asks company and job title (optional), dietary needs and T-shirt size under each holder, with data-driven options", async () => {
     mount(withQuestions(LIST));
     await toHolders({ count: 2 });
@@ -209,18 +205,21 @@ describe("step 03 — per-holder questions", () => {
     expect(orderBody().holders[1]?.answers).toEqual({ dietary: "other", dietaryOther: "no nuts", tshirt: "XXL" });
   });
 
-  it("keeps the answers when going Back and Continue again, and creates no second order", async () => {
+  it("keeps the answers when going Back from the payment and Continue again, and creates no second order", async () => {
     mount(withQuestions(LIST));
     await toHolders();
     fillHolder({ index: 0, name: "Ada", email: "ada@example.com" });
     choose({ id: "holder-0-dietary", value: "halal" });
     choose({ id: "holder-0-tshirt", value: "M" });
-    fireEvent.click(screen.getByRole("button", { name: "Back" }));
-    await screen.findByRole("heading", { level: 2, name: "Your details" });
-    fireEvent.click(screen.getByRole("button", { name: "Continue" }));
-    await screen.findByRole("heading", { level: 2, name: "Ticket holders" });
+    fireEvent.click(screen.getByRole("button", { name: "Continue to payment" }));
+    await screen.findByRole("heading", { level: 2, name: "Payment" });
+    fireEvent.click(screen.getByRole("button", { name: "Back to tickets" }));
+    await screen.findByRole("heading", { level: 2, name: "Your tickets" });
     expect(fieldById("holder-0-dietary")).toHaveValue("halal");
     expect(fieldById("holder-0-tshirt")).toHaveValue("M");
+    fireEvent.click(screen.getByRole("button", { name: "Continue to payment" }));
+    await screen.findByRole("heading", { level: 2, name: "Payment" });
+    expect(api.callsTo("/api/tickets/orders")).toHaveLength(1);
   });
 });
 
@@ -228,7 +227,7 @@ describe("ten holders on a phone", () => {
   it("every holder is its own numbered fieldset, every field is full width and 44 px tall, and the page has no wide element", async () => {
     mount(withQuestions(LIST));
     await toHolders({ count: 10 });
-    const fieldsets = screen.getAllByRole("group");
+    const fieldsets = screen.getAllByRole("group").filter((el) => el.tagName === "FIELDSET");
     expect(fieldsets).toHaveLength(10);
     for (const [index, set] of fieldsets.entries()) {
       expect(within(set).getByText(new RegExp(`^Ticket ${index + 1} `))).toBeInTheDocument();

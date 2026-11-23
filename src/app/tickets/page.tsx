@@ -1,13 +1,14 @@
 import type { Metadata } from 'next';
 import { notFound } from 'next/navigation';
 import { CmsPageRenderer } from '@/components/cms/CmsPageRenderer';
-import { TicketsPageView } from '@/components/TicketsPageView';
-import { LumaLine, TicketsIntro } from '@/components/tickets/TicketsIntro';
+import { ClosingBanner, TicketsPageView } from '@/components/TicketsPageView';
+import { TicketsIntro } from '@/components/tickets/TicketsIntro';
 import { TicketsPageBody } from '@/components/tickets/TicketsPageBody';
-import { allowedTypeIdsOf, isTicketsSectionBlock, offeredTypesParam } from '@/lib/tickets/cms-section';
+import { allowedTypeIdsOf, isTicketsSectionBlock, offeredTypesParam, ticketCardsOf } from '@/lib/tickets/cms-section';
 import { lumaHrefOf } from '@/lib/tickets/luma-fallback';
 import { parseCmsBlocks } from '@/lib/cmsBlocks';
-import { prefetchCaptchaConfig, prefetchCMSPage, prefetchDocumentsGateForms } from '@/lib/prefetch';
+import { prefetchCaptchaConfig, prefetchCMSPage, prefetchDocumentsGateForms, prefetchSocials } from '@/lib/prefetch';
+import { isLumaTicketUrl } from '@/lib/lumaTicket';
 import { parseTicketsPage } from '@/lib/tickets-page';
 import { generatePageMetadata, SEO_DEFAULTS } from '@/lib/seo-defaults';
 
@@ -39,23 +40,32 @@ export async function generateMetadata({ searchParams }: { searchParams: Promise
  * The CMS `tickets` page decides what this page is, so organisers switch to the live checkout from the dashboard:
  * - No Tickets section on it (dashboard › CMS › block › add-on Sales › Tickets): the CMS page with its Luma links, as
  *   before the live checkout existed.
- * - A Tickets section on it: that CMS page with live cards. The old Luma pass blocks are left out (production code
+ * - A Tickets section on it and the CMS pass tiles still there: the page as it was (the same tiles and the Luma banner),
+ *   with each tile's button opening the live checkout for its ticket (matched to the section's card by title, else by
+ *   order). The Luma banner stays the second option. DECISION (DeAI, 2026-11-23): "it should look the same, but just
+ *   the top two tiles should start the ticketing flow of GConf".
+ * - A Tickets section and no pass tiles: that CMS page with live cards. The old Luma pass blocks are left out (production code
  *   before this change still shows them, so organisers never have to unpublish them first), and a "Prefer Luma?" line
- *   keeps Luma as the second option while the page still has a Luma link.
+ *   keeps Luma as the second option: the CMS tickets page's closing tile under the cards, linking to the page's Luma link, else
+ *   the site's Luma social link.
  * - A filtered or private link, or `?type=` from a card's Buy button: the built-in live list + 4-step checkout, under
  *   the CMS page's heading texts. It offers only the tickets picked for sale: those of the section the buyer's Buy
  *   button sits in (`?types=`), else the cards on this CMS page; none picked = nothing on sale.
  * - No published CMS `tickets` page: 404.
  */
 export default async function TicketsPage({ searchParams }: { searchParams: Promise<SearchParams> }) {
-  const [cmsPage, params] = await Promise.all([prefetchCMSPage('tickets'), searchParams]);
+  const [cmsPage, params, socials] = await Promise.all([prefetchCMSPage('tickets'), searchParams, prefetchSocials()]);
 
   // DECISION (Vimal, 2026-11-23): no published CMS `tickets` page = no /tickets page (404), like any unpublished page.
   // Only /tickets itself: the private pages under /tickets/* that ticket emails link to keep working.
   if (!cmsPage) notFound();
   const blocks = parseCmsBlocks(cmsPage);
   const legacy = parseTicketsPage(blocks);
-  const lumaHref = lumaHrefOf({ content: legacy });
+  // The CMS page's own Luma link first; once the organiser has removed the Luma blocks there, the site's Luma social
+  // link (Settings › Socials), so Luma stays the second option until that is removed too.
+  const cmsLumaHref = lumaHrefOf({ content: legacy });
+  const siteLumaHref = socials.find((s) => s.key === 'luma' && /^https?:\/\//i.test(s.url) && isLumaTicketUrl(s.url))?.url ?? null;
+  const lumaHref = cmsLumaHref ?? siteLumaHref;
 
   // A filtered or private link, or a card's Buy button (`?type=`), always opens the checkout itself: a CMS page here
   // would send the buyer in a circle.
@@ -63,6 +73,18 @@ export default async function TicketsPage({ searchParams }: { searchParams: Prom
   const hasTicketsSection = blocks.some(isTicketsSectionBlock);
 
   if (!filtered && !hasTicketsSection) return <TicketsPageView content={legacy} />;
+
+  if (!filtered && legacy.passes.length > 0) {
+    const cards = blocks.filter(isTicketsSectionBlock).flatMap(ticketCardsOf).filter((card) => card.ticketTypeId !== '');
+    const offered = allowedTypeIdsOf(blocks);
+    const sameName = (a: string, b: string) => a.trim().toLowerCase() === b.trim().toLowerCase();
+    const passes = legacy.passes.map((pass, index) => {
+      const card = cards.find((c) => sameName(c.title, pass.title)) ?? cards[index];
+      // Same address as a live card's Buy button: this ticket preselected, only the page's picked tickets on offer.
+      return card ? { ...pass, buttonHref: `/tickets?type=${encodeURIComponent(card.ticketTypeId)}&types=${offered.map(encodeURIComponent).join(',')}` } : pass;
+    });
+    return <TicketsPageView content={{ ...legacy, passes }} />;
+  }
 
   if (!filtered) {
     const lumaPassIds = new Set(legacy.passes.map((pass) => pass.id));
@@ -82,8 +104,10 @@ export default async function TicketsPage({ searchParams }: { searchParams: Prom
           captchaProvider={captchaConfig.provider}
         />
         {lumaHref ? (
-          <div className="flex justify-center px-4 pb-20 text-center">
-            <LumaLine href={lumaHref} />
+          // The same closing tile as the CMS tickets page, under the live cards. Its notice is the CMS page's own
+          // ("PRICE INCREASE FROM …"), so it is left out when the Luma link comes from the site's socials.
+          <div className="mx-auto w-full max-w-[1180px] px-4 pb-20 sm:px-6 md:px-14 md:pb-24">
+            <ClosingBanner notice={cmsLumaHref ? legacy.notice : ''} title={legacy.closingTitle} label={legacy.closingLabel} href={lumaHref} />
           </div>
         ) : null}
       </div>

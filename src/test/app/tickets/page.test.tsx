@@ -1,7 +1,8 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
-const { prefetchCMSPage, prefetchCaptchaConfig, prefetchDocumentsGateForms, notFound } = vi.hoisted(() => ({
+const { prefetchCMSPage, prefetchCaptchaConfig, prefetchDocumentsGateForms, prefetchSocials, notFound } = vi.hoisted(() => ({
   prefetchCMSPage: vi.fn(),
+  prefetchSocials: vi.fn(),
   prefetchCaptchaConfig: vi.fn(),
   prefetchDocumentsGateForms: vi.fn(),
   notFound: vi.fn(() => {
@@ -11,17 +12,17 @@ const { prefetchCMSPage, prefetchCaptchaConfig, prefetchDocumentsGateForms, notF
 vi.mock("react/jsx-dev-runtime", async () => (await import("../../helpers/jsx-stub")).jsxStub);
 vi.mock("react/jsx-runtime", async () => (await import("../../helpers/jsx-stub")).jsxStub);
 vi.mock("next/navigation", () => ({ notFound }));
-vi.mock("@/lib/prefetch", () => ({ prefetchCMSPage, prefetchCaptchaConfig, prefetchDocumentsGateForms }));
+vi.mock("@/lib/prefetch", () => ({ prefetchCMSPage, prefetchCaptchaConfig, prefetchDocumentsGateForms, prefetchSocials }));
 vi.mock("@/components/tickets/TicketsPageBody", () => ({ TicketsPageBody: function TicketsPageBody() { return null; } }));
-vi.mock("@/components/TicketsPageView", () => ({ TicketsPageView: function TicketsPageView() { return null; } }));
+vi.mock("@/components/TicketsPageView", () => ({ TicketsPageView: function TicketsPageView() { return null; }, ClosingBanner: function ClosingBanner() { return null; } }));
 vi.mock("@/components/cms/CmsPageRenderer", () => ({ CmsPageRenderer: function CmsPageRenderer() { return null; } }));
-vi.mock("@/components/tickets/TicketsIntro", () => ({ TicketsIntro: function TicketsIntro() { return null; }, LumaLine: function LumaLine() { return null; } }));
+vi.mock("@/components/tickets/TicketsIntro", () => ({ TicketsIntro: function TicketsIntro() { return null; } }));
 
 const page = await import("../../../app/tickets/page");
 const { TicketsPageBody } = await import("../../../components/tickets/TicketsPageBody");
-const { TicketsPageView } = await import("../../../components/TicketsPageView");
+const { TicketsPageView, ClosingBanner } = await import("../../../components/TicketsPageView");
 const { CmsPageRenderer } = await import("../../../components/cms/CmsPageRenderer");
-const { LumaLine, TicketsIntro } = await import("../../../components/tickets/TicketsIntro");
+const { TicketsIntro } = await import("../../../components/tickets/TicketsIntro");
 
 type El = { type: unknown; props: Record<string, unknown> };
 const render = async (params: Record<string, string | string[] | undefined> = {}) => (await page.default({ searchParams: Promise.resolve(params) })) as unknown as El;
@@ -34,6 +35,8 @@ beforeEach(() => {
   prefetchCMSPage.mockReset();
   prefetchCaptchaConfig.mockReset();
   prefetchDocumentsGateForms.mockReset();
+  prefetchSocials.mockReset();
+  prefetchSocials.mockResolvedValue([]);
   notFound.mockClear();
   prefetchCaptchaConfig.mockResolvedValue({ site_key: "cap-key", disabled: false, provider: "turnstile" });
   prefetchDocumentsGateForms.mockResolvedValue({ f1: { id: "f1" } });
@@ -67,15 +70,38 @@ describe("/tickets page", () => {
     expect(rest).toEqual([]); // no Luma link on the page = no Luma line
   });
 
-  // Production code before the live checkout still shows the Luma pass blocks: organisers add the Tickets section
-  // first and never have to unpublish them, so the live page leaves them out and keeps one "Prefer Luma?" line.
-  it("with a Tickets section, leaves the old Luma pass blocks out and offers Luma as one line", async () => {
-    prefetchCMSPage.mockResolvedValue(cms([heroBlock, ticketsBlock, lumaPass]));
-    const [el, line] = childrenOf(await render());
-    expect((el?.props.blocks as { id: string }[]).map((b) => b.id)).toEqual(["hero", "tk"]);
-    const lumaLine = (line?.props.children as El | undefined) ?? null;
-    expect(lumaLine?.type).toBe(LumaLine);
-    expect(lumaLine?.props.href).toBe(luma);
+  // DeAI (2026-11-23): "it should look the same, but just the top two tiles should start the ticketing flow of GConf".
+  it("with a Tickets section and the CMS pass tiles, shows the page as it was; each tile opens the checkout for its ticket", async () => {
+    const vip = "8429f0cd-7c27-4ebf-9549-099d6c9ef991";
+    const premium = "90c1b772-ea99-4f9c-b91e-2dfd7f6ff153";
+    const premiumPass = { ...lumaPass, id: "p0", title: "Premium Pass", description: "€99.00" };
+    const section = { ...ticketsBlock, ticketCards: [{ id: "c1", ticketTypeId: premium, title: "Premium Pass" }, { id: "c2", ticketTypeId: vip, title: "VIP Pass" }] };
+    prefetchCMSPage.mockResolvedValue(cms([heroBlock, premiumPass, lumaPass, section]));
+    const el = await render();
+    expect(el.type).toBe(TicketsPageView);
+    const content = el.props.content as { passes: { title: string; buttonHref: string }[]; closingHref: string };
+    expect(content.passes.map((pass) => [pass.title, pass.buttonHref])).toEqual([
+      ["Premium Pass", `/tickets?type=${premium}&types=${premium},${vip}`],
+      ["VIP Pass", `/tickets?type=${vip}&types=${premium},${vip}`],
+    ]);
+    // the closing banner keeps Luma as the second option
+    expect(content.closingHref).toBe(luma);
+  });
+
+  it("with a Tickets section and no Luma link on the CMS page, the site's Luma social link gets the closing Luma tile", async () => {
+    prefetchSocials.mockResolvedValue([{ key: "luma", label: "Luma", url: luma }]);
+    prefetchCMSPage.mockResolvedValue(cms([heroBlock, ticketsBlock]));
+    const [, wrapper] = childrenOf(await render());
+    const banner = wrapper?.props.children as El;
+    expect(banner.type).toBe(ClosingBanner);
+    // the CMS page's notice ("PRICE INCREASE FROM …") is not shown under a link that did not come from it
+    expect(banner.props).toMatchObject({ href: luma, notice: "", label: "Buy tickets now on Luma" });
+  });
+
+  it("a non-Luma 'luma' social link is not offered", async () => {
+    prefetchSocials.mockResolvedValue([{ key: "luma", label: "Luma", url: "https://example.com/x" }]);
+    prefetchCMSPage.mockResolvedValue(cms([heroBlock, ticketsBlock]));
+    expect(childrenOf(await render())).toHaveLength(1);
   });
 
   it("a block of type `tickets` counts as a Tickets section too", async () => {

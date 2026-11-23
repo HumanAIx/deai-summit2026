@@ -42,15 +42,17 @@ describe("TicketTypeList", () => {
   });
 
   it("lists on-sale types with price, booking fee, max per order and a quantity stepper", async () => {
-    const { container } = await renderList(data());
+    const { container } = await renderList(data({}, [type({ maxPerOrder: 4 })]));
     expect(screen.getByRole("heading", { level: 1, name: "Tickets" })).toBeInTheDocument();
-    // the checkout step has its own h2, so sources are h3 and ticket names h4
-    expect(screen.getByRole("heading", { level: 2, name: "Tickets" })).toBeInTheDocument();
-    expect(screen.getByRole("heading", { level: 3, name: "DeAI Summit" })).toBeInTheDocument();
-    expect(screen.getByRole("heading", { level: 4, name: "Full pass" })).toBeInTheDocument();
+    // the cart step has its own h2 and "01 · Tickets" h3; one source repeats no heading, so ticket names are h5
+    expect(screen.getByRole("heading", { level: 2, name: "Your tickets" })).toBeInTheDocument();
+    expect(screen.getByRole("heading", { level: 3, name: "01 · Tickets" })).toBeInTheDocument();
+    expect(screen.queryByRole("heading", { level: 4, name: "DeAI Summit" })).toBeNull();
+    expect(screen.getByRole("heading", { level: 5, name: "Full pass" })).toBeInTheDocument();
     expect(screen.getByText(/€150(?!\.)/)).toBeInTheDocument();
-    expect(screen.getByText("+ €2.50 booking fee")).toBeInTheDocument();
-    expect(screen.getByText(/Max 10 per order/)).toBeInTheDocument();
+    expect(screen.getByText(/\+ €2\.50 booking fee/)).toBeInTheDocument(); // one subline: price + fee · …
+    expect(screen.getByText(/Max 4 per order/)).toBeInTheDocument();
+    expect(screen.queryByText(/On sale/)).toBeNull(); // the usual status is not repeated on every row
     expect(screen.getByRole("button", { name: "Add one Full pass" })).toBeEnabled();
     expect(screen.getByRole("button", { name: "Remove one Full pass" })).toBeDisabled();
     expect(screen.queryByText("Coming soon")).not.toBeInTheDocument();
@@ -60,7 +62,7 @@ describe("TicketTypeList", () => {
 
   it("shows no booking fee when the organiser pays it, 'Free' for 0, and the exact stock when ep-api gives it", async () => {
     await renderList({ types: [type({ priceCents: 0, bookingFeeCents: 0, left: 3 })], checkout: { salesOpen: true, testMode: false, feePayer: "organiser" } });
-    expect(screen.getByText("Free")).toBeInTheDocument();
+    expect(screen.getByText(/^Free/)).toBeInTheDocument();
     expect(screen.queryByText(/booking fee/)).not.toBeInTheDocument();
     expect(screen.getByText(/3 left/)).toBeInTheDocument();
   });
@@ -87,23 +89,23 @@ describe("TicketTypeList", () => {
 });
 
 describe("TicketTypeList extra questions", () => {
-  it("hands the site's enabled questions to the checkout: the heard-from box appears on step 02", async () => {
+  it("hands the site's enabled questions to the checkout: the heard-from box appears in 02 · Your details", async () => {
     installFakeApi();
     const list = [{ key: "source", id: "heardFrom", scope: "order", fields: [{ name: "value", kind: "select", required: false, options: [{ value: "social", label: "Social" }, { value: "other", label: "Other" }] }] }];
     await renderList(data({ checkout: { salesOpen: true, testMode: false, feePayer: "buyer", questionList: list } }));
     fireEvent.click(screen.getByRole("button", { name: /^Add one Full pass/ }));
-    await waitFor(() => expect(screen.getByRole("button", { name: "Continue" })).toBeEnabled());
-    fireEvent.click(screen.getByRole("button", { name: "Continue" }));
+    await waitFor(() => expect(screen.getByRole("button", { name: "Continue to payment" })).toBeEnabled());
+    await screen.findByRole("heading", { level: 3, name: "02 · Your details" });
     expect(await screen.findByLabelText("How did you hear about us? (optional)")).toBeInTheDocument();
     vi.unstubAllGlobals();
   });
 
-  it("a site on an older ep-api (no list) asks nothing extra on step 02", async () => {
+  it("a site on an older ep-api (no list) asks nothing extra in 02 · Your details", async () => {
     installFakeApi();
     await renderList(data());
     fireEvent.click(screen.getByRole("button", { name: /^Add one Full pass/ }));
-    await waitFor(() => expect(screen.getByRole("button", { name: "Continue" })).toBeEnabled());
-    fireEvent.click(screen.getByRole("button", { name: "Continue" }));
+    await waitFor(() => expect(screen.getByRole("button", { name: "Continue to payment" })).toBeEnabled());
+    await screen.findByRole("heading", { level: 3, name: "02 · Your details" });
     expect(await screen.findByLabelText("Full name")).toBeInTheDocument();
     expect(screen.queryByLabelText("How did you hear about us? (optional)")).toBeNull();
     vi.unstubAllGlobals();

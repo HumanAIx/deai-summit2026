@@ -427,10 +427,9 @@
     "checkout": {
       "stepsLabel": "Checkout steps",
       "steps": {
-        "tickets": "Tickets",
-        "details": "Your details",
-        "holders": "Ticket holders",
-        "pay": "Pay"
+        "tickets": "Tickets & details",
+        "pay": "Payment",
+        "done": "Confirmation"
       },
       "continue": "Continue",
       "continueToPayment": "Continue to payment",
@@ -457,19 +456,21 @@
       "newsletter": {
         "label": "Subscribe to the newsletter and get {pct}% off this order.",
         "codeWins": "Your discount code gives more than the newsletter's {pct}%, so only the code applies.",
-        "newsletterWins": "The newsletter's {pct}% gives more than your discount code, so only the newsletter discount applies."
+        "newsletterWins": "The newsletter's {pct}% gives more than your discount code, so only the newsletter discount applies.",
+        "note": "Only for you, not the ticket holders. Unsubscribe any time."
       },
       "summary": {
-        "heading": "Order summary",
+        "heading": "Your order",
         "empty": "Choose at least one ticket.",
         "line": "{quantity} × {name}",
         "each": "{price} each",
         "free": "Free",
-        "subtotal": "Subtotal",
         "discount": "Discount",
-        "fee": "Booking fees",
-        "vat": "VAT included",
-        "total": "Total"
+        "fee": "Booking fee",
+        "vat": "Incl. {amount} VAT",
+        "total": "Total",
+        "vatLabel": "VAT",
+        "feeNote": "Not refunded unless the event is cancelled."
       },
       "details": {
         "name": "Full name",
@@ -495,7 +496,8 @@
         "name": "Holder name",
         "email": "Holder email address",
         "sameAsBuyer": "Same as buyer",
-        "detailsLater": "Each ticket holder adds their job title, company and dietary needs on their own ticket page after the purchase. We email them the link."
+        "detailsLater": "Each ticket holder adds their job title, company and dietary needs on their own ticket page after the purchase. We email them the link.",
+        "follows": "for you, unless changed"
       },
       "captcha": {
         "hint": "Please solve the check above to continue.",
@@ -511,12 +513,15 @@
         "processing": "Processing…",
         "notReady": "Payment is still loading. Please wait a moment.",
         "declined": "The payment did not go through. Please try another card.",
-        "back": "Back to ticket holders",
+        "back": "Back to tickets",
         "holdEndingSoon": "Your reservation ends soon. Need more time?",
         "holdEndingNoMore": "Your reservation ends soon and can't be extended any further.",
         "extend": "Extend",
         "extending": "Extending…",
-        "extendFailed": "We couldn't extend your reservation. Finish paying before the time runs out."
+        "extendFailed": "We couldn't extend your reservation. Finish paying before the time runs out.",
+        "title": "Payment",
+        "receiptTo": "Receipt to {email}",
+        "secure": "Payment fields are secured by Stripe. Card details never reach the organiser."
       },
       "validation": {
         "required": "This field is required.",
@@ -562,6 +567,17 @@
             "other": "Other"
           }
         }
+      },
+      "getTickets": "Get tickets",
+      "cart": {
+        "title": "Your tickets",
+        "sectionTickets": "Tickets",
+        "sectionDetails": "Your details",
+        "sectionHolders": "Ticket holders",
+        "nextPay": "Next: secure payment with Stripe. Your tickets are held for {minutes, plural, one {# minute} other {# minutes}}.",
+        "nextPayNoHold": "Next: secure payment with Stripe.",
+        "nextFree": "Free tickets: no payment needed.",
+        "fixFields": "Check the highlighted fields to continue."
       }
     },
     "me": {

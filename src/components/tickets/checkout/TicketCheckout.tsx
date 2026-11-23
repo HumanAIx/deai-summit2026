@@ -21,14 +21,14 @@ import { requestCreateOrder, requestExtendHold } from "@/lib/tickets/checkout-cl
 import { formatMoney } from "@/lib/tickets/format";
 import { openPrivateTicketPage } from "@/lib/tickets/private-navigation";
 import type { CreateOrderBody } from "@/lib/tickets/schemas";
-import { TICKETS_CARD } from "../tickets-classes";
-import { DetailsStep } from "./DetailsStep";
-import { EMPTY_DETAILS, EMPTY_HOLDER, normalizeVat, type DetailsValues, type HolderValues } from "./forms";
-import { HoldersStep } from "./HoldersStep";
+import { formatEventWhen } from "@/lib/tickets/format";
+import { TK_PANEL } from "../tickets-classes";
+import { CartStep, type SourceConflict } from "./CartStep";
+import { EMPTY_DETAILS, EMPTY_HOLDER, normalizeVat, type CartFormValues, type DetailsValues, type HolderValues } from "./forms";
 import { useCheckoutCaptcha, useCheckoutQuote } from "./hooks";
 import { PayStep } from "./PayStep";
-import { StepTickets, type SourceConflict } from "./StepTickets";
 import { TicketCards } from "./TicketCards";
+import { StepsBar } from "./ui";
 import { useKeepCartOnNavigation } from "./useKeepCartOnNavigation";
 import type { CheckoutConfig, CheckoutDone, EmbeddedCheckout, OrderState, PublicType, Step } from "./types";
 
@@ -53,7 +53,7 @@ function heardFromOf({ details, questions }: { details: DetailsValues; questions
   return { heardFrom: { value: details.heardFrom, ...(details.heardFrom === "other" && text ? { text } : {}) } as NonNullable<CreateOrderBody["heardFrom"]> };
 }
 
-const STEP_KEYS = ["tickets", "details", "holders", "pay"] as const;
+const STEP_KEYS = ["tickets", "pay", "done"] as const;
 const CODE_ERRORS = new Set(["codeInvalid", "codeNotValidNow", "codeNotApplicable", "codeUsedUp", "codeOnce"]);
 const CARD_ERRORS = new Set(["soldOut", "notOnSale", "priceChanged", "overMax", "offerOverQuantity"]);
 const HOLD_GONE = new Set(["holdEnded", "orderClosed", "notFound", "orderNotFound"]);
@@ -105,18 +105,17 @@ export function TicketCheckout({ types: allTypes, config, linkToken, offerToken,
   const [appliedCode, setAppliedCode] = useState<string | null>(null);
   const [codeError, setCodeError] = useState<string | null>(null);
   const [newsletter, setNewsletter] = useState(false);
-  const [details, setDetails] = useState<DetailsValues>(EMPTY_DETAILS);
-  const [holders, setHolders] = useState<HolderValues[]>([]);
+  // What the buyer typed on the cart step (buyer, invoice, terms, holders): kept when they come Back from paying.
+  const [form, setForm] = useState<CartFormValues>({ ...EMPTY_DETAILS, holders: [] });
   const [order, setOrder] = useState<OrderState | null>(null);
   const [banner, setBanner] = useState<string | null>(null);
   const [expired, setExpired] = useState(false);
   const [submitting, setSubmitting] = useState(false);
   // Set when the buyer is sent to the order page (full page load): the checkout is over, links go back to normal.
   const [finished, setFinished] = useState(false);
-  // The captcha of the order (only when the site has one): asked once step 03 is reached; the token is single-use.
-  // Asked from the details step, so the answer is in before the holders step's Place order (the widget itself still only
-  // mounts on the holders step).
-  const captchaConfig = useCheckoutCaptcha({ active: step >= 2 });
+  // The captcha of the order (only when the site has one): its setting is asked once the cart holds a ticket, so the
+  // answer is in before the order button; the token is single-use.
+  const captchaConfig = useCheckoutCaptcha({ active: ticketCount({ cart: pickedCart }) > 0 || step > 1 });
   const [captchaToken, setCaptchaToken] = useState<string | null>(null);
   const [captchaBroken, setCaptchaBroken] = useState(false);
   const [captchaKey, setCaptchaKey] = useState(0);
@@ -211,7 +210,7 @@ export function TicketCheckout({ types: allTypes, config, linkToken, offerToken,
     setAppliedCode(value);
   }
 
-  function orderBody({ holderValues }: { holderValues: readonly HolderValues[] }): Omit<CreateOrderBody, "idempotencyKey"> {
+  function orderBody({ details, holderValues }: { details: DetailsValues; holderValues: readonly HolderValues[] }): Omit<CreateOrderBody, "idempotencyKey"> {
     const vat = normalizeVat({ value: details.vatNumber });
     return {
       lines,
@@ -257,15 +256,16 @@ export function TicketCheckout({ types: allTypes, config, linkToken, offerToken,
     };
   }
 
-  async function placeOrder(holderValues: HolderValues[]) {
-    setHolders(holderValues);
-    const body = orderBody({ holderValues });
+  async function placeOrder(values: CartFormValues) {
+    setForm(values);
+    const holderValues = values.holders;
+    const body = orderBody({ details: values, holderValues });
     // The token is single-use and never part of "the same request": Back then Continue keeps its pending order.
     const fingerprint = JSON.stringify(body);
     setBanner(null);
     // Same request as the pending order (Back, then Continue again): keep that order, do not create a second one.
     if (order && order.fingerprint === fingerprint) {
-      setStep(4);
+      setStep(2);
       return;
     }
     if (placing.current) return; // a double click must not send twice
@@ -304,7 +304,7 @@ export function TicketCheckout({ types: allTypes, config, linkToken, offerToken,
         currency: quoted?.currency ?? types[0]?.currency ?? "EUR",
       });
       setSubmitting(false);
-      setStep(4);
+      setStep(2);
       return;
     }
 
@@ -373,51 +373,62 @@ export function TicketCheckout({ types: allTypes, config, linkToken, offerToken,
   const totalIsZero = quoted?.totals.totalCents === 0;
   const quoteError = quote.status === "error" ? quote.code : null;
   const sellable = types.some((type) => isBuyable({ type, salesOpen: config.salesOpen }));
-  const stepName = t(`steps.${STEP_KEYS[step - 1] ?? "tickets"}`);
+  const stepNames = STEP_KEYS.map((key) => t(`steps.${key}`));
+  // The meta line under the title: the event of the cart (or of the first ticket listed) and its dates.
+  const shownSource = (types.find((type) => (cart[type.id] ?? 0) > 0) ?? types[0])?.source;
+  const meta = shownSource
+    ? [shownSource.name, formatEventWhen({ format, source: { startDate: shownSource.startDate ?? null, endDate: shownSource.endDate ?? null, timeZone: shownSource.timeZone ?? "UTC", startsAt: null } })].filter(Boolean).join(" · ")
+    : "";
 
   // Nothing can be bought (sales closed, everything sold out…): show the list as information, with no cart or steps.
   if (!sellable && !order && !expired) {
     return (
-      <div className="mt-6">
+      <div className={`${TK_PANEL} mx-auto mt-8 max-w-3xl px-[18px] py-6 sm:px-8 sm:py-8`}>
         <TicketCards types={types} config={config} cart={{}} flagged={{}} onQuantity={() => undefined} />
       </div>
     );
   }
 
-  return (
-    <div className="mt-6 flex flex-col gap-6">
+  const notices = (
+    <>
       {expired ? (
-        <div ref={expiredRef} tabIndex={-1} role="alert" className={`${TICKETS_CARD} border-warning-emphasis focus:outline-none`}>
-          <h2 className="font-heading text-lg font-semibold">{t("expired.heading")}</h2>
-          <p className="mt-1 text-sm text-muted">{t("expired.body")}</p>
+        <div ref={expiredRef} tabIndex={-1} role="alert" className="rounded-xl border border-[color-mix(in_srgb,var(--tk-warn)_45%,transparent)] bg-[color-mix(in_srgb,var(--tk-warn)_10%,transparent)] px-4 py-3 focus:outline-none">
+          <h2 className="m-0 text-base font-semibold text-(--tk-warn)">{t("expired.heading")}</h2>
+          <p className="m-0 mt-1 text-sm text-(--tk-soft)">{t("expired.body")}</p>
         </div>
       ) : null}
-
-      <ol aria-label={t("stepsLabel")} className="flex flex-wrap items-center gap-x-4 gap-y-1 text-sm">
-        {STEP_KEYS.map((key, index) => {
-          const number = index + 1;
-          const current = number === step;
-          return (
-            <li key={key} aria-current={current ? "step" : undefined} className={current ? "font-semibold text-text" : "text-muted"}>
-              <span className="tabular-nums">{String(number).padStart(2, "0")}</span>
-              <span className={current ? "ml-1.5" : "ml-1.5 hidden sm:inline"}>{t(`steps.${key}`)}</span>
-            </li>
-          );
-        })}
-      </ol>
-
-      <h2 ref={headingRef} tabIndex={-1} className="font-heading text-xl font-semibold focus:outline-none">
-        {stepName}
-      </h2>
-
       {banner ? (
-        <p role="alert" className="text-sm font-medium text-danger">
+        <p role="alert" className="m-0 text-sm font-medium text-(--tk-err)">
           {te.has(banner) ? te(banner) : te("generic")}
         </p>
       ) : null}
+    </>
+  );
 
+  // Title of each step (design: "Your tickets" with the event line, "Payment" with who is paid and where the receipt goes).
+  const header = (
+    <>
+      <StepsBar label={t("stepsLabel")} steps={stepNames} current={step - 1} />
+      <div>
+        <h2 ref={headingRef} tabIndex={-1} className="m-0 font-heading text-[30px] leading-[1.1] font-normal tracking-[-0.01em] focus:outline-none sm:text-[38px]">
+          {step === 1 ? t("cart.title") : t("pay.title")}
+        </h2>
+        {step === 1 ? (meta ? (
+          // The date range comes from Intl, whose ICU data differs between Node and the browser (spacing around the dash).
+          <p suppressHydrationWarning className="m-0 mt-1.5 text-[15px] text-(--tk-mut)">
+            {meta}
+          </p>
+        ) : null) : <p className="m-0 mt-1.5 text-[15px] text-(--tk-mut)">{t("pay.receiptTo", { email: form.email.trim() })}</p>}
+      </div>
+      {notices}
+    </>
+  );
+
+  return (
+    <div className={`${TK_PANEL} mt-8 px-[18px] pt-6 pb-6 sm:px-8 sm:py-9 lg:px-11 lg:py-10`}>
       {step === 1 ? (
-        <StepTickets
+        <CartStep
+          header={header}
           types={types}
           config={config}
           cart={cart}
@@ -440,56 +451,27 @@ export function TicketCheckout({ types: allTypes, config, linkToken, offerToken,
           onNewsletter={setNewsletter}
           quote={quote}
           quoteError={quoteError}
-          canContinue={ticketCount({ cart }) > 0 && quote.status === "ready" && !conflict}
-          onContinue={() => {
-            setExpired(false);
-            setBanner(null);
-            setStep(2);
-          }}
-        />
-      ) : null}
-
-      {step === 2 ? (
-        <DetailsStep
-          config={config}
-          values={details}
-          onBack={(values) => {
-            setDetails(values);
-            setStep(1);
-          }}
-          onSubmit={(values) => {
-            setDetails(values);
-            setBanner(null);
-            setStep(3);
-          }}
-        />
-      ) : null}
-
-      {step === 3 ? (
-        <HoldersStep
+          canOrder={ticketCount({ cart }) > 0 && quote.status === "ready" && !conflict}
           slots={slots}
-          questions={config.extraQuestions}
-          buyer={{ name: details.name, email: details.email }}
-          values={holders}
+          values={form}
           submitting={submitting}
-          placeLabel={totalIsZero ? t("placeOrder") : t("continueToPayment")}
-          captchaPending={captchaConfig.status === "loading"}
-          detailsLater={config.detailsLater === true}
+          placeLabel={totalIsZero ? t("getTickets") : t("continueToPayment")}
+          captchaPending={captchaConfig.status === "loading" && slots.length > 0}
           captcha={
-            captchaConfig.status === "on" && !captchaBroken
+            captchaConfig.status === "on" && !captchaBroken && slots.length > 0
               ? { provider: captchaConfig.provider, resetKey: captchaKey, solved: captchaToken !== null, onToken: setCaptchaToken, onUnavailable: handleCaptchaUnavailable }
               : undefined
           }
-          onBack={(values) => {
-            setHolders(values);
-            setStep(2);
+          onSubmit={(values) => {
+            setExpired(false);
+            void placeOrder(values);
           }}
-          onSubmit={(values) => void placeOrder(values)}
         />
       ) : null}
 
-      {step === 4 && order ? (
+      {step === 2 && order ? (
         <PayStep
+          header={header}
           order={order}
           locale={locale}
           returnUrl={`${window.location.origin}${orderPath}`}
@@ -502,12 +484,12 @@ export function TicketCheckout({ types: allTypes, config, linkToken, offerToken,
           onSucceeded={() => {
             setFinished(true);
             if (embedded) {
-              embedded.onDone(doneOf({ orderId: order.orderId, buyerToken: order.buyerToken, free: false, holderValues: holders }));
+              embedded.onDone(doneOf({ orderId: order.orderId, buyerToken: order.buyerToken, free: false, holderValues: form.holders }));
               return;
             }
             openPrivateTicketPage({ path: orderPath });
           }}
-          onBack={() => setStep(3)}
+          onBack={() => setStep(1)}
         />
       ) : null}
     </div>

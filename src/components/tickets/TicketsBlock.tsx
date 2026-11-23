@@ -99,12 +99,15 @@ export function TicketsBlock({
   buyHref,
   editable = false,
   frame = (content) => content,
+  maxCardPx,
 }: {
   cards: readonly TicketCard[];
   buyHref: string;
   editable?: boolean;
   /** DeAI: wraps the cards (the section and its heading), so a section with nothing on sale disappears as a whole. */
   frame?: (content: ReactNode) => ReactNode;
+  /** DeAI: a wider card cap where the cards are the page's main content (see `gridStyle`). */
+  maxCardPx?: number;
 }) {
   const t = useTranslations("block.ticketsBlock");
   const locale = useLocale();
@@ -125,7 +128,7 @@ export function TicketsBlock({
       data-tickets-block=""
       className="[--tb-accent:var(--t-accent-text,var(--color-ticket-accent,var(--color-primary-text)))] [--tb-accent-2:var(--t-primary-text,var(--color-ticket-accent-2,var(--tb-accent)))] [--tb-btn:var(--t-btn,var(--ticket-btn-bg,var(--color-primary)))] [--tb-on-btn:var(--t-on-btn,var(--color-ticket-on-btn,var(--color-on-primary)))] w-full min-w-0"
     >
-      <ul className="mx-auto grid list-none gap-4 p-0" style={gridStyle({ count: resolved.length })} aria-busy={live.status === "loading"}>
+      <ul className="mx-auto grid list-none gap-4 p-0" style={gridStyle({ count: resolved.length, maxCardPx })} aria-busy={live.status === "loading"}>
         {resolved.map((entry, index) => (
           <li key={entry.card.id} className="flex min-w-0">
             <TicketCardView entry={entry} featured={index === featured} live={live} salesOpen={salesOpen} feePayer={feePayer} buyHref={buyHref} offeredIds={offeredIds} editable={editable} />
