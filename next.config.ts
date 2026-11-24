@@ -9,6 +9,9 @@ const nextConfig: NextConfig = {
   // and `@import "tailwindcss"` fails to resolve from there.
   turbopack: { root: __dirname },
   serverExternalPackages: ['sharp'],
+  experimental: {
+    agentUpgrade: 'security',
+  },
   images: {
     // SECURITY NOTE: `hostname: '**'` accepts any HTTPS host and turns
     // /_next/image into a public open image proxy. Replace with an explicit
@@ -51,9 +54,17 @@ const nextConfig: NextConfig = {
           { key: 'Referrer-Policy', value: 'strict-origin-when-cross-origin' },
           // microphone=(self) required for Bitpull voice widget (getUserMedia).
           // Empty microphone=() forces NotAllowedError even on HTTPS.
-          { key: 'Permissions-Policy', value: 'camera=(), microphone=(self), geolocation=(), payment=(), usb=(), interest-cohort=()' },
+          // payment: Stripe's Express Checkout (Apple Pay / Google Pay) on the /tickets checkout page.
+          // `payment=()` would block the wallets; cards work either way.
+          { key: 'Permissions-Policy', value: 'camera=(), microphone=(self), geolocation=(), payment=(self "https://js.stripe.com" "https://*.js.stripe.com"), usb=(), interest-cohort=()' },
         ],
       },
+      // Private ticket pages carry a secret in their URL (holder, order, private sale, waitlist offer, My tickets):
+      // never send it on as a Referer. Later entries override the global one for the same key.
+      ...['t', 'order', 'l', 'w', 'me'].map((section) => ({
+        source: `/tickets/${section}/:path*`,
+        headers: [{ key: 'Referrer-Policy', value: 'no-referrer' }],
+      })),
     ];
   },
 };

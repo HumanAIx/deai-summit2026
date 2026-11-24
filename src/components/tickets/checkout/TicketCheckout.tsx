@@ -1,0 +1,509 @@
+"use client";
+
+// Interactive: the whole checkout is client state — a cart with a live quote, three form steps, a hold timer and
+// Stripe's payment elements. Server pages hand it plain, already-parsed data; it talks only to our own handlers.
+
+import { useFormatter, useTranslations } from "@/lib/tickets/i18n";
+import { useRouter } from "next/navigation";
+import { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from "react";
+import {
+  cartLines,
+  clampCart,
+  holderSlots,
+  isBuyable,
+  newIdempotencyKey,
+  replaceCart,
+  setQuantity,
+  ticketCount,
+  type Cart,
+} from "@/lib/tickets/checkout-cart";
+import { requestCreateOrder, requestExtendHold } from "@/lib/tickets/checkout-client";
+import { formatMoney } from "@/lib/tickets/format";
+import { openPrivateTicketPage } from "@/lib/tickets/private-navigation";
+import type { CreateOrderBody } from "@/lib/tickets/schemas";
+import { formatEventWhen } from "@/lib/tickets/format";
+import { TK_PANEL } from "../tickets-classes";
+import { CartStep, type SourceConflict } from "./CartStep";
+import { EMPTY_DETAILS, EMPTY_HOLDER, normalizeVat, type CartFormValues, type DetailsValues, type HolderValues } from "./forms";
+import { useCheckoutCaptcha, useCheckoutQuote } from "./hooks";
+import { PayStep } from "./PayStep";
+import { TicketCards } from "./TicketCards";
+import { StepsBar } from "./ui";
+import { useKeepCartOnNavigation } from "./useKeepCartOnNavigation";
+import type { CheckoutConfig, CheckoutDone, EmbeddedCheckout, OrderState, PublicType, Step, UnlistedType } from "./types";
+
+/** What a holder answered, for the questions the site asks only (empty answers are left out; ep-api refuses the rest). */
+function answersOf({ holder, questions }: { holder: HolderValues; questions: CheckoutConfig["extraQuestions"] }): { answers?: NonNullable<CreateOrderBody["holders"][number]["answers"]> } {
+  const company = holder.company.trim();
+  const jobTitle = holder.jobTitle.trim();
+  const dietaryOther = holder.dietaryOther.trim();
+  const answers = {
+    ...(questions.companyJob && company ? { company } : {}),
+    ...(questions.companyJob && jobTitle ? { jobTitle } : {}),
+    ...(questions.dietary && holder.dietary ? { dietary: holder.dietary } : {}),
+    ...(questions.dietary && holder.dietary === "other" && dietaryOther ? { dietaryOther } : {}),
+    ...(questions.tshirt && holder.tshirt ? { tshirt: holder.tshirt } : {}),
+  } as NonNullable<CreateOrderBody["holders"][number]["answers"]>;
+  return Object.keys(answers).length > 0 ? { answers } : {};
+}
+
+function heardFromOf({ details, questions }: { details: DetailsValues; questions: CheckoutConfig["extraQuestions"] }): { heardFrom?: NonNullable<CreateOrderBody["heardFrom"]> } {
+  if (!questions.heardFrom || !details.heardFrom) return {};
+  const text = details.heardFromText.trim();
+  return { heardFrom: { value: details.heardFrom, ...(details.heardFrom === "other" && text ? { text } : {}) } as NonNullable<CreateOrderBody["heardFrom"]> };
+}
+
+const STEP_KEYS = ["tickets", "pay", "done"] as const;
+const CODE_ERRORS = new Set(["codeInvalid", "codeNotValidNow", "codeNotApplicable", "codeUsedUp", "codeOnce"]);
+const CARD_ERRORS = new Set(["soldOut", "notOnSale", "priceChanged", "overMax", "offerOverQuantity"]);
+const HOLD_GONE = new Set(["holdEnded", "orderClosed", "notFound", "orderNotFound"]);
+
+export interface TicketCheckoutProps {
+  types: PublicType[];
+  config: CheckoutConfig;
+  /** The private-link token of `/tickets?link=…` (types behind a link are sold with it), when there is one. */
+  linkToken?: string | undefined;
+  /** A waitlist offer (`/tickets/w/{token}`): sent with the quote and the order; `initialQuantity` pre-selects the offered tickets. */
+  offerToken?: string | undefined;
+  initialQuantity?: number | undefined;
+  /** Tickets in the cart when it opens (the Tickets block's pop-up pre-selects the clicked type at 1). */
+  initialCart?: Cart | undefined;
+  /** Offer only these types (the pop-up: the block's cards of one event). Absent = every type, as on `/tickets`. */
+  allowedTypeIds?: readonly string[] | undefined;
+  /** Picked tickets ep-api does not list (hidden, removed): shown as "Unavailable" rows, never in the cart. */
+  unlisted?: readonly UnlistedType[] | undefined;
+  /** Inside the Tickets block's pop-up (see `EmbeddedCheckout`). Absent = the `/tickets` page, unchanged. */
+  embedded?: EmbeddedCheckout | undefined;
+  locale: string;
+  /** `""` on the default locale, `"/de"` otherwise — so the order link stays in the buyer's language. */
+  localePrefix: string;
+}
+
+export function TicketCheckout({ types: allTypes, config, linkToken, offerToken, initialQuantity, initialCart, allowedTypeIds, unlisted = [], embedded, locale, localePrefix }: TicketCheckoutProps) {
+  const t = useTranslations("tickets.checkout");
+  const te = useTranslations("tickets.errors");
+  const format = useFormatter();
+  const router = useRouter();
+  const types = useMemo(() => (allowedTypeIds ? allTypes.filter((type) => allowedTypeIds.includes(type.id)) : allTypes), [allTypes, allowedTypeIds]);
+  // The pop-up re-reads stock itself; the page asks the router. One place, so no path can forget which one applies.
+  const embeddedRef = useRef(embedded);
+  useEffect(() => {
+    embeddedRef.current = embedded;
+  });
+  const refreshStock = useCallback(() => {
+    if (embeddedRef.current) embeddedRef.current.onRefresh();
+    else router.refresh();
+  }, [router]);
+
+  const [step, setStep] = useState<Step>(1);
+  const [pickedCart, setCart] = useState<Cart>(() => {
+    const first = types[0];
+    if (offerToken && initialQuantity && first) return { [first.id]: initialQuantity };
+    return initialCart ?? {};
+  });
+  const [flagged, setFlagged] = useState<Record<string, string>>({});
+  const [conflict, setConflict] = useState<SourceConflict | null>(null);
+  const [codeInput, setCodeInput] = useState("");
+  const [appliedCode, setAppliedCode] = useState<string | null>(null);
+  const [codeError, setCodeError] = useState<string | null>(null);
+  const [newsletter, setNewsletter] = useState(false);
+  // What the buyer typed on the cart step (buyer, invoice, terms, holders): kept when they come Back from paying.
+  const [form, setForm] = useState<CartFormValues>({ ...EMPTY_DETAILS, holders: [] });
+  const [order, setOrder] = useState<OrderState | null>(null);
+  const [banner, setBanner] = useState<string | null>(null);
+  const [expired, setExpired] = useState(false);
+  const [submitting, setSubmitting] = useState(false);
+  // Set when the buyer is sent to the order page (full page load): the checkout is over, links go back to normal.
+  const [finished, setFinished] = useState(false);
+  // The captcha of the order (only when the site has one): its setting is asked once the cart holds a ticket, so the
+  // answer is in before the order button; the token is single-use.
+  const captchaConfig = useCheckoutCaptcha({ active: ticketCount({ cart: pickedCart }) > 0 || step > 1 });
+  const [captchaToken, setCaptchaToken] = useState<string | null>(null);
+  const [captchaBroken, setCaptchaBroken] = useState(false);
+  const [captchaKey, setCaptchaKey] = useState(0);
+  const handleCaptchaUnavailable = useCallback(() => setCaptchaBroken(true), []);
+  const captchaOn = captchaConfig.status === "on" && !captchaBroken;
+  const resetCaptcha = useCallback(() => {
+    setCaptchaToken(null);
+    setCaptchaKey((key) => key + 1);
+  }, []);
+  const headingRef = useRef<HTMLHeadingElement>(null);
+  const expiredRef = useRef<HTMLDivElement>(null);
+  const firstRender = useRef(true);
+  const placing = useRef(false);
+  const idempotency = useRef<{ fingerprint: string; key: string } | null>(null);
+
+  // Fresh availability (after a refresh) is applied by derivation: what can no longer be bought drops out of the
+  // cart, what exceeds the new stock is lowered. No effect, so no extra render.
+  const cart = useMemo(() => clampCart({ cart: pickedCart, types, salesOpen: config.salesOpen }), [pickedCart, types, config.salesOpen]);
+  const lines = useMemo(() => cartLines({ cart, types }), [cart, types]);
+  const quote = useCheckoutQuote({
+    lines,
+    code: appliedCode,
+    newsletter,
+    linkToken,
+    offerToken,
+    onRejected: ({ ticketTypeId, code }) => {
+      if (ticketTypeId) setFlagged((previous) => ({ ...previous, [ticketTypeId]: code }));
+    },
+  });
+  const quoted = quote.status === "ready" ? quote.result : null;
+  const effectiveCode = appliedCode !== null && quoted?.codeStatus === "valid" ? appliedCode : null;
+  const slots = useMemo(() => holderSlots({ lines, types }), [lines, types]);
+  // A cart in progress: any ticket chosen, past step 1, or an order created. Every link leaving the page then opens in a new tab.
+  useKeepCartOnNavigation({ active: !finished && (ticketCount({ cart }) > 0 || step > 1 || order !== null) });
+
+  // The pop-up's shell needs the step (no backdrop close while paying) and the hold (the leave guard).
+  const holdEndsAt = order?.holdExpiresAt ?? null;
+  // A layout effect: the shell must know the step / hold in the same commit that shows them (a click right after paint must not see the old ones).
+  useLayoutEffect(() => {
+    embeddedRef.current?.onProgress({ step, holdExpiresAt: holdEndsAt });
+  }, [step, holdEndsAt]);
+
+  // Focus follows the step: the new step's heading, so a keyboard / screen reader user lands on it.
+  useEffect(() => {
+    if (firstRender.current) {
+      firstRender.current = false;
+      return;
+    }
+    headingRef.current?.focus();
+  }, [step]);
+
+  const handleExpired = useCallback(() => {
+    setExpired(true);
+    setOrder(null);
+    setBanner(null);
+    idempotency.current = null;
+    setStep(1);
+    refreshStock(); // fresh availability for step 01
+  }, [refreshStock]);
+
+  useEffect(() => {
+    if (expired) expiredRef.current?.focus();
+  }, [expired]);
+
+  function changeQuantity({ type, quantity }: { type: PublicType; quantity: number }) {
+    setExpired(false);
+    const change = setQuantity({ cart, types, type, quantity });
+    if (change.kind === "conflict") {
+      setConflict({ type, quantity, fromName: change.from.name });
+      return;
+    }
+    setConflict(null);
+    setCart(change.cart);
+    setFlagged((previous) => Object.fromEntries(Object.entries(previous).filter(([id]) => id !== type.id)));
+  }
+
+  function clearAndAdd() {
+    if (!conflict) return;
+    setCart(replaceCart({ type: conflict.type, quantity: conflict.quantity }));
+    setFlagged({});
+    setConflict(null);
+  }
+
+  function applyCode() {
+    const value = codeInput.trim().toUpperCase();
+    setCodeError(null);
+    if (!/^[A-Z0-9-]{3,32}$/.test(value)) {
+      setAppliedCode(null);
+      setCodeError("codeInvalid");
+      return;
+    }
+    setAppliedCode(value);
+  }
+
+  function orderBody({ details, holderValues }: { details: DetailsValues; holderValues: readonly HolderValues[] }): Omit<CreateOrderBody, "idempotencyKey"> {
+    const vat = normalizeVat({ value: details.vatNumber });
+    return {
+      lines,
+      buyer: { name: details.name.trim(), email: details.email.trim() },
+      holders: slots.map((slot, index) => ({
+        ticketTypeId: slot.ticketTypeId,
+        name: holderValues[index]?.name.trim() ?? "",
+        email: holderValues[index]?.email.trim() ?? "",
+        ...answersOf({ holder: holderValues[index] ?? EMPTY_HOLDER, questions: config.extraQuestions }),
+      })),
+      ...heardFromOf({ details, questions: config.extraQuestions }),
+      ...(details.invoice
+        ? {
+            company: {
+              name: details.companyName.trim(),
+              ...(vat ? { vatNumber: vat } : {}),
+              street: details.street.trim(),
+              ...(details.postalCode.trim() ? { postalCode: details.postalCode.trim() } : {}),
+              city: details.city.trim(),
+              countryCode: details.countryCode,
+            },
+          }
+        : {}),
+      ...(effectiveCode ? { discountCode: effectiveCode } : {}),
+      newsletter: config.newsletterOffer.on && newsletter,
+      acceptTerms: details.acceptTerms || !config.questions.terms,
+      ...(linkToken ? { linkToken } : {}),
+      ...(offerToken ? { offerToken } : {}),
+    };
+  }
+
+  /** The pop-up's confirmation data: the first cart line's event, and the holders as entered. */
+  function doneOf({ orderId, buyerToken, free, holderValues }: { orderId: string; buyerToken: string; free: boolean; holderValues: readonly HolderValues[] }): CheckoutDone {
+    const source = types.find((type) => lines.some((line) => line.ticketTypeId === type.id))?.source ?? types[0]?.source;
+    return {
+      orderId,
+      buyerToken,
+      free,
+      holders: holderValues.map((holder) => ({ name: holder.name.trim(), email: holder.email.trim() })),
+      eventName: source?.name ?? "",
+      startDate: source?.startDate ?? null,
+      endDate: source?.endDate ?? null,
+    };
+  }
+
+  async function placeOrder(values: CartFormValues) {
+    setForm(values);
+    const holderValues = values.holders;
+    const body = orderBody({ details: values, holderValues });
+    // The token is single-use and never part of "the same request": Back then Continue keeps its pending order.
+    const fingerprint = JSON.stringify(body);
+    setBanner(null);
+    // Same request as the pending order (Back, then Continue again): keep that order, do not create a second one.
+    if (order && order.fingerprint === fingerprint) {
+      setStep(2);
+      return;
+    }
+    if (placing.current) return; // a double click must not send twice
+    placing.current = true;
+    setSubmitting(true);
+    // One key per distinct request, kept across retries: a lost response or a double click replays the SAME order.
+    const key = idempotency.current?.fingerprint === fingerprint ? idempotency.current.key : newIdempotencyKey();
+    idempotency.current = { fingerprint, key };
+
+    // `captchaToken` goes out ONLY for a site with a captcha: until ep-api #456 is live it refuses unknown fields.
+    const answer = await requestCreateOrder({ body: { ...body, ...(captchaOn && captchaToken ? { captchaToken } : {}), idempotencyKey: key } });
+    placing.current = false;
+    if (captchaOn) resetCaptcha(); // spent by this attempt, whatever the answer
+
+    if (answer.ok) {
+      const created = answer.data;
+      const token = created.buyerToken ?? "";
+      if (created.free) {
+        setFinished(true);
+        if (embeddedRef.current) {
+          embeddedRef.current.onDone(doneOf({ orderId: created.orderId, buyerToken: token, free: true, holderValues }));
+          return;
+        }
+        openPrivateTicketPage({ path: `${localePrefix}/tickets/order/${token}` });
+        return; // stay in the "placing" state until the navigation lands
+      }
+      setOrder({
+        orderId: created.orderId,
+        buyerToken: token,
+        holdExpiresAt: created.holdExpiresAt,
+        holdMaxAt: created.holdMaxAt,
+        clientSecret: created.clientSecret,
+        publishableKey: created.publishableKey,
+        fingerprint,
+        totals: created.totals,
+        currency: quoted?.currency ?? types[0]?.currency ?? "EUR",
+      });
+      setSubmitting(false);
+      setStep(2);
+      return;
+    }
+
+    setSubmitting(false);
+    // Only a lost / unreachable answer may be retried under the same key; a definite refusal starts a new request.
+    if (answer.code !== "unavailable") idempotency.current = null;
+    if (HOLD_GONE.has(answer.code)) return handleExpired();
+    if (answer.code === "captchaRequired" || answer.code === "captchaFailed") {
+      setBanner(answer.code); // the widget was redrawn above: the buyer solves it again
+      return;
+    }
+    if (answer.code === "offerEnded") {
+      setBanner(answer.code);
+      refreshStock(); // the offer page re-reads it and shows the "offer has ended" state
+      return;
+    }
+    if (CODE_ERRORS.has(answer.code)) {
+      setCodeError(answer.code);
+      setAppliedCode(null);
+      setStep(1);
+      return;
+    }
+    if (CARD_ERRORS.has(answer.code) || answer.code === "oneEventPerOrder") {
+      if (answer.ticketTypeId) setFlagged((previous) => ({ ...previous, [answer.ticketTypeId ?? ""]: answer.code }));
+      setBanner(answer.code);
+      setStep(1);
+      refreshStock(); // fresh stock / prices
+      return;
+    }
+    setBanner(answer.code);
+  }
+
+  /**
+   * Right before paying. `false` = do not confirm. The hold is checked locally (the timer's own clock), and the
+   * request for more hold time runs in the BACKGROUND while Stripe confirms.
+   * DECISION (develop test 2026-11-12): awaiting the extend first made Pay wait for a full renderer → ep-api round
+   * trip — 11.8 s on a cold serverless start. A payment that lands after its hold anyway is handled by ep-api (stock
+   * still free → paid; otherwise refunded in full and emailed), so the extend is a courtesy, not a gate.
+   */
+  // The buyer's own "Extend" near the end of the hold: waits for ep-api (unlike the courtesy extend in `beforePay`).
+  async function extendHold(): Promise<boolean> {
+    if (!order) return false;
+    const answer = await requestExtendHold({ orderId: order.orderId, token: order.buyerToken });
+    if (!answer.ok) return false;
+    setOrder((current) => (current ? { ...current, holdExpiresAt: answer.data.holdExpiresAt, holdMaxAt: answer.data.holdMaxAt ?? current.holdMaxAt } : current));
+    return true;
+  }
+
+  async function beforePay(): Promise<boolean> {
+    if (!order) return false;
+    if (new Date(order.holdExpiresAt).getTime() <= Date.now()) {
+      handleExpired();
+      return false;
+    }
+    // The hold cannot go past `holdMaxAt`: once it is there, asking again only earns a refusal.
+    if (order.holdMaxAt && new Date(order.holdExpiresAt).getTime() >= new Date(order.holdMaxAt).getTime()) return true;
+    void requestExtendHold({ orderId: order.orderId, token: order.buyerToken }).then((answer) => {
+      // Only a success changes the screen: a refusal arrives while the card is already being confirmed, and the
+      // order page tells the buyer how that payment ended.
+      if (answer.ok) setOrder((current) => (current ? { ...current, holdExpiresAt: answer.data.holdExpiresAt, holdMaxAt: answer.data.holdMaxAt ?? current.holdMaxAt } : current));
+    });
+    return true;
+  }
+
+  const orderPath = order ? `${localePrefix}/tickets/order/${order.buyerToken}?o=${order.orderId}` : "";
+  const totalIsZero = quoted?.totals.totalCents === 0;
+  const quoteError = quote.status === "error" ? quote.code : null;
+  const sellable = types.some((type) => isBuyable({ type, salesOpen: config.salesOpen }));
+  const stepNames = STEP_KEYS.map((key) => t(`steps.${key}`));
+  // The meta line under the title: the event of the cart (or of the first ticket listed) and its dates.
+  const shownSource = (types.find((type) => (cart[type.id] ?? 0) > 0) ?? types[0])?.source;
+  const meta = shownSource
+    ? [shownSource.name, formatEventWhen({ format, source: { startDate: shownSource.startDate ?? null, endDate: shownSource.endDate ?? null, timeZone: shownSource.timeZone ?? "UTC", startsAt: null } })].filter(Boolean).join(" · ")
+    : "";
+
+  const notices = (
+    <>
+      {expired ? (
+        <div ref={expiredRef} tabIndex={-1} role="alert" className="rounded-xl border border-[color-mix(in_srgb,var(--tk-warn)_45%,transparent)] bg-[color-mix(in_srgb,var(--tk-warn)_10%,transparent)] px-4 py-3 focus:outline-none">
+          <h2 className="m-0 text-base font-semibold text-(--tk-warn)">{t("expired.heading")}</h2>
+          <p className="m-0 mt-1 text-sm text-(--tk-soft)">{t("expired.body")}</p>
+        </div>
+      ) : null}
+      {banner ? (
+        <p role="alert" className="m-0 text-sm font-medium text-(--tk-err)">
+          {te.has(banner) ? te(banner) : te("generic")}
+        </p>
+      ) : null}
+    </>
+  );
+
+  // Nothing can be bought (sales closed, everything sold out…): show the list as information, with no cart or steps.
+  // A refusal that led here (the ticket in the cart was removed or stopped selling, then the list refreshed) keeps its
+  // message, and the buyer is told plainly that nothing can be bought, so the cart never disappears without a word.
+  if (!sellable && !order && !expired) {
+    return (
+      <div className={`${TK_PANEL} mx-auto mt-8 flex max-w-3xl flex-col gap-4 px-[18px] py-6 sm:px-8 sm:py-8`}>
+        {notices}
+        {/* Closed sales already say so above the panel ("Sales are closed"). */}
+        {config.salesOpen && (types.length > 0 || unlisted.length > 0) ? (
+          <p role="status" className="m-0 text-sm text-(--tk-soft)">
+            {t("noneBuyable")}
+          </p>
+        ) : null}
+        <TicketCards types={types} config={config} cart={{}} flagged={{}} onQuantity={() => undefined} unlisted={unlisted} />
+      </div>
+    );
+  }
+
+  // Title of each step (design: "Your tickets" with the event line, "Payment" with who is paid and where the receipt goes).
+  const header = (
+    <>
+      <StepsBar label={t("stepsLabel")} steps={stepNames} current={step - 1} />
+      <div>
+        <h2 ref={headingRef} tabIndex={-1} className="m-0 font-heading text-[30px] leading-[1.1] font-normal tracking-[-0.01em] focus:outline-none sm:text-[38px]">
+          {step === 1 ? t("cart.title") : t("pay.title")}
+        </h2>
+        {step === 1 ? (meta ? (
+          // The date range comes from Intl, whose ICU data differs between Node and the browser (spacing around the dash).
+          <p suppressHydrationWarning className="m-0 mt-1.5 text-[15px] text-(--tk-mut)">
+            {meta}
+          </p>
+        ) : null) : <p className="m-0 mt-1.5 text-[15px] text-(--tk-mut)">{t("pay.receiptTo", { email: form.email.trim() })}</p>}
+      </div>
+      {notices}
+    </>
+  );
+
+  return (
+    <div className={`${TK_PANEL} mt-8 px-[18px] pt-6 pb-6 sm:px-8 sm:py-9 lg:px-11 lg:py-10`}>
+      {step === 1 ? (
+        <CartStep
+          header={header}
+          types={types}
+          unlisted={unlisted}
+          config={config}
+          cart={cart}
+          flagged={flagged}
+          onQuantity={changeQuantity}
+          conflict={conflict}
+          onClearAndAdd={clearAndAdd}
+          onKeepCart={() => setConflict(null)}
+          codeInput={codeInput}
+          onCodeInput={setCodeInput}
+          appliedCode={appliedCode}
+          codeError={codeError}
+          onApplyCode={applyCode}
+          onRemoveCode={() => {
+            setAppliedCode(null);
+            setCodeInput("");
+            setCodeError(null);
+          }}
+          newsletter={newsletter}
+          onNewsletter={setNewsletter}
+          quote={quote}
+          quoteError={quoteError}
+          canOrder={ticketCount({ cart }) > 0 && quote.status === "ready" && !conflict}
+          slots={slots}
+          values={form}
+          submitting={submitting}
+          placeLabel={totalIsZero ? t("getTickets") : t("continueToPayment")}
+          captchaPending={captchaConfig.status === "loading" && slots.length > 0}
+          captcha={
+            captchaConfig.status === "on" && !captchaBroken && slots.length > 0
+              ? { provider: captchaConfig.provider, resetKey: captchaKey, solved: captchaToken !== null, onToken: setCaptchaToken, onUnavailable: handleCaptchaUnavailable }
+              : undefined
+          }
+          onSubmit={(values) => {
+            setExpired(false);
+            void placeOrder(values);
+          }}
+        />
+      ) : null}
+
+      {step === 2 && order ? (
+        <PayStep
+          header={header}
+          order={order}
+          locale={locale}
+          returnUrl={`${window.location.origin}${orderPath}`}
+          onExpire={handleExpired}
+          testMode={config.testMode}
+          payLabel={t("pay.payNow", { amount: formatMoney({ format, cents: order.totals.totalCents, currency: order.currency }) })}
+          beforePay={beforePay}
+          types={types}
+          onExtend={extendHold}
+          onSucceeded={() => {
+            setFinished(true);
+            if (embedded) {
+              embedded.onDone(doneOf({ orderId: order.orderId, buyerToken: order.buyerToken, free: false, holderValues: form.holders }));
+              return;
+            }
+            openPrivateTicketPage({ path: orderPath });
+          }}
+          onBack={() => setStep(1)}
+        />
+      ) : null}
+    </div>
+  );
+}
