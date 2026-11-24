@@ -8,6 +8,13 @@ export async function GET() {
     'Allow: /',
     'Disallow: /api/',
     'Disallow: /_next/',
+    // Private ticket pages (secret token in the URL) and the "find my tickets" form.
+    'Disallow: /tickets/t/',
+    'Disallow: /tickets/order/',
+    'Disallow: /tickets/l/',
+    'Disallow: /tickets/w/',
+    'Disallow: /tickets/me/',
+    'Disallow: /tickets/lost',
     '',
     `Sitemap: ${BASE_URL}/sitemap.xml`,
     `Host: ${BASE_URL}`,

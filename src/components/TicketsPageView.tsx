@@ -118,7 +118,38 @@ function PassCard({ pass }: { pass: TicketPass }) {
   );
 }
 
-export function TicketsPageView({ content }: { content: TicketsPageContent }) {
+/** The closing tile ("Secure your place in Valletta" + the Luma button). Also shown under the live cards on `/tickets`. */
+export function ClosingBanner({ notice, title, label, href }: { notice: string; title: string; label: string; href: string }) {
+  return (
+    <div className="flex flex-col items-start justify-between gap-8 rounded-3xl border border-white/10 bg-[rgba(10,20,50,0.4)] p-8 md:flex-row md:items-center md:p-12">
+      <div className="flex flex-col gap-3">
+        {notice ? (
+          <div className={`${plexMono.className} text-sm font-medium tracking-[0.22em] text-[#2CC7D9]`}>
+            {notice}
+          </div>
+        ) : null}
+        <h2 className="m-0 font-display text-[clamp(1.75rem,3.2vw,2.5rem)] font-medium leading-[1.1] tracking-[-0.025em]">
+          {title}
+        </h2>
+      </div>
+      {href && href !== '#' ? (
+        <TicketLink
+          href={href}
+          className="flex h-[68px] shrink-0 items-center gap-3.5 rounded-full bg-gradient-to-r from-[#1E6BF0] to-[#08B5C6] px-8 text-lg font-semibold text-white shadow-[0_16px_44px_-12px_rgba(8,181,198,0.65)] transition hover:brightness-110 sm:px-10 sm:text-xl"
+        >
+          {label}
+        </TicketLink>
+      ) : null}
+    </div>
+  );
+}
+
+/**
+ * The CMS `tickets` page in DeAI's look. `cards` (the live GConf.ai ticket cards of the page's Tickets sections) take
+ * the place of the static pass tiles; then the closing Luma tile shows only while there is a Luma link to offer.
+ */
+export function TicketsPageView({ content, cards }: { content: TicketsPageContent; cards?: ReactNode }) {
+  const closing = cards === undefined || (content.closingHref !== '' && content.closingHref !== '#');
   return (
     <section
       className="relative -mt-[140px] min-h-screen bg-[#040A1E] pt-[140px] text-white"
@@ -156,7 +187,9 @@ export function TicketsPageView({ content }: { content: TicketsPageContent }) {
           ) : null}
         </div>
 
-        {content.passes.length > 0 ? (
+        {cards !== undefined ? (
+          <div className="flex flex-col gap-6">{cards}</div>
+        ) : content.passes.length > 0 ? (
           <div className="grid items-stretch gap-6 lg:grid-cols-2">
             {content.passes.map((pass) => (
               <PassCard key={pass.id} pass={pass} />
@@ -165,26 +198,7 @@ export function TicketsPageView({ content }: { content: TicketsPageContent }) {
         ) : null}
 
         <div className="flex flex-col gap-12 sm:gap-16">
-          <div className="flex flex-col items-start justify-between gap-8 rounded-3xl border border-white/10 bg-[rgba(10,20,50,0.4)] p-8 md:flex-row md:items-center md:p-12">
-            <div className="flex flex-col gap-3">
-              {content.notice ? (
-                <div className={`${plexMono.className} text-sm font-medium tracking-[0.22em] text-[#2CC7D9]`}>
-                  {content.notice}
-                </div>
-              ) : null}
-              <h2 className="m-0 font-display text-[clamp(1.75rem,3.2vw,2.5rem)] font-medium leading-[1.1] tracking-[-0.025em]">
-                {content.closingTitle}
-              </h2>
-            </div>
-            {content.closingHref && content.closingHref !== '#' ? (
-              <TicketLink
-                href={content.closingHref}
-                className="flex h-[68px] shrink-0 items-center gap-3.5 rounded-full bg-gradient-to-r from-[#1E6BF0] to-[#08B5C6] px-8 text-lg font-semibold text-white shadow-[0_16px_44px_-12px_rgba(8,181,198,0.65)] transition hover:brightness-110 sm:px-10 sm:text-xl"
-              >
-                {content.closingLabel}
-              </TicketLink>
-            ) : null}
-          </div>
+          {closing ? <ClosingBanner notice={content.notice} title={content.closingTitle} label={content.closingLabel} href={content.closingHref} /> : null}
           <div className={`${plexMono.className} flex flex-wrap items-center justify-between gap-4 border-t border-white/10 py-7 text-[13px] tracking-[0.22em] text-[#9AA3B8]`}>
             <span>VALLETTA, MALTA</span>
             <a href="https://deaisummit.org" className="text-[#9AA3B8] transition hover:text-white">

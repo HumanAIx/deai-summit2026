@@ -25,9 +25,12 @@ const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL || "https://deaisummit.org";
 const GA4_MEASUREMENT_ID = "G-10XNHM2ZWW";
 const GOOGLE_ADS_ID = "AW-18489910387";
 
-/** Meta base pixel. The ID comes from the CMS Analytics tags Meta pixel field. */
+/**
+ * Meta base pixel. The ID comes from the CMS Analytics tags Meta pixel field. Runs on every page except the private
+ * ticket pages (`/tickets/{t|order|l|w|me}/{token}`, same rule as `isPrivateTicketPath`): their URL holds a secret.
+ */
 function facebookPixelBoot(pixelId: string): string {
-  return `!function(f,b,e,v,n,t,s)
+  return `if(!/^\\/tickets\\/(t|order|l|w|me)\\/[^\\/]+/.test(location.pathname)){!function(f,b,e,v,n,t,s)
 {if(f.fbq)return;n=f.fbq=function(){n.callMethod?
 n.callMethod.apply(n,arguments):n.queue.push(arguments)};
 if(!f._fbq)f._fbq=n;n.push=n;n.loaded=!0;n.version='2.0';
@@ -36,7 +39,7 @@ t.src=v;s=b.getElementsByTagName(e)[0];
 s.parentNode.insertBefore(t,s)}(window,document,'script',
 'https://connect.facebook.net/en_US/fbevents.js');
 fbq('init', ${JSON.stringify(pixelId)});
-fbq('track', 'PageView');`;
+fbq('track', 'PageView');}`;
 }
 
 export async function generateMetadata(): Promise<Metadata> {
