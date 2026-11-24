@@ -21,8 +21,9 @@ export async function generateMetadata(): Promise<Metadata> {
 
 /**
  * `/tickets/order/[token]` — My order (buyer link). One ep-api call: `GET /tickets/my/order`
- * (`x-order-token`). A 404 WITH `?o={orderId}` is "payment still being confirmed" (the checkout's return
- * URL, also the 3-D Secure return): a client component polls our status handler and refreshes this page.
+ * (`x-order-token`). With `?o={orderId}` (the checkout's return URL, also the 3-D Secure return) the payment loader
+ * shows: a 404 is "payment still being confirmed" (a client component polls our status handler), a paid order is its
+ * confirmed screen straight away. Either way it then opens `?paid=1`: the order with the "just paid" note.
  * A 404 without `?o`, a malformed token or any other miss is the opaque "not valid" state (rule 28).
  */
 export default async function MyOrderPage({
@@ -30,9 +31,9 @@ export default async function MyOrderPage({
   searchParams,
 }: {
   params: Promise<{ token: string }>;
-  searchParams: Promise<{ o?: string | string[] }>;
+  searchParams: Promise<{ o?: string | string[]; paid?: string | string[] }>;
 }) {
-  const [{ token: rawToken }, { o }] = await Promise.all([params, searchParams]);
+  const [{ token: rawToken }, { o, paid }] = await Promise.all([params, searchParams]);
   const ctx = await ticketsLocaleCtx();
   const lostLinkHref = localizeHref({ href: "/tickets/lost", ctx });
 
@@ -41,6 +42,15 @@ export default async function MyOrderPage({
 
   const [locale, requestHeaders] = await Promise.all([getLocale(), headers()]);
   const result = await fetchMyOrder({ token: token.data, locale, ip: forwardedClientIp({ headers: requestHeaders }) });
+  const orderId = orderIdSchema.safeParse(Array.isArray(o) ? o[0] : o);
+  if (result.state === "ok" && orderId.success) {
+    // Fresh from the checkout and already paid: the loader's confirmed screen first, which then opens `?paid=1`.
+    return (
+      <TicketsShell>
+        <OrderConfirming orderId={orderId.data} token={token.data} ticketsHref={localizeHref({ href: "/tickets", ctx })} contactHref={localizeHref({ href: "/contact", ctx })} paid />
+      </TicketsShell>
+    );
+  }
   if (result.state === "ok") {
     // The buyer's own ticket ("(you)") links straight to its ticket page (ep-api sends that token only for it).
     const ticketHrefs = Object.fromEntries(
@@ -53,16 +63,15 @@ export default async function MyOrderPage({
       ? await fetchMyTicket({ token: ownTicketToken, locale, ip: forwardedClientIp({ headers: requestHeaders }) }).catch(() => null)
       : null;
     const eventSource = ownTicket?.state === "ok" ? ownTicket.data.source : null;
-    // Fresh from the checkout (its return URL carries `?o=`): the "payment received, bookmark this page" note.
-    const justPaid = (Array.isArray(o) ? o[0] : o) !== undefined;
+    // Fresh from the checkout (the confirmation screen opens `?paid=1`): the "payment received, bookmark this page" note.
+    const justPaid = paid !== undefined;
     return <OrderView order={result.data} token={token.data} ticketHrefs={ticketHrefs} eventSource={eventSource} justPaid={justPaid} />;
   }
 
-  const orderId = orderIdSchema.safeParse(Array.isArray(o) ? o[0] : o);
   if (!orderId.success) return <InvalidLinkState lostLinkHref={lostLinkHref} />;
   return (
     <TicketsShell>
-      <OrderConfirming orderId={orderId.data} token={token.data} ticketsHref={localizeHref({ href: "/tickets", ctx })} lostLinkHref={lostLinkHref} />
+      <OrderConfirming orderId={orderId.data} token={token.data} ticketsHref={localizeHref({ href: "/tickets", ctx })} contactHref={localizeHref({ href: "/contact", ctx })} />
     </TicketsShell>
   );
 }

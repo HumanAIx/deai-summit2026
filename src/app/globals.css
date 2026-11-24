@@ -936,6 +936,17 @@
   --mt-hover: #DDF6F9;
 }
 
+/* The payment loader's ripple rings (OrderConfirming): each grows from r 48 to r 66 while fading out. */
+.tk-ripple {
+  transform-box: fill-box;
+  transform-origin: center;
+  animation: tk-ripple 1.82s linear infinite;
+}
+@keyframes tk-ripple {
+  from { transform: scale(1); opacity: 0.5; }
+  to { transform: scale(1.375); opacity: 0; }
+}
+
 /* "Save as PDF" on the holder's ticket page prints the ticket card alone, on one page, dark as on screen: everything that is
    neither the card, inside it, nor one of its ancestors is left out, and the ancestors lose their spacing. */
 @media print {
