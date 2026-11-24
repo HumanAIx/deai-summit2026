@@ -1,7 +1,7 @@
 import { describe, expect, it, vi } from "vitest";
 import { axeViolations, describeViolations } from "../../helpers/axe";
 import { resolveServerElement } from "../../helpers/resolve-server";
-import { render, screen } from "../../test-utils";
+import { fireEvent, render, screen } from "../../test-utils";
 import type { MyTicket } from "../../../lib/tickets/schemas";
 
 vi.mock("next/navigation", () => ({ useRouter: () => ({ push: vi.fn(), refresh: vi.fn() }) }));
@@ -79,9 +79,28 @@ describe("TicketView", () => {
     expect(screen.getByRole("link", { name: "hello@acme.example" })).toHaveAttribute("href", "mailto:hello@acme.example");
   });
 
-  it("links to the order only when ep-api says the holder bought it", async () => {
-    await renderTicket(TICKET, undefined, "/tickets/order/buyer-token-xxxxxxxxxxxxxxxx");
-    expect(screen.getByRole("link", { name: "View my order" })).toHaveAttribute("href", "/tickets/order/buyer-token-xxxxxxxxxxxxxxxx");
+  it("links back to the order only when ep-api says the holder bought it", async () => {
+    const own = await renderTicket(TICKET, undefined, "/tickets/order/buyer-token-xxxxxxxxxxxxxxxx");
+    expect(screen.getByRole("link", { name: "Back to your order" })).toHaveAttribute("href", "/tickets/order/buyer-token-xxxxxxxxxxxxxxxx");
+    own.unmount();
+    await renderTicket(TICKET);
+    expect(screen.queryByRole("link", { name: "Back to your order" })).not.toBeInTheDocument();
+  });
+
+  it("offers Save as PDF next to Add to calendar, which opens the print dialog", async () => {
+    const print = vi.spyOn(window, "print").mockImplementation(() => undefined);
+    await renderTicket(TICKET);
+    fireEvent.click(screen.getByRole("button", { name: "Save as PDF" }));
+    expect(print).toHaveBeenCalledTimes(1);
+    print.mockRestore();
+  });
+
+  it("shows the test badge beside the back link only for a test ticket", async () => {
+    const plain = await renderTicket(TICKET);
+    expect(screen.queryByText("Test ticket — not a real purchase")).not.toBeInTheDocument();
+    plain.unmount();
+    await renderTicket({ ...TICKET, isTest: true });
+    expect(screen.getByText("Test ticket — not a real purchase")).toBeInTheDocument();
   });
 
   it("a refunded ticket shows the refunded banner and no QR and no calendar link", async () => {
@@ -89,7 +108,8 @@ describe("TicketView", () => {
     expect(screen.getByRole("status")).toHaveTextContent("This ticket was refunded and can no longer be used.");
     expect(screen.queryByRole("img")).not.toBeInTheDocument();
     expect(screen.queryByRole("link", { name: "Add to calendar" })).not.toBeInTheDocument();
-    expect(screen.getByText(/· Refunded/)).toBeInTheDocument();
+    expect(screen.getByText("Refunded")).toBeInTheDocument();
+    expect(screen.queryByRole("button", { name: "Save as PDF" })).not.toBeInTheDocument();
   });
 
   it("a void ticket the organiser blocked says blocked; one the holder cancelled says cancelled", async () => {
@@ -153,9 +173,11 @@ describe("TicketView", () => {
     expect(describeViolations(violations)).toEqual([]);
   });
 
-  it("carries print styles that keep the QR large and hide the calendar button", async () => {
+  it("marks the ticket card for printing (Save as PDF prints it alone) and hides the buttons in print", async () => {
     const { container } = await renderTicket(TICKET);
-    expect(screen.getByRole("img").className).toContain("print:h-80");
+    const card = container.querySelector("[data-ticket-card]");
+    expect(card).not.toBeNull();
+    expect(card?.contains(screen.getByRole("img", { name: "QR code for ticket DEAI-T-4F2A-91" }))).toBe(true);
     expect(screen.getByRole("link", { name: "Add to calendar" }).parentElement?.className).toContain("print:hidden");
     expect(container.querySelector("[data-ticket-print]")).not.toBeNull();
   });

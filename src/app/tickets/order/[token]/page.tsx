@@ -53,7 +53,9 @@ export default async function MyOrderPage({
       ? await fetchMyTicket({ token: ownTicketToken, locale, ip: forwardedClientIp({ headers: requestHeaders }) }).catch(() => null)
       : null;
     const eventSource = ownTicket?.state === "ok" ? ownTicket.data.source : null;
-    return <OrderView order={result.data} token={token.data} ticketHrefs={ticketHrefs} eventSource={eventSource} />;
+    // Fresh from the checkout (its return URL carries `?o=`): the "payment received, bookmark this page" note.
+    const justPaid = (Array.isArray(o) ? o[0] : o) !== undefined;
+    return <OrderView order={result.data} token={token.data} ticketHrefs={ticketHrefs} eventSource={eventSource} justPaid={justPaid} />;
   }
 
   const orderId = orderIdSchema.safeParse(Array.isArray(o) ? o[0] : o);

@@ -11,7 +11,8 @@ import { countryOptions } from "@/lib/tickets/countries";
 import { DIET_NOTE_VALUES, DIET_VALUES, PROFILE_LIMITS, profileBodySchema, type DietValue, type ProfileBlock, type ProfileBody, type ProfileGroup } from "@/lib/tickets/schemas";
 import { requestNameCorrection, requestSaveProfile } from "@/lib/tickets/self-service-client";
 import { DETAILS_ID, goToDetails, goToField } from "./details-focus";
-import { MT_BUTTON_LG, MT_CARD, MT_CHIP, MT_GRADIENT, MT_INPUT, MT_INPUT_ERROR, MT_INPUT_MISSING, MT_INPUT_OK, MT_LABEL } from "./my-ticket-classes";
+import { LockIcon } from "./ticket-page-icons";
+import { TP_BUTTON, TP_CARD, TP_CHIP, TP_FIELD_LABEL, TP_GRADIENT, TP_INPUT, TP_INPUT_ERROR, TP_INPUT_MISSING, TP_INPUT_OK, TP_PILL, TP_PILL_DONE, TP_PILL_WAIT, TP_SECTION_LABEL } from "./ticket-page-classes";
 
 export interface DetailsFormValues {
   name: string;
@@ -224,7 +225,7 @@ export function TicketDetailsForm({
       : missing.length > 0
         ? t("ticket.details.status.missing", { fields: missingText })
         : t("ticket.details.status.done");
-  const statusTone = dirty ? "text-text" : missing.length > 0 ? "text-warning-emphasis" : "text-success";
+  const statusTone = dirty || missing.length > 0 ? "text-(--mt-warn)" : "text-(--mt-ok)";
 
   const renderField = (spec: FieldSpec) => {
     const error = fieldError(spec.key);
@@ -233,37 +234,40 @@ export function TicketDetailsForm({
     const describedBy = [error ? `${id}-error` : null, spec.hint ? `${id}-hint` : null].filter(Boolean).join(" ") || undefined;
     const registration = register(spec.key);
     return (
-      <div key={spec.key} className="flex min-w-0 flex-col gap-1.5">
-        <label htmlFor={id} className="text-[13px] text-muted">
+      <div key={spec.key} className="flex min-w-0 flex-col gap-2">
+        <label htmlFor={id} className={TP_FIELD_LABEL}>
           {spec.label}
           {spec.required ? (
-            <span aria-hidden className="text-warning-emphasis">
+            <span aria-hidden className="text-(--mt-warn)">
               {" "}
               *
             </span>
           ) : null}
         </label>
-        <input
-          id={id}
-          type={spec.type ?? "text"}
-          autoComplete={spec.autoComplete ?? "off"}
-          placeholder={spec.placeholder}
-          maxLength={spec.maxLength}
-          disabled={spec.disabled}
-          aria-required={spec.required ? true : undefined}
-          aria-invalid={error ? true : undefined}
-          aria-describedby={describedBy}
-          data-missing={isMissing && !spec.disabled ? "true" : undefined}
-          className={`${MT_INPUT} ${error ? MT_INPUT_ERROR : isMissing ? MT_INPUT_MISSING : MT_INPUT_OK} ${spec.upper ? "uppercase" : ""}`}
-          {...registration}
-        />
+        <div className="relative">
+          <input
+            id={id}
+            type={spec.type ?? "text"}
+            autoComplete={spec.autoComplete ?? "off"}
+            placeholder={spec.placeholder}
+            maxLength={spec.maxLength}
+            disabled={spec.disabled}
+            aria-required={spec.required ? true : undefined}
+            aria-invalid={error ? true : undefined}
+            aria-describedby={describedBy}
+            data-missing={isMissing && !spec.disabled ? "true" : undefined}
+            className={`${TP_INPUT} ${error ? TP_INPUT_ERROR : isMissing ? TP_INPUT_MISSING : TP_INPUT_OK} ${spec.upper ? "uppercase" : ""} ${spec.disabled ? "pr-10 text-ellipsis" : ""}`}
+            {...registration}
+          />
+          {spec.disabled ? <LockIcon className="pointer-events-none absolute top-1/2 right-4 -translate-y-1/2 text-(--mt-dim)" /> : null}
+        </div>
         {spec.hint ? (
-          <p id={`${id}-hint`} className="text-xs text-muted">
+          <p id={`${id}-hint`} className="text-[13px] text-(--mt-dim)">
             {spec.hint}
           </p>
         ) : null}
         {error ? (
-          <p id={`${id}-error`} role="alert" className="text-xs text-danger">
+          <p id={`${id}-error`} role="alert" className="text-[13px] text-(--mt-err)">
             {error}
           </p>
         ) : null}
@@ -294,44 +298,64 @@ export function TicketDetailsForm({
   const countryError = fieldError("country");
   const countryMissing = addressRequired && !values.country;
 
+  const req = (on: boolean) =>
+    on ? (
+      <span aria-hidden className="text-(--mt-warn)">
+        {" "}
+        *
+      </span>
+    ) : null;
+  const legend = (n: number, text: string, on = false) => (
+    <legend className={`${TP_SECTION_LABEL} mb-4`}>
+      <span aria-hidden>{`0${n} · `}</span>
+      {text}
+      {req(on)}
+    </legend>
+  );
+
   return (
-    <section id={DETAILS_ID} aria-labelledby="details-heading" className={`${MT_CARD} flex scroll-mt-4 flex-col gap-5 p-[clamp(18px,4vw,24px)] print:hidden`}>
-      <div className="flex flex-wrap items-start gap-x-6 gap-y-4">
-        <div className="flex min-w-0 flex-[1_1_260px] flex-col gap-1.5">
-          <div className="flex flex-wrap items-baseline gap-2.5">
-            <h2 id="details-heading" className="text-[19px] font-semibold">
+    <section id={DETAILS_ID} aria-labelledby="details-heading" className={`${TP_CARD} flex scroll-mt-4 flex-col print:hidden`}>
+      <div className="flex flex-wrap items-center justify-between gap-6 border-b border-(--mt-hair) px-[clamp(18px,4.5vw,30px)] py-[clamp(22px,4vw,28px)]">
+        <div className="flex min-w-0 flex-[1_1_240px] flex-col gap-2.5">
+          <div className="flex flex-wrap items-center gap-3">
+            <h2 id="details-heading" className="text-2xl font-semibold tracking-[-0.02em]">
               {t("ticket.details.heading")}
             </h2>
             {profile.required.length > 0 ? (
-              <span className={`font-mono text-[12.5px] ${missing.length > 0 ? "text-warning-emphasis" : "text-success"}`}>{t("ticket.details.progress", { done: doneCount, total: profile.required.length })}</span>
+              <span className={`${TP_PILL} min-h-[26px] px-2.5 text-xs ${missing.length > 0 ? TP_PILL_WAIT : TP_PILL_DONE}`}>
+                <span aria-hidden className="size-1.5 rounded-full bg-current" />
+                {t("ticket.details.progress", { done: doneCount, total: profile.required.length })}
+              </span>
             ) : null}
           </div>
-          <p className="text-[13.5px] leading-normal text-muted [text-wrap:pretty]">
+          <p className="text-[15px] leading-[1.55] text-(--mt-body) [text-wrap:pretty]">
             {profile.frozen
               ? t("ticket.details.introFrozen")
               : deadlineLabel
                 ? t("ticket.details.introBy", { date: deadlineLabel, event: eventName })
                 : t("ticket.details.intro", { event: eventName })}
           </p>
-          <div
-            role="progressbar"
-            aria-label={t("ticket.details.progressLabel")}
-            aria-valuemin={0}
-            aria-valuemax={profile.required.length}
-            aria-valuenow={doneCount}
-            className="mt-1 h-1 overflow-hidden rounded-sm bg-(--color-border)"
-          >
-            <div className={`h-full ${MT_GRADIENT} transition-[width] duration-300 motion-reduce:transition-none`} style={{ width: `${pct}%` }} />
-          </div>
+          {profile.required.length > 0 ? (
+            <div
+              role="progressbar"
+              aria-label={t("ticket.details.progressLabel")}
+              aria-valuemin={0}
+              aria-valuemax={profile.required.length}
+              aria-valuenow={doneCount}
+              className="mt-1 h-1 overflow-hidden rounded-sm bg-(--mt-hair)"
+            >
+              <div className={`h-full ${TP_GRADIENT} transition-[width] duration-300 motion-reduce:transition-none`} style={{ width: `${pct}%` }} />
+            </div>
+          ) : null}
         </div>
-        <div aria-label={t("ticket.details.badgePreview")} role="img" className="flex-[0_0_220px] overflow-hidden rounded-xl bg-on-dark text-on-light shadow-(--shadow) max-[520px]:flex-[1_1_100%]">
-          <div aria-hidden className={`h-2 ${MT_GRADIENT}`} />
-          <div aria-hidden className="flex flex-col gap-[3px] px-4 pt-3.5 pb-4">
-            <span className="font-mono text-[10px] tracking-[0.16em] text-on-light/60 uppercase [overflow-wrap:anywhere]">{t("ticket.details.badgeKicker", { event: eventName })}</span>
-            <span className={`mt-1.5 text-[19px] leading-tight font-bold tracking-[-0.01em] [overflow-wrap:anywhere] ${values.name.trim() ? "" : "text-on-light/45 italic"}`}>{values.name.trim() || t("ticket.details.badgeName")}</span>
-            <span className={`text-[13px] [overflow-wrap:anywhere] ${values.jobTitle.trim() ? "text-on-light/75" : "text-on-light/45 italic"}`}>{values.jobTitle.trim() || t("ticket.details.fields.jobTitle")}</span>
-            <span className={`text-[13px] font-semibold [overflow-wrap:anywhere] ${values.company.trim() ? "" : "text-on-light/45 italic"}`}>{values.company.trim() || t("ticket.details.fields.company")}</span>
-            <span className="mt-2.5 self-start rounded-full bg-on-light px-2.5 py-[3px] text-[11.5px] font-semibold tracking-[0.04em] text-on-dark uppercase">{typeName}</span>
+        <div aria-label={t("ticket.details.badgePreview")} role="img" className="relative flex-[0_0_220px] overflow-hidden rounded-2xl bg-white text-[#0B1222] shadow-[0_20px_40px_-20px_rgba(0,0,0,0.8)] max-[560px]:flex-[1_1_100%]">
+          <div aria-hidden className={`absolute inset-x-0 top-0 h-[5px] ${TP_GRADIENT}`} />
+          <div aria-hidden className="flex flex-col gap-1.5 px-4.5 pt-5.5 pb-4">
+            <span className="font-mono text-[9px] tracking-[0.2em] text-(--mt-dim) uppercase [overflow-wrap:anywhere]">{t("ticket.details.badgeKicker", { event: eventName })}</span>
+            <span className={`text-[19px] leading-[1.15] font-bold tracking-[-0.02em] [overflow-wrap:anywhere] ${values.name.trim() ? "" : "text-[#B4BAC6] italic"}`}>{values.name.trim() || t("ticket.details.badgeName")}</span>
+            <span className={`text-[13px] [overflow-wrap:anywhere] ${values.jobTitle.trim() ? "text-[#4A5368]" : "text-[#B4BAC6] italic"}`}>{values.jobTitle.trim() || t("ticket.details.fields.jobTitle")}</span>
+            <span className={`text-[13px] font-semibold [overflow-wrap:anywhere] ${values.company.trim() ? "text-[#1366E8]" : "text-[#B4BAC6] italic"}`}>{values.company.trim() || t("ticket.details.fields.company")}</span>
+            <span className="mt-2 flex min-h-6 items-center self-start rounded-full bg-[#0B1222] px-2.5 text-[10px] font-bold tracking-[0.12em] text-white uppercase">{typeName}</span>
           </div>
         </div>
       </div>
@@ -339,119 +363,115 @@ export function TicketDetailsForm({
       <form
         noValidate
         aria-labelledby="details-heading"
-        className="flex flex-col gap-5"
+        className="flex flex-col"
         onSubmit={(event) => {
           event.preventDefault();
           void onSave();
         }}
       >
-        <fieldset className="flex flex-col gap-3">
-          <legend className={`${MT_LABEL} mb-3`}>{t("ticket.details.sections.badge")}</legend>
-          <div className="grid grid-cols-[repeat(auto-fit,minmax(200px,1fr))] gap-x-3.5 gap-y-3">{badgeFields.map(renderField)}</div>
-        </fieldset>
+        <div className="flex flex-col gap-[clamp(28px,4vw,34px)] px-[clamp(18px,4.5vw,30px)] py-[clamp(22px,4vw,30px)]">
+          <fieldset className="flex min-w-0 flex-col">
+            {legend(1, t("ticket.details.sections.badge"))}
+            <div className="grid grid-cols-[repeat(auto-fit,minmax(min(100%,220px),1fr))] gap-4">{badgeFields.map(renderField)}</div>
+          </fieldset>
 
-        <fieldset className="flex flex-col gap-3">
-          <legend className={`${MT_LABEL} mb-3`}>
-            {t("ticket.details.sections.diet")}
-            {required.has("diet") ? (
-              <span aria-hidden className="text-warning-emphasis">
-                {" "}
-                *
-              </span>
+          <fieldset className="flex min-w-0 flex-col">
+            {legend(2, t("ticket.details.sections.diet"), required.has("diet"))}
+            <div role="group" aria-label={required.has("diet") ? `${t("ticket.details.sections.diet")} *` : t("ticket.details.sections.diet")} className="flex flex-wrap gap-2">
+              {DIET_VALUES.map((value, index) => {
+                const on = values.diet.includes(value);
+                return (
+                  <button
+                    key={value}
+                    type="button"
+                    aria-pressed={on}
+                    data-missing={index === 0 && missingSet.has("diet") ? "true" : undefined}
+                    onClick={() => setValue("diet", toggleDiet({ diet: values.diet, value }), { shouldDirty: true })}
+                    className={`${TP_CHIP} ${index === 0 && missingSet.has("diet") ? "border-(--mt-warn)" : ""}`}
+                  >
+                    {on ? (
+                      <span aria-hidden className="text-(--tk-accent)">
+                        ✓
+                      </span>
+                    ) : null}
+                    {t(`ticket.details.diet.${value}`)}
+                  </button>
+                );
+              })}
+            </div>
+            {noteOn ? (
+              <div className="mt-4 flex flex-col gap-2">
+                <label htmlFor="details-dietNote" className={TP_FIELD_LABEL}>
+                  {t("ticket.details.fields.dietNote")}
+                  <span className="font-normal text-(--mt-dim)"> · {t("ticket.details.fields.dietNoteHint")}</span>
+                </label>
+                <textarea
+                  id="details-dietNote"
+                  rows={2}
+                  maxLength={PROFILE_LIMITS.dietNote}
+                  placeholder={t("ticket.details.placeholders.dietNote")}
+                  aria-invalid={fieldError("dietNote") ? true : undefined}
+                  className={`${TP_INPUT} min-h-0 resize-y py-3.5 leading-normal ${fieldError("dietNote") ? TP_INPUT_ERROR : TP_INPUT_OK}`}
+                  {...register("dietNote")}
+                />
+              </div>
             ) : null}
-          </legend>
-          <div role="group" aria-label={required.has("diet") ? `${t("ticket.details.sections.diet")} *` : t("ticket.details.sections.diet")} className="flex flex-wrap gap-2">
-            {DIET_VALUES.map((value, index) => {
-              const on = values.diet.includes(value);
-              return (
-                <button
-                  key={value}
-                  type="button"
-                  aria-pressed={on}
-                  data-missing={index === 0 && missingSet.has("diet") ? "true" : undefined}
-                  onClick={() => setValue("diet", toggleDiet({ diet: values.diet, value }), { shouldDirty: true })}
-                  className={MT_CHIP}
-                >
-                  {on ? (
-                    <span aria-hidden className="me-1">
-                      ✓
-                    </span>
-                  ) : null}
-                  {t(`ticket.details.diet.${value}`)}
-                </button>
-              );
-            })}
-          </div>
-          {noteOn ? (
-            <div className="flex flex-col gap-1.5">
-              <label htmlFor="details-dietNote" className="text-[13px] text-muted">
-                {t("ticket.details.fields.dietNote")}
-                <span className="text-muted"> · {t("ticket.details.fields.dietNoteHint")}</span>
-              </label>
-              <textarea
-                id="details-dietNote"
-                rows={2}
-                maxLength={PROFILE_LIMITS.dietNote}
-                placeholder={t("ticket.details.placeholders.dietNote")}
-                aria-invalid={fieldError("dietNote") ? true : undefined}
-                className={`${MT_INPUT} min-h-0 resize-y py-2.5 leading-normal ${fieldError("dietNote") ? MT_INPUT_ERROR : MT_INPUT_OK}`}
-                {...register("dietNote")}
-              />
+          </fieldset>
+
+          <fieldset className="flex min-w-0 flex-col">
+            {legend(3, t("ticket.details.sections.address"))}
+            <div className="grid grid-cols-[repeat(auto-fit,minmax(min(100%,150px),1fr))] gap-4">
+              {addressFields.map(renderField)}
+              <div className="flex min-w-0 flex-col gap-2">
+                <label htmlFor="details-country" className={TP_FIELD_LABEL}>
+                  {t("ticket.details.fields.country")}
+                  {req(addressRequired)}
+                </label>
+                <div className="relative">
+                  <select
+                    id="details-country"
+                    autoComplete="country"
+                    aria-required={addressRequired ? true : undefined}
+                    aria-invalid={countryError ? true : undefined}
+                    data-missing={countryMissing ? "true" : undefined}
+                    className={`${TP_INPUT} cursor-pointer appearance-none pr-10 ${countryError ? TP_INPUT_ERROR : countryMissing ? TP_INPUT_MISSING : TP_INPUT_OK}`}
+                    {...register("country")}
+                  >
+                    <option value="">{t("ticket.details.chooseCountry")}</option>
+                    {countries.map((country) => (
+                      // The label comes from Intl.DisplayNames, whose ICU data differs between Node and the browser
+                      // ("Falkland Islands (Islas Malvinas)" vs "Falkland Islands"); the value (ISO code) is the same.
+                      <option key={country.value} value={country.value} suppressHydrationWarning>
+                        {country.label}
+                      </option>
+                    ))}
+                  </select>
+                  <svg aria-hidden focusable={false} width="12" height="8" viewBox="0 0 12 8" className="pointer-events-none absolute top-1/2 right-4 -translate-y-1/2">
+                    <path d="M1 1l5 5 5-5" stroke="#9AA3B8" strokeWidth="1.6" fill="none" />
+                  </svg>
+                </div>
+              </div>
             </div>
-          ) : null}
-        </fieldset>
+          </fieldset>
 
-        <fieldset className="flex flex-col gap-3">
-          <legend className={`${MT_LABEL} mb-3`}>{t("ticket.details.sections.address")}</legend>
-          <div className="grid grid-cols-[repeat(auto-fit,minmax(150px,1fr))] gap-x-3.5 gap-y-3">
-            {addressFields.map(renderField)}
-            <div className="flex min-w-0 flex-col gap-1.5">
-              <label htmlFor="details-country" className="text-[13px] text-muted">
-                {t("ticket.details.fields.country")}
-                {addressRequired ? (
-                  <span aria-hidden className="text-warning-emphasis">
-                    {" "}
-                    *
-                  </span>
-                ) : null}
-              </label>
-              <select
-                id="details-country"
-                autoComplete="country"
-                aria-required={addressRequired ? true : undefined}
-                aria-invalid={countryError ? true : undefined}
-                data-missing={countryMissing ? "true" : undefined}
-                className={`${MT_INPUT} cursor-pointer ${countryError ? MT_INPUT_ERROR : countryMissing ? MT_INPUT_MISSING : MT_INPUT_OK}`}
-                {...register("country")}
-              >
-                <option value="">{t("ticket.details.chooseCountry")}</option>
-                {countries.map((country) => (
-                  // The label comes from Intl.DisplayNames, whose ICU data differs between Node and the browser
-                  // ("Falkland Islands (Islas Malvinas)" vs "Falkland Islands"); the value (ISO code) is the same.
-                  <option key={country.value} value={country.value} suppressHydrationWarning>
-                    {country.label}
-                  </option>
-                ))}
-              </select>
-            </div>
+          <fieldset className="flex min-w-0 flex-col">
+            {legend(4, t("ticket.details.sections.contact"))}
+            <div className="grid grid-cols-[repeat(auto-fit,minmax(min(100%,220px),1fr))] gap-4">{contactFields.map(renderField)}</div>
+            <p className="mt-3 text-[13px] leading-normal text-(--mt-dim)">{t("ticket.details.contactNote")}</p>
+          </fieldset>
+
+          <div role="alert" className="empty:hidden">
+            {failure ? <p className="text-sm text-(--mt-err)">{t.has(`errors.${failure}`) ? t(`errors.${failure}`) : t("errors.generic")}</p> : null}
           </div>
-        </fieldset>
+        </div>
 
-        <fieldset className="flex flex-col gap-3">
-          <legend className={`${MT_LABEL} mb-3`}>{t("ticket.details.sections.contact")}</legend>
-          <div className="grid grid-cols-[repeat(auto-fit,minmax(200px,1fr))] gap-x-3.5 gap-y-3">{contactFields.map(renderField)}</div>
-          <p className="text-[12.5px] leading-normal text-muted">{t("ticket.details.contactNote")}</p>
-        </fieldset>
-
-        <div role="alert">{failure ? <p className="text-sm text-danger">{t.has(`errors.${failure}`) ? t(`errors.${failure}`) : t("errors.generic")}</p> : null}</div>
-
-        <div className="flex flex-wrap items-center gap-x-4 gap-y-2.5 border-t border-(--color-border) pt-4">
-          <button type="submit" disabled={!dirty || saving} className={MT_BUTTON_LG}>
-            {saving ? t("selfService.saving") : t("ticket.details.save")}
-          </button>
-          <p role="status" className={`text-[13.5px] ${statusTone}`}>
+        <div className="sticky bottom-0 z-10 flex flex-wrap items-center justify-between gap-x-4 gap-y-3 rounded-b-[22px] border-t border-(--mt-hair) bg-(--mt-bar) px-[clamp(18px,4.5vw,30px)] py-4.5 backdrop-blur-md">
+          <p role="status" className={`min-w-0 flex-[1_1_200px] text-sm ${statusTone}`}>
             {statusText}
           </p>
+          <button type="submit" disabled={!dirty || saving} className={`${TP_BUTTON} max-[480px]:w-full`}>
+            {saving ? t("selfService.saving") : t("ticket.details.save")}
+          </button>
         </div>
       </form>
     </section>
