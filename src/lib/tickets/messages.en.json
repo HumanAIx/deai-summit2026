@@ -52,6 +52,8 @@
       "accessAllSessions": "All sessions",
       "includesLabel": "{type} ticket includes",
       "viewOrder": "View my order",
+      "backToOrder": "Back to your order",
+      "savePdf": "Save as PDF",
       "qrHintLong": "Show the QR code at the entrance; the door team scans it. A screenshot works too, also without internet. Turn your screen brightness up.",
       "testBadge": "Test ticket — not a real purchase",
       "passedOn": {
@@ -156,7 +158,8 @@
         "required": "This field is required.",
         "max": "That is too long.",
         "email": "Enter a valid email address.",
-        "tickets": "Choose at least one ticket."
+        "tickets": "Choose at least one ticket.",
+        "reason": "Choose a reason."
       },
       "cancelTicket": {
         "heading": "Cancel my ticket",
@@ -221,7 +224,19 @@
         "submit": "Send refund request",
         "sentHeading": "Refund request sent",
         "sentBody": "The organiser will review it and answer by email. Your tickets stay valid until a refund is made.",
-        "open": "Ask for a refund"
+        "open": "Ask for a refund",
+      "cardIntro": "Ask the organiser to refund some or all of your tickets.",
+      "fillAbove": "Fill in your request above.",
+      "close": "Close the refund request",
+      "selectAll": "Select all",
+      "clearAll": "Clear all",
+      "messageHeading": "Message",
+      "optional": "Optional",
+      "messagePlaceholder": "Anything the organiser should know",
+      "summaryHeading": "Your request",
+      "summaryTickets": "Tickets",
+      "summaryCount": "{selected} of {total}",
+      "summaryNote": "The organiser confirms the final refund amount when they approve your request."
       }
     },
     "order": {
@@ -289,7 +304,12 @@
       "invoiceAskUs": "Ask us",
       "invoiceAskUsAfter": "and we send a credit note and a corrected invoice.",
       "summaryHeading": "Order summary",
-      "paidAmountOnShort": "paid {amount} on {date}"
+      "paidAmountOnShort": "paid {amount} on {date}",
+      "welcome": "Payment received. Bookmark this page — it's where you manage your order. We've also emailed you the link.",
+      "eventFacts": "Event date and venue",
+      "refundRequestedPill": "Refund requested",
+      "asideLabel": "Invoice and refunds",
+      "noDocumentsHint": "Your invoice appears here once it's issued."
     },
     "confirming": {
       "pendingHeading": "Confirming your payment…",

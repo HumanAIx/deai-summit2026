@@ -57,6 +57,12 @@ describe("/tickets/order/[token] page", () => {
     expect(element.props).toMatchObject({ order, token: TOKEN });
   });
 
+  it("a paid order reached from the checkout's return URL (?o=) says so (justPaid); a bookmarked link does not", async () => {
+    fetchMyOrder.mockResolvedValue({ state: "ok", data: order });
+    expect((await call({ o: ORDER_ID })).props).toMatchObject({ justPaid: true });
+    expect((await call()).props).toMatchObject({ justPaid: false });
+  });
+
   it("404 WITH ?o={orderId} is the 'confirming your payment' state, with localized links", async () => {
     fetchMyOrder.mockResolvedValue({ state: "invalid" });
     const confirming = findByType(await call({ o: ORDER_ID }), OrderConfirming);

@@ -2,7 +2,7 @@ import { z } from "zod";
 import { REFUND_REASONS } from "@/lib/tickets/schemas";
 
 /**
- * The client-side form schemas of holder self-service. Their messages are TOKENS (`required`, `max`, `email`, `tickets`)
+ * The client-side form schemas of holder self-service. Their messages are TOKENS (`required`, `max`, `email`, `tickets`, `reason`)
  * that the components map to translated text (WCAG 3.3.1 / 3.3.3); the limits are the same as ep-api's and as the
  * route handlers' schemas in `lib/tickets/schemas.ts`.
  */
@@ -21,7 +21,7 @@ export type HolderFormValues = z.infer<typeof holderFormSchema>;
 
 export const refundFormSchema = z.object({
   ticketIds: z.array(z.string()).min(1, "tickets"),
-  reason: z.enum(REFUND_REASONS, { message: "required" }),
+  reason: z.enum(REFUND_REASONS, { message: "reason" }),
   message: z.string().trim().max(1000, "max"),
 });
 export type RefundFormValues = z.infer<typeof refundFormSchema>;

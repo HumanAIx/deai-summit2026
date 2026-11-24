@@ -12,8 +12,7 @@ import { useForm, useWatch } from "react-hook-form";
 import { requestNameCorrection, requestPassOn, requestPassOnCheck } from "@/lib/tickets/self-service-client";
 import { TextField } from "./checkout/TextField";
 import { nameFormSchema, passOnFormSchema, type NameFormValues, type PassOnFormValues } from "./self-service-forms";
-import { MT_BUTTON, MT_BUTTON_GHOST, MT_BUTTON_OUTLINE, MT_CARD, MT_INPUT, MT_INPUT_ERROR, MT_INPUT_OK } from "./my-ticket-classes";
-import { TICKETS_BUTTON, TICKETS_CARD } from "./tickets-classes";
+import { TP_BUTTON, TP_BUTTON_OUTLINE, TP_BUTTON_TEXT, TP_CARD, TP_CARD_PAD, TP_INPUT, TP_INPUT_ERROR, TP_INPUT_OK } from "./ticket-page-classes";
 
 type Failure = { code: string } | null;
 
@@ -50,21 +49,22 @@ function CorrectNameForm({ token, currentName, onDone }: { token: string; curren
   }
 
   return (
-    <form onSubmit={handleSubmit(onSubmit)} noValidate aria-labelledby="correct-name-heading" className={`${TICKETS_CARD} flex flex-col gap-4`}>
-      <h2 id="correct-name-heading" className="font-heading text-xl font-semibold">
+    <form onSubmit={handleSubmit(onSubmit)} noValidate aria-labelledby="correct-name-heading" className={`${TP_CARD} ${TP_CARD_PAD} flex flex-col gap-4`}>
+      <h2 id="correct-name-heading" className="text-[19px] font-semibold tracking-[-0.01em]">
         {t("selfService.correctName.heading")}
       </h2>
-      <p className="text-sm text-muted">{t("selfService.correctName.intro")}</p>
+      <p className="text-[15px] leading-normal text-(--mt-body)">{t("selfService.correctName.intro")}</p>
       <TextField
         id="correct-name-input"
         label={t("selfService.nameLabel")}
         autoComplete="name"
+        variant="page"
         error={fieldMessage({ t, issue: errors.name?.message })}
         registration={register("name")}
       />
-      <div role="alert">{failure ? <p className="text-sm text-danger">{errorText({ t, code: failure.code })}</p> : null}</div>
+      <div role="alert">{failure ? <p className="text-sm text-(--mt-err)">{errorText({ t, code: failure.code })}</p> : null}</div>
       <div role="status">{saved ? <p className="text-sm font-medium">{t("selfService.correctName.saved")}</p> : null}</div>
-      <button type="submit" disabled={isSubmitting} className={`${TICKETS_BUTTON} self-start disabled:opacity-50`}>
+      <button type="submit" disabled={isSubmitting} className={`${TP_BUTTON} self-start max-[480px]:w-full`}>
         {isSubmitting ? t("selfService.saving") : t("selfService.correctName.submit")}
       </button>
     </form>
@@ -133,39 +133,39 @@ function PassOnForm({ token, onDone }: { token: string; onDone: () => void }) {
 
   const nameField = register("name");
   return (
-    <section aria-labelledby="pass-on-heading" className={`${MT_CARD} flex flex-col gap-3 p-[clamp(18px,4vw,24px)]`}>
+    <section aria-labelledby="pass-on-heading" className={`${TP_CARD} ${TP_CARD_PAD} flex flex-col gap-4`}>
       <div className="flex flex-wrap items-center gap-3">
         <div className="flex min-w-0 flex-[1_1_220px] flex-col gap-0.5">
-          <h2 id="pass-on-heading" className="text-[15px] font-normal">
+          <h2 id="pass-on-heading" className="text-[19px] font-semibold tracking-[-0.01em]">
             {t("selfService.passOn.heading")}
           </h2>
-          <p className="text-[13px] text-muted">{t("selfService.passOn.introCard")}</p>
+          <p className="text-sm leading-normal text-(--mt-body)">{t("selfService.passOn.introCard")}</p>
         </div>
         {open ? null : (
-          <button ref={openButton} type="button" onClick={() => setOpen(true)} className={MT_BUTTON_OUTLINE}>
+          <button ref={openButton} type="button" onClick={() => setOpen(true)} className={TP_BUTTON_OUTLINE}>
             {t("selfService.passOn.open")}
           </button>
         )}
       </div>
       {pending ? (
-        <div role="group" aria-labelledby="pass-on-confirm-heading" className="flex flex-col gap-3 border-t border-(--color-border) pt-3">
-          <h3 id="pass-on-confirm-heading" ref={confirmHeading} tabIndex={-1} className="text-[15px] font-semibold focus:outline-none">
+        <div role="group" aria-labelledby="pass-on-confirm-heading" className="flex flex-col gap-3 border-t border-(--mt-hair) pt-4">
+          <h3 id="pass-on-confirm-heading" ref={confirmHeading} tabIndex={-1} className="text-[17px] font-semibold focus:outline-none">
             {t("selfService.passOn.confirmHeading", { name: pending.name })}
           </h3>
           <p className="text-sm [overflow-wrap:anywhere]">{t("selfService.passOn.confirmTo", { name: pending.name, email: pending.email })}</p>
-          <p className="text-sm font-medium text-danger">{t("selfService.passOn.confirmWarning")}</p>
+          <p className="text-sm font-medium text-(--mt-err)">{t("selfService.passOn.confirmWarning")}</p>
           <div className="flex flex-wrap items-center gap-2.5">
-            <button type="button" onClick={() => void confirm()} disabled={submitting} className={MT_BUTTON}>
+            <button type="button" onClick={() => void confirm()} disabled={submitting} className={TP_BUTTON}>
               {submitting ? t("selfService.saving") : t("selfService.passOn.confirm")}
             </button>
-            <button type="button" onClick={() => setPending(null)} disabled={submitting} className={MT_BUTTON_GHOST}>
+            <button type="button" onClick={() => setPending(null)} disabled={submitting} className={TP_BUTTON_TEXT}>
               {t("selfService.passOn.back")}
             </button>
           </div>
         </div>
       ) : open ? (
         <form onSubmit={handleSubmit(check)} noValidate aria-labelledby="pass-on-heading" className="flex flex-col gap-2.5">
-          <div className="grid grid-cols-[repeat(auto-fit,minmax(200px,1fr))] gap-2.5">
+          <div className="grid grid-cols-[repeat(auto-fit,minmax(min(100%,220px),1fr))] gap-3">
             <div className="flex flex-col gap-1">
               <input
                 id="pass-on-name"
@@ -174,7 +174,7 @@ function PassOnForm({ token, onDone }: { token: string; onDone: () => void }) {
                 aria-label={t("selfService.passOn.nameLabel")}
                 aria-invalid={errors.name ? true : undefined}
                 aria-describedby={errors.name ? "pass-on-name-error" : undefined}
-                className={`${MT_INPUT} ${errors.name ? MT_INPUT_ERROR : MT_INPUT_OK}`}
+                className={`${TP_INPUT} ${errors.name ? TP_INPUT_ERROR : TP_INPUT_OK}`}
                 {...nameField}
                 ref={(element) => {
                   nameField.ref(element);
@@ -182,7 +182,7 @@ function PassOnForm({ token, onDone }: { token: string; onDone: () => void }) {
                 }}
               />
               {errors.name ? (
-                <p id="pass-on-name-error" role="alert" className="text-xs text-danger">
+                <p id="pass-on-name-error" role="alert" className="text-[13px] text-(--mt-err)">
                   {fieldMessage({ t, issue: errors.name.message })}
                 </p>
               ) : null}
@@ -197,25 +197,25 @@ function PassOnForm({ token, onDone }: { token: string; onDone: () => void }) {
                 aria-label={t("selfService.passOn.emailLabel")}
                 aria-invalid={errors.email ? true : undefined}
                 aria-describedby={errors.email ? "pass-on-email-error" : undefined}
-                className={`${MT_INPUT} ${errors.email ? MT_INPUT_ERROR : MT_INPUT_OK}`}
+                className={`${TP_INPUT} ${errors.email ? TP_INPUT_ERROR : TP_INPUT_OK}`}
                 {...register("email")}
               />
               {errors.email ? (
-                <p id="pass-on-email-error" role="alert" className="text-xs text-danger">
+                <p id="pass-on-email-error" role="alert" className="text-[13px] text-(--mt-err)">
                   {fieldMessage({ t, issue: errors.email.message })}
                 </p>
               ) : null}
             </div>
           </div>
-          <div role="alert">{failure ? <p className="text-sm text-danger">{errorText({ t, code: failure.code })}</p> : null}</div>
+          <div role="alert">{failure ? <p className="text-sm text-(--mt-err)">{errorText({ t, code: failure.code })}</p> : null}</div>
           <div className="flex flex-wrap items-center gap-2.5">
-            <button type="submit" disabled={!filled} className={MT_BUTTON}>
+            <button type="submit" disabled={!filled} className={TP_BUTTON}>
               {t("selfService.passOn.submitNow")}
             </button>
-            <button type="button" onClick={close} className={MT_BUTTON_GHOST}>
+            <button type="button" onClick={close} className={TP_BUTTON_TEXT}>
               {t("selfService.cancel")}
             </button>
-            <p className="text-[13px] text-muted">{t("selfService.passOn.warning")}</p>
+            <p className="text-[13px] text-(--mt-mut)">{t("selfService.passOn.warning")}</p>
           </div>
         </form>
       ) : null}
