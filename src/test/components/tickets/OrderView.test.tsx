@@ -41,8 +41,10 @@ describe("OrderView holder answers", () => {
     await renderOrder(withAnswers({ company: "Quantia", jobTitle: "CTO", dietary: "gluten_free", tshirt: "L" }));
     const holders = screen.getByRole("heading", { name: "Ticket holders" }).closest("section") as HTMLElement;
     const [ada, second] = within(holders).getAllByRole("listitem");
+    // Job title and company are the design's badge line under the name; the other answers are labelled rows.
+    expect(within(ada as HTMLElement).getByText("CTO · Quantia")).toBeInTheDocument();
     const rows = within(ada as HTMLElement).getAllByRole("term").map((term) => [term.textContent, term.nextElementSibling?.textContent]);
-    expect(rows).toEqual([["Company", "Quantia"], ["Job title", "CTO"], ["Dietary needs", "Gluten free"], ["T-shirt size", "L"]]);
+    expect(rows).toEqual([["Dietary needs", "Gluten free"], ["T-shirt size", "L"]]);
     expect(within(second as HTMLElement).queryByRole("term")).toBeNull();
     expect(within(ada as HTMLElement).queryByRole("textbox")).toBeNull();
   });
@@ -66,28 +68,50 @@ describe("OrderView holder answers", () => {
 });
 
 describe("OrderView", () => {
-  it("shows the order number, status, what was bought, and the paid amount and date", async () => {
+  it("shows the order number, status, what was bought, the total and the paid date", async () => {
     await renderOrder(ORDER);
     expect(screen.getByRole("heading", { level: 1, name: "Your order: 2 × Full pass" })).toBeInTheDocument();
-    expect(screen.getByText("Order #42 · Paid")).toBeInTheDocument();
-    expect(screen.getByText("Paid €193 on November 12, 2026")).toBeInTheDocument();
+    expect(screen.getByText("Order #42")).toBeInTheDocument();
+    expect(screen.getByText("Paid")).toBeInTheDocument();
+    expect(screen.getByText("Paid on November 12, 2026")).toBeInTheDocument();
+    const header = screen.getByRole("heading", { level: 1 }).closest("header") as HTMLElement;
+    expect(within(header).getByText("€193")).toBeInTheDocument();
   });
 
-  it("with the event known, the subtitle reads like the prototype: event · dates · venue · paid amount on date", async () => {
+  it("with the event known, shows its dates and venue as chips (design)", async () => {
     const source: MyTicket["source"] = { kind: "schedule", id: "s1", name: "DeAI Summit 2026", startDate: "2026-11-25", endDate: "2026-11-26", timeZone: "Europe/Malta", startsAt: null, venue: { name: "MFCC Malta", city: "Ta' Qali", label: null } } as MyTicket["source"];
     await renderOrder(ORDER, {}, source);
-    expect(screen.getByText(/^DeAI Summit 2026 · November 25\s?–\s?26, 2026 · MFCC Malta · paid €193 on November 12, 2026$/)).toBeInTheDocument();
+    const facts = screen.getByRole("list", { name: "Event date and venue" });
+    expect(within(facts).getAllByRole("listitem").map((item) => item.textContent)).toEqual([expect.stringMatching(/^November 25\s?–\s?26, 2026$/), "MFCC Malta"]);
   });
 
-  it("an event without dates or venue keeps only what it has", async () => {
+  it("an event without dates or venue shows no chips", async () => {
     const source = { kind: "event", id: "e1", name: "DeAI Summit 2026", startDate: null, endDate: null, timeZone: "Europe/Malta", startsAt: null, venue: null } as MyTicket["source"];
     await renderOrder(ORDER, {}, source);
-    expect(screen.getByText("DeAI Summit 2026 · paid €193 on November 12, 2026")).toBeInTheDocument();
+    expect(screen.queryByRole("list", { name: "Event date and venue" })).not.toBeInTheDocument();
   });
 
   it("several lines make a combined title", async () => {
     await renderOrder({ ...ORDER, lines: [...ORDER.lines, { name: "Dinner", quantity: 1, unitCents: 5000, discountCents: 0, feeCents: 0, vatRate: 18, grossCents: 5000 }] });
-    expect(screen.getByRole("heading", { level: 1, name: "Your order: 2 × Full pass · 1 × Dinner" })).toBeInTheDocument();
+    expect(screen.getByRole("heading", { level: 1, name: "Your order: 2 × Full pass + 1 × Dinner" })).toBeInTheDocument();
+  });
+
+  it("says 'payment received, bookmark this page' only when the buyer just came back from the checkout of a paid order", async () => {
+    const plain = await renderOrder(ORDER);
+    expect(screen.queryByText(/Bookmark this page/)).not.toBeInTheDocument();
+    plain.unmount();
+    const fresh = await resolveServerElement(<OrderView order={ORDER} token={TOKEN} justPaid />);
+    const view = render(<>{fresh}</>);
+    expect(screen.getByText(/Payment received\. Bookmark this page/)).toBeInTheDocument();
+    view.unmount();
+    render(<>{await resolveServerElement(<OrderView order={{ ...ORDER, status: "refunded" }} token={TOKEN} justPaid />)}</>);
+    expect(screen.queryByText(/Bookmark this page/)).not.toBeInTheDocument();
+  });
+
+  it("tags each holder with the pass when the order has a single ticket type", async () => {
+    await renderOrder(ORDER);
+    const holders = screen.getByRole("heading", { name: "Ticket holders" }).closest("section") as HTMLElement;
+    expect(within(holders).getAllByText("Full pass")).toHaveLength(2);
   });
 
   it("lists each line with quantity x price, VAT rate, per-ticket discount and booking fee, and the line total", async () => {
@@ -155,7 +179,7 @@ describe("OrderView", () => {
 
   it("says so when there are no documents yet", async () => {
     await renderOrder({ ...ORDER, documents: [] });
-    expect(screen.getByText("No documents yet.")).toBeInTheDocument();
+    expect(screen.getByText(/^No documents yet\./)).toBeInTheDocument();
   });
 
   it("shows the test-order badge only when ep-api flags the order as a test", async () => {
@@ -168,7 +192,8 @@ describe("OrderView", () => {
 
   it("shows the seller footer and a refunded order status", async () => {
     await renderOrder({ ...ORDER, status: "refunded" });
-    expect(screen.getByText("Order #42 · Refunded")).toBeInTheDocument();
+    expect(screen.getByText("Order #42")).toBeInTheDocument();
+    expect(within(screen.getByRole("heading", { level: 1 }).closest("header") as HTMLElement).getByText("Refunded")).toBeInTheDocument();
     expect(screen.getByText("Sold by Acme Events Ltd")).toBeInTheDocument();
   });
 
@@ -220,12 +245,18 @@ describe("OrderView", () => {
       expect(screen.queryByRole("button", { name: /^Edit/ })).not.toBeInTheDocument();
     });
 
-    it("shows the refund request form for the valid tickets when a request may be sent", async () => {
+    it("opens the refund request as a full-width panel above the order, for the valid tickets, and closes it again", async () => {
       await renderOrder(WITH);
       const section = screen.getByRole("heading", { name: "Refunds" }).closest("section") as HTMLElement;
       fireEvent.click(within(section).getByRole("button", { name: "Ask for a refund" }));
-      expect(within(section).getByRole("heading", { name: "Request a refund" })).toBeInTheDocument();
-      expect(within(section).getAllByRole("checkbox")).toHaveLength(2);
+      const panel = screen.getByRole("region", { name: "Request a refund" });
+      expect(section.contains(panel)).toBe(false);
+      expect(within(panel).getAllByRole("checkbox")).toHaveLength(2);
+      expect(within(section).getByText("Fill in your request above.")).toBeInTheDocument();
+      expect(screen.getByRole("heading", { name: "Request a refund" })).toHaveFocus();
+      fireEvent.click(within(panel).getByRole("button", { name: "Cancel" }));
+      expect(screen.queryByRole("region", { name: "Request a refund" })).not.toBeInTheDocument();
+      expect(within(section).getByRole("button", { name: "Ask for a refund" })).toBeInTheDocument();
     });
 
     it("shows an open request's status instead of the form", async () => {

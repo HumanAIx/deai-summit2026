@@ -1,6 +1,6 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { axeViolations, describeViolations } from "../../helpers/axe";
-import { fireEvent, render, screen, waitFor } from "../../test-utils";
+import { fireEvent, render, screen, waitFor, within } from "../../test-utils";
 
 const router = { push: vi.fn(), refresh: vi.fn() };
 vi.mock("next/navigation", () => ({ useRouter: () => router }));
@@ -33,18 +33,46 @@ function renderOpen(ui: React.ReactElement) {
 describe("RefundRequestForm", () => {
   it("starts closed: the intro and an 'Ask for a refund' button, no form", () => {
     render(<RefundRequestForm token={TOKEN} tickets={TICKETS} />);
-    expect(screen.getByText(/Nothing is refunded until they approve it/)).toBeInTheDocument();
+    expect(screen.getByText("Ask the organiser to refund some or all of your tickets.")).toBeInTheDocument();
     expect(screen.queryByRole("checkbox")).not.toBeInTheDocument();
   });
 
-  it("says it only asks the organiser and lists a checkbox per ticket, a reason select and a message", async () => {
+  it("says it only asks the organiser and lists a checkbox per ticket, reason chips and a message", async () => {
     const { container } = renderOpen(<RefundRequestForm token={TOKEN} tickets={TICKETS} />);
     expect(screen.getByText(/Nothing is refunded until they approve it/)).toBeInTheDocument();
     expect(screen.getByRole("checkbox", { name: /Ada Lovelace/ })).not.toBeChecked();
     expect(screen.getByRole("checkbox", { name: /Grace Hopper/ })).not.toBeChecked();
-    expect(screen.getAllByRole("option").map((o) => o.textContent)).toEqual(["Choose a reason", "I can't attend", "I was charged twice", "The event changed", "I bought it by mistake", "Another reason"]);
-    expect(screen.getByLabelText("Message to the organiser (optional)")).toHaveAttribute("maxlength", "1000");
+    expect(screen.getAllByRole("radio").map((radio) => radio.closest("label")?.textContent)).toEqual(["I can't attend", "I was charged twice", "The event changed", "I bought it by mistake", "Another reason"]);
+    expect(screen.getByRole("textbox", { name: /Message/ })).toHaveAttribute("maxlength", "1000");
+    expect(screen.getByText("Fill in your request above.")).toBeInTheDocument();
     expect(describeViolations(await axeViolations({ container }))).toEqual([]);
+  });
+
+  it("'Select all' picks every ticket and turns into 'Clear all'; the summary counts them and names the reason", () => {
+    renderOpen(<RefundRequestForm token={TOKEN} tickets={TICKETS} />);
+    const summary = screen.getByRole("complementary", { name: "Your request" });
+    expect(within(summary).getByText("0 of 2")).toBeInTheDocument();
+    fireEvent.click(screen.getByRole("button", { name: "Select all" }));
+    expect(screen.getByRole("checkbox", { name: /Ada Lovelace/ })).toBeChecked();
+    expect(screen.getByRole("checkbox", { name: /Grace Hopper/ })).toBeChecked();
+    expect(within(summary).getByText("2 of 2")).toBeInTheDocument();
+    fireEvent.click(screen.getByRole("radio", { name: "The event changed" }));
+    expect(within(summary).getByText("The event changed")).toBeInTheDocument();
+    fireEvent.click(screen.getByRole("button", { name: "Clear all" }));
+    expect(within(summary).getByText("0 of 2")).toBeInTheDocument();
+  });
+
+  it("Cancel, the close button and Escape close the form and give the focus back to 'Ask for a refund'", () => {
+    renderOpen(<RefundRequestForm token={TOKEN} tickets={TICKETS} />);
+    expect(screen.getByRole("heading", { name: "Request a refund" })).toHaveFocus();
+    fireEvent.click(screen.getByRole("button", { name: "Cancel" }));
+    expect(screen.queryByRole("checkbox")).not.toBeInTheDocument();
+    fireEvent.click(screen.getByRole("button", { name: "Ask for a refund" }));
+    fireEvent.click(screen.getByRole("button", { name: "Close the refund request" }));
+    expect(screen.queryByRole("checkbox")).not.toBeInTheDocument();
+    fireEvent.click(screen.getByRole("button", { name: "Ask for a refund" }));
+    fireEvent.keyDown(screen.getByRole("checkbox", { name: /Ada Lovelace/ }), { key: "Escape" });
+    expect(screen.queryByRole("checkbox")).not.toBeInTheDocument();
   });
 
   it("pre-selects the only ticket of a one-ticket order", () => {
@@ -58,7 +86,8 @@ describe("RefundRequestForm", () => {
     renderOpen(<RefundRequestForm token={TOKEN} tickets={TICKETS} />);
     fireEvent.click(screen.getByRole("button", { name: "Send refund request" }));
     expect(await screen.findByText("Choose at least one ticket.")).toBeInTheDocument();
-    expect(screen.getByLabelText("Reason")).toHaveAttribute("aria-invalid", "true");
+    const reasonError = screen.getByText("Choose a reason.");
+    for (const radio of screen.getAllByRole("radio")) expect(radio).toHaveAttribute("aria-describedby", reasonError.id);
     expect(fetchMock).not.toHaveBeenCalled();
   });
 
@@ -67,8 +96,8 @@ describe("RefundRequestForm", () => {
     vi.stubGlobal("fetch", fetchMock);
     renderOpen(<RefundRequestForm token={TOKEN} tickets={TICKETS} />);
     fireEvent.click(screen.getByRole("checkbox", { name: /Grace Hopper/ }));
-    fireEvent.change(screen.getByLabelText("Reason"), { target: { value: "cant_attend" } });
-    fireEvent.change(screen.getByLabelText("Message to the organiser (optional)"), { target: { value: "  I am ill  " } });
+    fireEvent.click(screen.getByRole("radio", { name: "I can't attend" }));
+    fireEvent.change(screen.getByRole("textbox", { name: /Message/ }), { target: { value: "  I am ill  " } });
     fireEvent.click(screen.getByRole("button", { name: "Send refund request" }));
     expect(await screen.findByText("Refund request sent")).toBeInTheDocument();
     const [url, init] = fetchMock.mock.calls[0] as [string, { headers: Record<string, string>; body: string }];
@@ -86,7 +115,7 @@ describe("RefundRequestForm", () => {
     fireEvent.click(ada);
     fireEvent.click(screen.getByRole("checkbox", { name: /Grace Hopper/ }));
     fireEvent.click(ada);
-    fireEvent.change(screen.getByLabelText("Reason"), { target: { value: "other" } });
+    fireEvent.click(screen.getByRole("radio", { name: "Another reason" }));
     fireEvent.click(screen.getByRole("button", { name: "Send refund request" }));
     await waitFor(() => expect(fetchMock).toHaveBeenCalled());
     expect(JSON.parse((fetchMock.mock.calls[0] as [string, { body: string }])[1].body)).toEqual({ ticketIds: [T2], reason: "other" });
@@ -95,7 +124,7 @@ describe("RefundRequestForm", () => {
   it("a second request is refused with a translated message and the form stays", async () => {
     vi.stubGlobal("fetch", respond({ success: false, error: "api text", code: "refundRequestOpen" }, 409));
     renderOpen(<RefundRequestForm token={TOKEN} tickets={[TICKETS[0] as (typeof TICKETS)[number]]} />);
-    fireEvent.change(screen.getByLabelText("Reason"), { target: { value: "other" } });
+    fireEvent.click(screen.getByRole("radio", { name: "Another reason" }));
     fireEvent.click(screen.getByRole("button", { name: "Send refund request" }));
     expect(await screen.findByText("You already have a refund request waiting for an answer.")).toBeInTheDocument();
     expect(screen.queryByText("api text")).not.toBeInTheDocument();

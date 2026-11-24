@@ -10,7 +10,7 @@ import { useForm } from "react-hook-form";
 import { requestHolderEdit } from "@/lib/tickets/self-service-client";
 import { TextField } from "./checkout/TextField";
 import { holderFormSchema, type HolderFormValues } from "./self-service-forms";
-import { MT_BUTTON, MT_BUTTON_GHOST, MT_BUTTON_OUTLINE } from "./my-ticket-classes";
+import { TP_BUTTON, TP_BUTTON_OUTLINE, TP_BUTTON_TEXT } from "./ticket-page-classes";
 
 /**
  * "Edit" on one holder of the buyer's order. Only the fields ep-api allows are shown: the name when the organiser allows
@@ -83,13 +83,13 @@ export function HolderEditor({
 
   if (!open) {
     return (
-      <div className="mt-2 flex flex-col gap-2">
+      <div className="flex flex-col gap-2">
         {done ? (
-          <p role="status" className="text-sm font-medium">
+          <p role="status" className="text-sm font-medium text-(--mt-ok)">
             {t("selfService.holder.saved")}
           </p>
         ) : null}
-        <button ref={editButton} type="button" onClick={() => { setDone(false); setOpen(true); }} aria-label={t(assign ? "selfService.holder.assignFor" : "selfService.holder.editFor", { label })} className={`${MT_BUTTON_OUTLINE} min-h-10 self-start px-3.5 text-[13px]`}>
+        <button ref={editButton} type="button" onClick={() => { setDone(false); setOpen(true); }} aria-label={t(assign ? "selfService.holder.assignFor" : "selfService.holder.editFor", { label })} className={`${TP_BUTTON_OUTLINE} self-start px-4.5 text-sm`}>
           {t(assign ? "selfService.holder.assign" : "selfService.holder.edit")}
         </button>
       </div>
@@ -99,11 +99,12 @@ export function HolderEditor({
   const errorText = code ? (code === "unchanged" ? t("selfService.holder.unchanged") : t.has(`errors.${code}`) ? t(`errors.${code}`) : t("errors.generic")) : null;
 
   return (
-    <form onSubmit={handleSubmit(onSubmit)} noValidate aria-label={t("selfService.holder.editFor", { label })} className="mt-3 flex flex-col gap-3 border-t border-(--color-border) pt-3">
-      {canEditName ? <TextField id={`holder-name-${ticketId}`} label={t("selfService.nameLabel")} autoComplete="off" error={message(errors.name?.message)} registration={register("name")} /> : null}
+    <form onSubmit={handleSubmit(onSubmit)} noValidate aria-label={t("selfService.holder.editFor", { label })} className="flex flex-col gap-4 rounded-2xl border border-(--mt-hair) bg-(--mt-well) p-4">
+      {canEditName ? <TextField id={`holder-name-${ticketId}`} variant="page" label={t("selfService.nameLabel")} autoComplete="off" error={message(errors.name?.message)} registration={register("name")} /> : null}
       {canEditEmail ? (
         <TextField
           id={`holder-email-${ticketId}`}
+          variant="page"
           type="email"
           inputMode="email"
           label={t("selfService.holder.emailLabel")}
@@ -113,12 +114,12 @@ export function HolderEditor({
           registration={register("email")}
         />
       ) : null}
-      <div role="alert">{errorText ? <p className="text-sm text-danger">{errorText}</p> : null}</div>
+      <div role="alert">{errorText ? <p className="text-sm text-(--mt-err)">{errorText}</p> : null}</div>
       <div className="flex flex-wrap items-center gap-2.5">
-        <button type="submit" disabled={isSubmitting} className={MT_BUTTON}>
+        <button type="submit" disabled={isSubmitting} className={`${TP_BUTTON} min-h-11 max-[480px]:flex-1`}>
           {isSubmitting ? t("selfService.saving") : t("selfService.holder.save")}
         </button>
-        <button type="button" onClick={close} disabled={isSubmitting} className={MT_BUTTON_GHOST}>
+        <button type="button" onClick={close} disabled={isSubmitting} className={TP_BUTTON_TEXT}>
           {t("selfService.cancel")}
         </button>
       </div>

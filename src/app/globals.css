@@ -912,4 +912,53 @@
   --tk-mut: #8B95A7;
   --tk-warn: #FBBF24;
   --tk-err: #FCA5A5;
+  /* The holder's "My Ticket" and the buyer's "Manage Order" pages (24 Nov 2026 design exports). Accent and gradient are
+     the ones above; these are the design's navy surfaces, hairlines and text greys. */
+  --mt-ink: var(--color-background);
+  --mt-ticket: #071029;
+  --mt-card: rgba(10, 20, 50, 0.6);
+  --mt-well: rgba(4, 10, 30, 0.55);
+  --mt-field: rgba(4, 10, 30, 0.7);
+  --mt-bar: rgba(8, 16, 42, 0.94);
+  --mt-line: rgba(255, 255, 255, 0.1);
+  --mt-hair: rgba(255, 255, 255, 0.08);
+  --mt-control: rgba(255, 255, 255, 0.2);
+  --mt-chip: rgba(255, 255, 255, 0.16);
+  --mt-soft: #C9D0DE;
+  --mt-body: #A8B1C4;
+  --mt-mut: #8C97B0;
+  --mt-dim: #6E7891;
+  --mt-blue: #3B8BFF;
+  --mt-ok: #3DDC97;
+  --mt-warn: #F5C451;
+  --mt-warn-soft: #E6D3A3;
+  --mt-err: #FF8A8A;
+  --mt-hover: #DDF6F9;
 }
+
+/* "Save as PDF" on the holder's ticket page prints the ticket card alone, on one page, dark as on screen: everything that is
+   neither the card, inside it, nor one of its ancestors is left out, and the ancestors lose their spacing. */
+@media print {
+  body:has([data-ticket-card]) *:not(:has([data-ticket-card])):not([data-ticket-card]):not([data-ticket-card] *) {
+    display: none !important;
+  }
+  body:has([data-ticket-card]) :has([data-ticket-card]) {
+    margin: 0 !important;
+    padding: 0 !important;
+    min-height: 0 !important;
+    max-width: none !important;
+    gap: 0 !important;
+  }
+  body:has([data-ticket-card]) [data-ticket-card] {
+    width: 440px;
+    margin: 0 auto;
+    box-shadow: none;
+    break-inside: avoid;
+  }
+  body:has([data-ticket-card]) [data-ticket-card],
+  body:has([data-ticket-card]) [data-ticket-card] * {
+    -webkit-print-color-adjust: exact;
+    print-color-adjust: exact;
+  }
+}
+
