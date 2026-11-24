@@ -81,7 +81,7 @@ export async function OrderView({
   ticketHrefs?: Readonly<Record<string, string>>;
   /** DeAI: the event of the order (read from the buyer's own ticket; ep-api's order answer has none), for the date and venue. */
   eventSource?: MyTicket["source"] | null;
-  /** The visitor just came back from the checkout (`?o=` in the address): the "payment received, bookmark this page" note. */
+  /** The visitor just came back from the checkout (`?paid=1`, opened by the payment loader): the "payment received, bookmark this page" note. */
   justPaid?: boolean;
 }) {
   const [t, tTicket, tq, format] = await Promise.all([getTranslations("tickets.order"), getTranslations("tickets.ticket"), getTranslations("tickets.checkout.questions"), getFormatter()]);

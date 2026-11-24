@@ -22,8 +22,8 @@ const TOKEN = "b".repeat(43);
 const ORDER_ID = "5c1f7a1e-2f4a-4a53-9a3e-0e6f6a4c1b11";
 const order = { orderNo: 7 };
 
-function call({ token = TOKEN, o }: { token?: string; o?: string | string[] | undefined } = {}) {
-  return page.default({ params: Promise.resolve({ token }), searchParams: Promise.resolve({ ...(o === undefined ? {} : { o }) }) });
+function call({ token = TOKEN, o, paid }: { token?: string; o?: string | string[] | undefined; paid?: string } = {}) {
+  return page.default({ params: Promise.resolve({ token }), searchParams: Promise.resolve({ ...(o === undefined ? {} : { o }), ...(paid === undefined ? {} : { paid }) }) });
 }
 function findByType(node: unknown, type: unknown): { props: Record<string, unknown> } | null {
   if (!node || typeof node !== "object") return null;
@@ -57,16 +57,22 @@ describe("/tickets/order/[token] page", () => {
     expect(element.props).toMatchObject({ order, token: TOKEN });
   });
 
-  it("a paid order reached from the checkout's return URL (?o=) says so (justPaid); a bookmarked link does not", async () => {
+  it("a paid order reached from the checkout's return URL (?o=) is the loader's confirmed screen", async () => {
     fetchMyOrder.mockResolvedValue({ state: "ok", data: order });
-    expect((await call({ o: ORDER_ID })).props).toMatchObject({ justPaid: true });
+    const confirming = findByType(await call({ o: ORDER_ID }), OrderConfirming);
+    expect(confirming?.props).toMatchObject({ orderId: ORDER_ID, token: TOKEN, paid: true, contactHref: "/contact" });
+  });
+
+  it("?paid (opened by the confirmed screen) is the order with the 'just paid' note; a bookmarked link is not", async () => {
+    fetchMyOrder.mockResolvedValue({ state: "ok", data: order });
+    expect((await call({ paid: "1" })).props).toMatchObject({ justPaid: true });
     expect((await call()).props).toMatchObject({ justPaid: false });
   });
 
   it("404 WITH ?o={orderId} is the 'confirming your payment' state, with localized links", async () => {
     fetchMyOrder.mockResolvedValue({ state: "invalid" });
     const confirming = findByType(await call({ o: ORDER_ID }), OrderConfirming);
-    expect(confirming?.props).toMatchObject({ orderId: ORDER_ID, token: TOKEN, ticketsHref: "/tickets", lostLinkHref: "/tickets/lost" });
+    expect(confirming?.props).toMatchObject({ orderId: ORDER_ID, token: TOKEN, ticketsHref: "/tickets", contactHref: "/contact" });
   });
 
   it("404 without ?o, or with a malformed ?o, is the opaque invalid state", async () => {
