@@ -161,7 +161,7 @@ export function OrderConfirming({
   }[phase];
 
   return (
-    <div className="flex flex-col items-center gap-8">
+    <div className="mt-8 flex flex-col items-center gap-8 sm:mt-16">
       <section
         aria-labelledby="confirming-heading"
         className="flex w-full max-w-[520px] flex-col items-center gap-[30px] rounded-[28px] border border-(--mt-line) bg-(--mt-card) px-[clamp(24px,5vw,44px)] py-[clamp(32px,5vw,48px)] text-center shadow-[0_40px_90px_-40px_rgba(0,0,0,0.9)] backdrop-blur-[14px]"
