@@ -23,6 +23,15 @@ export interface CheckoutConfig {
 /** 1 = Tickets & details (one page), 2 = Payment. The confirmation (3) is the order page the buyer is sent to. */
 export type Step = 1 | 2;
 
+/** ep-api's ticket status → its `tickets.list.status.*` text key. */
+export const STATUS_KEYS: Readonly<Record<string, string>> = { on_sale: "onSale", sold_out: "soldOut", paused: "paused", not_yet: "notYet", ended: "ended" };
+
+/** A ticket picked for sale in the CMS that ep-api does not list (hidden, removed): its CMS card title, never sold. */
+export interface UnlistedType {
+  id: string;
+  name: string;
+}
+
 export type QuoteState =
   | { status: "idle" }
   | { status: "loading"; result?: QuoteResult }

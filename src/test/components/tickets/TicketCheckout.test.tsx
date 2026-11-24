@@ -304,6 +304,25 @@ describe("03 · ticket holders (same page)", () => {
     expect(screen.queryByText(/for you, unless changed/)).not.toBeInTheDocument();
   });
 
+  it("after a first press, the 'required' under the first holder goes as soon as the buyer's name and email are typed", async () => {
+    mountCheckout();
+    await toDetails({ count: 1 });
+    fireEvent.click(screen.getByRole("button", { name: "Continue to payment" }));
+    await waitFor(() => expect(document.getElementById(`${fieldById("holder-0-name")?.id}-error`)).toHaveTextContent("This field is required."));
+    fillDetails();
+    await waitFor(() => expect(document.getElementById(`${fieldById("holder-0-name")?.id}-error`)).toBeEmptyDOMElement());
+    expect(document.getElementById(`${fieldById("holder-0-email")?.id}-error`)).toBeEmptyDOMElement();
+  });
+
+  it("Enter in a field places the order (the order button is the form's submit button)", async () => {
+    mountCheckout();
+    await toHolders({ count: 1 });
+    expect(screen.getByRole("button", { name: "Continue to payment" })).toHaveAttribute("type", "submit");
+    fireEvent.submit(screen.getByLabelText("Full name").closest("form") as HTMLFormElement);
+    await screen.findByTestId("payment-element");
+    expect(api.callsTo("/api/tickets/orders")).toHaveLength(1);
+  });
+
   it("every holder needs a valid name and email before an order is created", async () => {
     mountCheckout();
     await toHolders({ count: 2 });
@@ -384,6 +403,19 @@ describe("creating the order", () => {
     expect(await screen.findByRole("heading", { level: 2, name: "Your tickets" })).toBeInTheDocument();
     expect(screen.getAllByText("Sorry, those tickets are sold out.").length).toBeGreaterThan(0);
     expect(refresh).toHaveBeenCalled();
+  });
+
+  it("refused and nothing left to buy after the refresh: the reason and 'none can be bought' stay, the cart never vanishes silently", async () => {
+    api.order = () => refusal({ code: "notOnSale", ticketTypeId: TYPE_A_ID });
+    const view = mountCheckout({ types: [typeA] });
+    await placeOrder();
+    await waitFor(() => expect(refresh).toHaveBeenCalled());
+    // The organiser stopped selling it: the refreshed list has nothing buyable
+    view.rerender(<TicketCheckout types={[{ ...typeA, status: "paused" }]} config={config} locale="en" localePrefix="" />);
+    const reason = await screen.findByRole("alert");
+    expect(reason.textContent).not.toBe("");
+    expect(screen.getByText("None of these tickets can be bought right now.")).toBeInTheDocument();
+    expect(screen.queryByRole("button", { name: /Add one/ })).not.toBeInTheDocument();
   });
 
   it("a code refusal returns to step 01 with the code's own message and drops the code", async () => {
@@ -594,6 +626,20 @@ describe("paying", () => {
     expect(api.callsTo(`/api/tickets/orders/${ORDER_ID}/extend`)).toHaveLength(1);
     expect(stripe.confirmPayment).toHaveBeenCalledTimes(1);
     await waitFor(() => expect(openPage).toHaveBeenCalled());
+  });
+
+  it("Stripe says the payment was cancelled (the hold ended and ep-api released the tickets): 'reservation expired', back to the cart", async () => {
+    stripe.confirmPayment.mockResolvedValueOnce({
+      error: { type: "invalid_request_error", code: "payment_intent_unexpected_state", message: "A processing error occurred.", payment_intent: { status: "canceled" } },
+    });
+    mountCheckout();
+    await reachPayStep();
+    fireEvent.click(screen.getByRole("button", { name: "Pay €123.45" }));
+    expect(await screen.findByText("Your reservation expired")).toBeInTheDocument();
+    expect(screen.queryByText("A processing error occurred.")).not.toBeInTheDocument();
+    expect(screen.queryByTestId("payment-element")).not.toBeInTheDocument();
+    expect(refresh).toHaveBeenCalled();
+    expect(openPage).not.toHaveBeenCalled();
   });
 
   it("a decline stays on the payment step, shows Stripe's message, and allows a retry", async () => {

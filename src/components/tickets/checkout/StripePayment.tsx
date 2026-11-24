@@ -21,6 +21,11 @@ export interface StripePaymentProps {
   /** Payment went through without a redirect (or is processing): the parent navigates to the order page. */
   onSucceeded: () => void;
   payLabel: string;
+  /**
+   * Stripe answered that the payment was cancelled: ep-api ended the hold (its time ran out, the device clock was off)
+   * and released the tickets. Nothing was charged; the parent says the reservation ended and goes back to the cart.
+   */
+  onHoldEnded?: (() => void) | undefined;
 }
 
 /** Languages Stripe's Elements are translated into; anything else follows the browser (`auto`). */
@@ -33,7 +38,7 @@ function stripeLocale({ locale }: { locale: string }): StripeElementLocale {
   return STRIPE_LOCALES.has(base) ? (base as StripeElementLocale) : "auto";
 }
 
-function PayForm({ returnUrl, beforePay, onSucceeded, payLabel }: Omit<StripePaymentProps, "publishableKey" | "locale" | "clientSecret">) {
+function PayForm({ returnUrl, beforePay, onSucceeded, payLabel, onHoldEnded }: Omit<StripePaymentProps, "publishableKey" | "locale" | "clientSecret">) {
   const t = useTranslations("tickets.checkout");
   const stripe = useStripe();
   const elements = useElements();
@@ -51,6 +56,10 @@ function PayForm({ returnUrl, beforePay, onSucceeded, payLabel }: Omit<StripePay
     // again: that selects Stripe's deferred-intent flow, which requires `elements.submit()` first and otherwise throws
     // an IntegrationError on every attempt.
     const { error } = await stripe.confirmPayment({ elements, confirmParams: { return_url: returnUrl }, redirect: "if_required" });
+    if (error?.code === "payment_intent_unexpected_state" && error.payment_intent?.status === "canceled" && onHoldEnded) {
+      onHoldEnded();
+      return ""; // the parent explains (reservation ended), not Stripe's "A processing error occurred."
+    }
     // Stripe's own text (already in the buyer's language): a decline, a bad card number, an expired card...
     if (error) return error.message ?? t("pay.declined");
     return null;

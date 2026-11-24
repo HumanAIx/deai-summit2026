@@ -80,11 +80,17 @@ function useLiveTypes({ locale }: { locale: string }): { live: Live; retry: () =
 }
 
 
+/** DeAI (2026-11-24): the live cards wear the CMS pass-tile look (`TicketsPageView`'s `PassCard`), so the old static tiles can go. */
 const BUTTON_BASE =
-  "mt-8 inline-flex min-h-14 w-full items-center justify-center gap-2 rounded-full px-6 text-center text-base font-semibold [overflow-wrap:anywhere]";
+  "mt-8 flex min-h-[60px] w-full items-center justify-center gap-3 rounded-full px-6 text-center text-lg font-semibold transition [overflow-wrap:anywhere]";
 
-const WAITLIST_BUTTON =
-  "mt-8 inline-flex min-h-14 w-full items-center justify-center gap-2 rounded-full px-6 text-center text-base font-semibold [overflow-wrap:anywhere] border border-[color-mix(in_srgb,var(--color-primary)_40%,transparent)] text-text hover:bg-surface";
+/** The outline pill of a non-featured tile, also the waitlist button. */
+const OUTLINE_LOOK = "border border-[#2CC7D9]/50 text-white hover:bg-[#2CC7D9]/10";
+
+/** A button that can't be pressed (sold out, sales closed, prices not loaded): the reason, quiet. */
+const DISABLED_LOOK = "cursor-not-allowed border border-white/15 text-[#9AA3B8]";
+
+const WAITLIST_BUTTON = `${BUTTON_BASE} ${OUTLINE_LOOK}`;
 
 /**
  * The cards of a `tickets` add-on block. Card text (title, label, list) comes from the block's own props and is
@@ -128,7 +134,7 @@ export function TicketsBlock({
       data-tickets-block=""
       className="[--tb-accent:var(--t-accent-text,var(--color-ticket-accent,var(--color-primary-text)))] [--tb-accent-2:var(--t-primary-text,var(--color-ticket-accent-2,var(--tb-accent)))] [--tb-btn:var(--t-btn,var(--ticket-btn-bg,var(--color-primary)))] [--tb-on-btn:var(--t-on-btn,var(--color-ticket-on-btn,var(--color-on-primary)))] w-full min-w-0"
     >
-      <ul className="mx-auto grid list-none gap-4 p-0" style={gridStyle({ count: resolved.length, maxCardPx })} aria-busy={live.status === "loading"}>
+      <ul className="mx-auto grid list-none gap-6 p-0" style={gridStyle({ count: resolved.length, maxCardPx })} aria-busy={live.status === "loading"}>
         {resolved.map((entry, index) => (
           <li key={entry.card.id} className="flex min-w-0">
             <TicketCardView entry={entry} featured={index === featured} live={live} salesOpen={salesOpen} feePayer={feePayer} buyHref={buyHref} offeredIds={offeredIds} editable={editable} />
@@ -195,26 +201,26 @@ function TicketCardView({
   const opensText = opens && !Number.isNaN(opens.getTime()) ? format.dateTime(opens, { dateStyle: "long" }) : null;
 
   const shell = featured
-    ? "border-[color-mix(in_srgb,var(--color-primary)_40%,transparent)] bg-[linear-gradient(180deg,color-mix(in_srgb,var(--color-primary)_10%,var(--color-surface-raised))_0%,var(--color-surface-raised)_100%)] shadow-[0_0_60px_color-mix(in_srgb,var(--color-primary)_20%,transparent)]"
-    : "border-(--color-border) bg-(--surf-card,var(--color-surface-raised))";
+    ? "border-[#2CC7D9]/35 bg-gradient-to-b from-[rgba(20,50,130,0.45)] to-[rgba(10,20,50,0.55)] shadow-[0_30px_80px_-30px_rgba(8,140,220,0.45)]"
+    : "border-white/10 bg-[rgba(10,20,50,0.55)]";
 
   return (
-    <article className={`relative flex w-full min-w-0 flex-col overflow-hidden rounded-2xl border p-6 text-text sm:p-8 ${shell}`}>
-      {featured ? <span aria-hidden className="absolute inset-x-0 top-0 h-[3px] bg-linear-to-r from-primary to-secondary" /> : null}
+    <article className={`relative flex w-full min-w-0 flex-col overflow-hidden rounded-3xl border p-7 text-text backdrop-blur-sm sm:p-9 md:p-11 ${shell}`}>
+      {featured ? <span aria-hidden data-featured-bar="" className="absolute inset-x-0 top-0 h-1 bg-gradient-to-r from-[#1E6BF0] to-[#08B5C6]" /> : null}
 
-      <p className="flex items-center gap-3 font-mono text-xs uppercase tracking-[0.2em] text-(--tb-accent) [overflow-wrap:anywhere]">
-        <span aria-hidden className="h-px w-8 shrink-0 bg-(--tb-accent)" />
+      <p className="m-0 flex items-center gap-3 font-mono text-[13px] font-medium uppercase tracking-[0.22em] text-[#2CC7D9] [overflow-wrap:anywhere]">
+        <span aria-hidden className="h-0.5 w-8 shrink-0 bg-[#2CC7D9]" />
         {kickerText}
       </p>
 
       {title === "" && loading ? (
-        <div aria-hidden className="mt-3 h-10 w-3/4 animate-pulse rounded bg-(--color-border) motion-reduce:animate-none" />
+        <div aria-hidden className="mt-5 h-12 w-3/4 animate-pulse rounded bg-white/10 motion-reduce:animate-none" />
       ) : (
-        <h3 className="mt-3 font-heading text-3xl leading-tight font-normal tracking-tight [overflow-wrap:anywhere] sm:text-4xl">
+        <h3 className="m-0 mt-5 font-display text-[clamp(2.5rem,4.4vw,3.5rem)] leading-none font-normal tracking-[-0.03em] [overflow-wrap:anywhere]">
           {parts ? (
             <>
               {parts.before}
-              <span className="bg-linear-to-r from-(--tb-accent) to-(--tb-accent-2) bg-clip-text font-semibold text-transparent">{parts.accent}</span>
+              <span className="bg-gradient-to-r from-[#1E6BF0] to-[#08B5C6] bg-clip-text font-bold text-transparent">{parts.accent}</span>
               {parts.after}
             </>
           ) : (
@@ -223,43 +229,43 @@ function TicketCardView({
         </h3>
       )}
 
-      <div className="mt-4 min-h-[4.5rem]">
+      <div className="mt-5 min-h-[5.75rem]">
         {type ? (
           <>
-            <p className="flex flex-wrap items-baseline text-5xl leading-none font-semibold tracking-tight [overflow-wrap:anywhere] sm:text-6xl">
+            <p className="m-0 flex flex-wrap items-baseline text-[clamp(4rem,7vw,5.75rem)] leading-none font-semibold tracking-[-0.05em] [overflow-wrap:anywhere]">
               {type.priceCents === 0 ? (
                 tl("free")
               ) : (
-                priceParts({ cents: type.priceCents, currency: type.currency, locale }).map((part, i) => (
-                  <span key={i} className={part.small ? "text-3xl font-medium text-muted sm:text-4xl" : undefined}>
+                priceParts({ cents: type.priceCents, currency: type.currency, locale, alwaysDecimals: true }).map((part, i) => (
+                  <span key={i} className={part.small ? "text-[clamp(1.875rem,3.2vw,2.625rem)] text-[#9A9CA8]" : undefined}>
                     {part.text}
                   </span>
                 ))
               )}
             </p>
             {type.priceCents > 0 && showsBookingFee({ type, feePayer }) ? (
-              <p className="mt-2 text-sm text-muted">{tl("feeExtra", { fee: formatMoney({ format, cents: type.bookingFeeCents, currency: type.currency }) })}</p>
+              <p className="m-0 mt-3 text-sm text-[#9AA3B8]">{tl("feeExtra", { fee: formatMoney({ format, cents: type.bookingFeeCents, currency: type.currency }) })}</p>
             ) : null}
-            {left !== null ? <p className="mt-2 text-sm font-medium text-muted">{t("left", { count: left })}</p> : null}
+            {left !== null ? <p className="m-0 mt-2 text-sm font-medium text-[#2CC7D9]">{t("left", { count: left })}</p> : null}
           </>
         ) : placeholder ? (
           <p data-testid="ticket-card-placeholder" className="text-sm font-medium text-muted">
             {card.ticketTypeId === "" ? t("editorNoType") : t("editorGoneType")}
           </p>
         ) : (
-          <div aria-hidden className="h-14 w-40 animate-pulse rounded bg-(--color-border) motion-reduce:animate-none" />
+          <div aria-hidden className="h-20 w-48 animate-pulse rounded bg-white/10 motion-reduce:animate-none" />
         )}
       </div>
 
-      <hr className="my-8 border-0 border-t border-(--color-border)" />
+      <hr className="my-8 h-px border-0 bg-white/10" />
 
-      {card.incl !== "" ? <p className="mb-3 font-mono text-xs uppercase tracking-[0.2em] text-muted [overflow-wrap:anywhere]">{card.incl}</p> : null}
-      <ul className="flex flex-1 list-none flex-col gap-4 p-0 text-base">
+      {card.incl !== "" ? <p className="m-0 mb-4 font-mono text-[13px] uppercase tracking-[0.22em] text-[#9AA3B8] [overflow-wrap:anywhere]">{card.incl}</p> : null}
+      <ul className="m-0 flex flex-1 list-none flex-col gap-3.5 p-0 text-[19px]">
         {(Array.isArray(card.feats) ? card.feats : [])
           .filter((line) => line !== "")
           .map((line, i) => (
-            <li key={i} className="flex items-start gap-3 [overflow-wrap:anywhere]">
-              <svg aria-hidden viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" className="mt-0.5 shrink-0 text-(--tb-accent)">
+            <li key={i} className="flex items-center gap-4 [overflow-wrap:anywhere]">
+              <svg aria-hidden viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" className="shrink-0 text-[#2CC7D9]">
                 <path d="M5 12.5l4.5 4.5L19 7.5" />
               </svg>
               <span>{line}</span>
@@ -274,11 +280,11 @@ function TicketCardView({
           {t("editorPickType")}
         </div>
       ) : live.status === "error" ? (
-        <button type="button" disabled className={`${BUTTON_BASE} cursor-not-allowed border border-(--color-control-border) text-text opacity-60`}>
+        <button type="button" disabled className={`${BUTTON_BASE} ${DISABLED_LOOK}`}>
           {t("unavailable")}
         </button>
       ) : (
-        <div aria-hidden className={`${BUTTON_BASE} animate-pulse bg-(--color-border) motion-reduce:animate-none`} />
+        <div aria-hidden className={`${BUTTON_BASE} animate-pulse bg-white/10 motion-reduce:animate-none`} />
       )}
     </article>
   );
@@ -314,15 +320,15 @@ function CardButton({
     const text =
       state === "notYet" ? (opensText ? t("onSale", { date: opensText }) : t("closed")) : state === "soldOut" ? t("soldOut") : state === "salesNotOpen" ? t("notOpen") : t("closed");
     return (
-      <button type="button" disabled className={`${BUTTON_BASE} cursor-not-allowed border border-(--color-control-border) text-text opacity-60`}>
+      <button type="button" disabled className={`${BUTTON_BASE} ${DISABLED_LOOK}`}>
         {text}
       </button>
     );
   }
 
   const look = featured
-    ? "border-0 text-(--tb-on-btn) [background:var(--tb-btn)] shadow-[0_8px_30px_color-mix(in_srgb,var(--color-secondary)_32%,transparent)] hover:opacity-90"
-    : "border border-[color-mix(in_srgb,var(--color-primary)_40%,transparent)] text-text hover:bg-surface";
+    ? "border-0 bg-gradient-to-r from-[#1E6BF0] to-[#08B5C6] text-white shadow-[0_12px_36px_-10px_rgba(8,181,198,0.6)] hover:brightness-110"
+    : OUTLINE_LOOK;
   const arrow = (
     <svg aria-hidden viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
       <path d="M5 12h14M13 6l6 6-6 6" />

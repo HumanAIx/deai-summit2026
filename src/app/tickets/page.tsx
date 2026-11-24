@@ -1,13 +1,13 @@
 import type { Metadata } from 'next';
 import { notFound } from 'next/navigation';
-import { CmsPageRenderer } from '@/components/cms/CmsPageRenderer';
-import { ClosingBanner, TicketsPageView } from '@/components/TicketsPageView';
+import { TicketsPageView } from '@/components/TicketsPageView';
+import { TicketsSection } from '@/components/tickets/TicketsSection';
 import { TicketsIntro } from '@/components/tickets/TicketsIntro';
 import { TicketsPageBody } from '@/components/tickets/TicketsPageBody';
 import { allowedTypeIdsOf, isTicketsSectionBlock, offeredTypesParam, ticketCardsOf } from '@/lib/tickets/cms-section';
 import { lumaHrefOf } from '@/lib/tickets/luma-fallback';
 import { parseCmsBlocks } from '@/lib/cmsBlocks';
-import { prefetchCaptchaConfig, prefetchCMSPage, prefetchDocumentsGateForms, prefetchSocials } from '@/lib/prefetch';
+import { prefetchCMSPage, prefetchSocials } from '@/lib/prefetch';
 import { isLumaTicketUrl } from '@/lib/lumaTicket';
 import { parseTicketsPage } from '@/lib/tickets-page';
 import { generatePageMetadata, SEO_DEFAULTS } from '@/lib/seo-defaults';
@@ -40,14 +40,12 @@ export async function generateMetadata({ searchParams }: { searchParams: Promise
  * The CMS `tickets` page decides what this page is, so organisers switch to the live checkout from the dashboard:
  * - No Tickets section on it (dashboard › CMS › block › add-on Sales › Tickets): the CMS page with its Luma links, as
  *   before the live checkout existed.
- * - A Tickets section on it and the CMS pass tiles still there: the page as it was (the same tiles and the Luma banner),
- *   with each tile's button opening the live checkout for its ticket (matched to the section's card by title, else by
- *   order). The Luma banner stays the second option. DECISION (DeAI, 2026-11-23): "it should look the same, but just
- *   the top two tiles should start the ticketing flow of GConf".
- * - A Tickets section and no pass tiles: that CMS page with live cards. The old Luma pass blocks are left out (production code
- *   before this change still shows them, so organisers never have to unpublish them first), and a "Prefer Luma?" line
- *   keeps Luma as the second option: the CMS tickets page's closing tile under the cards, linking to the page's Luma link, else
- *   the site's Luma social link.
+ * - A Tickets section on it: the same page template (`TicketsPageView`) with the section's live cards where the static
+ *   pass tiles were. The cards wear the pass-tile look (so the page "looks the same", DeAI 2026-11-23) but are read from GConf.ai: price, stock and sale state are live, and each card is
+ *   the ticket the organiser picked, so nothing has to match by title. DECISION (Vimal, 2026-11-24): no static tile is
+ *   ever wired to a ticket. The old static pass blocks are left out (production code before this change still shows
+ *   them, so organisers can delete them whenever they like), and Luma stays the second option: the CMS tickets page's
+ *   closing tile under the cards, linking to the page's Luma link, else the site's Luma social link.
  * - A filtered or private link, or `?type=` from a card's Buy button: the built-in live list + 4-step checkout, under
  *   the CMS page's heading texts. It offers only the tickets picked for sale: those of the section the buyer's Buy
  *   button sits in (`?types=`), else the cards on this CMS page; none picked = nothing on sale.
@@ -74,43 +72,17 @@ export default async function TicketsPage({ searchParams }: { searchParams: Prom
 
   if (!filtered && !hasTicketsSection) return <TicketsPageView content={legacy} />;
 
-  if (!filtered && legacy.passes.length > 0) {
-    const cards = blocks.filter(isTicketsSectionBlock).flatMap(ticketCardsOf).filter((card) => card.ticketTypeId !== '');
-    const offered = allowedTypeIdsOf(blocks);
-    const sameName = (a: string, b: string) => a.trim().toLowerCase() === b.trim().toLowerCase();
-    const passes = legacy.passes.map((pass, index) => {
-      const card = cards.find((c) => sameName(c.title, pass.title)) ?? cards[index];
-      // Same address as a live card's Buy button: this ticket preselected, only the page's picked tickets on offer.
-      return card ? { ...pass, buttonHref: `/tickets?type=${encodeURIComponent(card.ticketTypeId)}&types=${offered.map(encodeURIComponent).join(',')}` } : pass;
-    });
-    return <TicketsPageView content={{ ...legacy, passes }} />;
-  }
-
   if (!filtered) {
-    const lumaPassIds = new Set(legacy.passes.map((pass) => pass.id));
-    const liveBlocks = blocks.filter((block) => !lumaPassIds.has(block.id));
-    const [captchaConfig, formConfigs] = await Promise.all([
-      prefetchCaptchaConfig(),
-      prefetchDocumentsGateForms(liveBlocks, cmsPage?.content?.formConfigs || null),
-    ]);
+    // The live cards in the page's own template (heading, backdrop, closing tile, footer line), exactly where the
+    // static pass tiles were: those are left out, so the page looks the same and only the cards are live.
+    // The closing tile's notice is the CMS page's own ("PRICE INCREASE FROM …"), so it goes when Luma comes from socials.
     return (
-      <div className="-mt-[140px] bg-[#040A1E] pt-[140px]">
-        <CmsPageRenderer
-          blocks={liveBlocks}
-          pageTitle={cmsPage?.page_title}
-          formConfigs={formConfigs}
-          captchaSiteKey={captchaConfig.site_key}
-          captchaDisabled={captchaConfig.disabled === true}
-          captchaProvider={captchaConfig.provider}
-        />
-        {lumaHref ? (
-          // The same closing tile as the CMS tickets page, under the live cards. Its notice is the CMS page's own
-          // ("PRICE INCREASE FROM …"), so it is left out when the Luma link comes from the site's socials.
-          <div className="mx-auto w-full max-w-[1180px] px-4 pb-20 sm:px-6 md:px-14 md:pb-24">
-            <ClosingBanner notice={cmsLumaHref ? legacy.notice : ''} title={legacy.closingTitle} label={legacy.closingLabel} href={lumaHref} />
-          </div>
-        ) : null}
-      </div>
+      <TicketsPageView
+        content={{ ...legacy, notice: cmsLumaHref ? legacy.notice : '', closingHref: lumaHref ?? '' }}
+        cards={blocks.filter(isTicketsSectionBlock).map((block) => (
+          <TicketsSection key={block.id} block={block} bare />
+        ))}
+      />
     );
   }
 
@@ -123,6 +95,8 @@ export default async function TicketsPage({ searchParams }: { searchParams: Prom
       // The tickets the buyer came for: the section their Buy button sits in (`types`), else the ones picked on this
       // CMS page. Only picked tickets are sold; none picked = nothing on offer.
       allowedTypeIds={offeredTypesParam(first(params.types)) ?? allowedTypeIdsOf(blocks)}
+      // A picked ticket ep-api no longer lists (hidden, removed) still gets a "not available" row, under its card title.
+      pickedNames={Object.fromEntries(blocks.filter(isTicketsSectionBlock).flatMap(ticketCardsOf).map((card) => [card.ticketTypeId, card.title]))}
       intro={legacy.titleLead || legacy.accentWord ? <TicketsIntro {...legacy} lumaHref={lumaHref} /> : undefined}
     />
   );

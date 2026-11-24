@@ -2,11 +2,9 @@ import { useFormatter, useTranslations } from "@/lib/tickets/i18n";
 import { isBuyable, maxQuantity, type Cart } from "@/lib/tickets/checkout-cart";
 import { formatMoney } from "@/lib/tickets/format";
 import { TK_STEPPER } from "../tickets-classes";
-import type { CheckoutConfig, PublicType } from "./types";
+import { STATUS_KEYS, type CheckoutConfig, type PublicType, type UnlistedType } from "./types";
 import { Icon } from "./ui";
 import { WaitlistJoin } from "./WaitlistJoin";
-
-const STATUS_KEYS: Record<string, string> = { on_sale: "onSale", sold_out: "soldOut", paused: "paused", not_yet: "notYet", ended: "ended" };
 
 /** "Only 4 left" shows from this many down (the design: low stock is worth saying, plenty is not). */
 const LOW_STOCK = 20;
@@ -15,7 +13,9 @@ const LOW_STOCK = 20;
  * The ticket rows of "01 · Tickets" (design: a bordered row per ticket, accent ring and tint once it is in the cart,
  * a round − / + on the right). Grouped by source (event / schedule) when more than one is listed. Prices are ep-api's
  * integer cents through the locale formatter. A row ep-api rejected (sold out, price changed…) shows its message in
- * place (`flagged`), tied to the row with `aria-describedby`.
+ * place (`flagged`), tied to the row with `aria-describedby`. Every ticket on offer is listed, also the ones that can't
+ * be bought now, each saying why (sold out, paused, not on sale yet, sales ended); an on-sale ticket says when sales
+ * end. `unlisted` (picked in the CMS, not listed by ep-api: hidden or removed) come last as "Unavailable".
  */
 export function TicketCards({
   types,
@@ -24,6 +24,7 @@ export function TicketCards({
   flagged,
   onQuantity,
   nested = false,
+  unlisted = [],
 }: {
   types: readonly PublicType[];
   config: CheckoutConfig;
@@ -32,6 +33,7 @@ export function TicketCards({
   onQuantity: (args: { type: PublicType; quantity: number }) => void;
   /** Inside a checkout step (which has its own headings): source titles are `h4`, ticket names `h5`. */
   nested?: boolean;
+  unlisted?: readonly UnlistedType[];
 }) {
   const t = useTranslations("tickets.list");
   const tc = useTranslations("tickets");
@@ -69,6 +71,7 @@ export function TicketCards({
               // Sold out with a waitlist: "Join the waitlist" replaces the dead end. No waitlist keeps the plain "Sold out".
               const waitlist = config.salesOpen && type.status === "sold_out" && type.waitlistEnabled === true;
               const opens = type.status === "not_yet" && type.saleFrom ? new Date(type.saleFrom) : null;
+              const closes = buyable && type.closeAt ? new Date(type.closeAt) : null;
               const fee = config.feePayer === "buyer" && type.bookingFeeCents > 0 && type.priceCents > 0 ? ` ${t("feeExtra", { fee: formatMoney({ format, cents: type.bookingFeeCents, currency: type.currency }) })}` : "";
               const parts = [
                 `${price}${fee}`,
@@ -76,6 +79,7 @@ export function TicketCards({
                 opens && !Number.isNaN(opens.getTime()) ? tc("checkout.card.opensOn", { date: format.dateTime(opens, { dateStyle: "long" }) }) : null,
                 buyable && type.left !== null && type.left <= LOW_STOCK ? t("left", { count: type.left }) : null,
                 buyable && type.maxPerOrder > 1 && type.maxPerOrder < 10 ? t("maxPerOrder", { count: type.maxPerOrder }) : null,
+                closes && !Number.isNaN(closes.getTime()) ? t("salesEnd", { date: format.dateTime(closes, { dateStyle: "medium", ...(zoneOf(type) ? { timeZone: zoneOf(type) } : {}) }) }) : null,
               ].filter(Boolean);
               return (
                 <li
@@ -85,7 +89,10 @@ export function TicketCards({
                 >
                   <div className="min-w-0 flex-[1_1_14rem]">
                     <TypeHeading className="m-0 text-base font-medium [overflow-wrap:anywhere]">{type.name}</TypeHeading>
-                    <p className="m-0 mt-0.5 text-[13px] text-(--tk-mut)">{parts.join(" · ")}</p>
+                    {/* Dates come from Intl, whose ICU data differs between Node and the browser. */}
+                    <p suppressHydrationWarning className="m-0 mt-0.5 text-[13px] text-(--tk-mut)">
+                      {parts.join(" · ")}
+                    </p>
                     {type.description ? <p className="m-0 mt-1 whitespace-pre-line text-[13px] text-(--tk-soft) [overflow-wrap:anywhere]">{type.description}</p> : null}
                     {flag ? (
                       <p id={flagId} role="alert" className="m-0 mt-1.5 flex items-center gap-1.5 text-[13px] font-medium text-(--tk-err)">
@@ -118,6 +125,30 @@ export function TicketCards({
           </ul>
         </section>
       ))}
+      {unlisted.length > 0 ? (
+        <ul aria-label={t("status.unknown")} className="m-0 flex list-none flex-col gap-2.5 p-0">
+          {unlisted.map((entry) => (
+            <li key={entry.id} className="flex flex-wrap items-center gap-x-3.5 gap-y-3 rounded-xl border border-(--tk-line) px-4 py-3.5 opacity-80">
+              <div className="min-w-0 flex-[1_1_14rem]">
+                <TypeHeading className="m-0 text-base font-medium [overflow-wrap:anywhere]">{entry.name}</TypeHeading>
+                <p className="m-0 mt-0.5 text-[13px] text-(--tk-mut)">{t("status.unknown")}</p>
+              </div>
+            </li>
+          ))}
+        </ul>
+      ) : null}
     </div>
   );
+}
+
+/** The event's IANA zone, when the runtime knows it (sales end is shown in the event's time, like every ticket date). */
+function zoneOf(type: PublicType): string | undefined {
+  const zone = type.source.timeZone;
+  if (!zone) return undefined;
+  try {
+    new Intl.DateTimeFormat("en", { timeZone: zone });
+    return zone;
+  } catch {
+    return undefined;
+  }
 }

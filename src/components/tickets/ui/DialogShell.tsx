@@ -4,6 +4,7 @@
 
 import { useDialogA11y } from "@/components/tickets/ui/useDialogA11y";
 import { useRef, type ReactNode, type RefObject } from "react";
+import { createPortal } from "react-dom";
 
 /**
  * The one accessible modal every public dialog renders inside (gallery viewer,
@@ -13,6 +14,10 @@ import { useRef, type ReactNode, type RefObject } from "react";
  * when BOTH the press and the release landed on it, so a drag that starts
  * inside the panel (selecting text) or on the backdrop can be aborted
  * (WCAG 2.5.2 pointer cancellation).
+ *
+ * Rendered into `<body>` (a portal), never where it is mounted: a faded, sticky or transformed ancestor (a sold-out
+ * ticket row at 80 % opacity, the sticky order box) would otherwise fade the dialog with it and trap its z-index
+ * below its neighbours. Ticket dialogs put `deai-tickets` on their backdrop so the ticket tokens still apply there.
  */
 export function DialogShell({
   label,
@@ -43,7 +48,7 @@ export function DialogShell({
     target === backdrop || (panelFillsBackdrop && target === panelRef.current);
   useDialogA11y({ containerRef: panelRef, onClose, ...(initialFocusRef ? { initialFocusRef } : {}) });
 
-  return (
+  const dialog = (
     <div
       role="presentation"
       className={backdropClassName}
@@ -67,4 +72,6 @@ export function DialogShell({
       </div>
     </div>
   );
+  // Mounted only while open, which is always after a click in the browser; the inline fallback is for a server render.
+  return typeof document === "undefined" ? dialog : createPortal(dialog, document.body);
 }

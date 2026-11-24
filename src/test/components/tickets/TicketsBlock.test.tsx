@@ -265,8 +265,8 @@ describe("TicketsBlock — card content", () => {
     show([card({ featured: true }), card({ id: "c2", ticketTypeId: B, featured: true })]);
     await screen.findAllByRole("link");
     const articles = screen.getAllByRole("article");
-    expect(articles[0]?.querySelector("span.bg-linear-to-r")).not.toBeNull();
-    expect(articles[1]?.querySelector("span.bg-linear-to-r")).toBeNull();
+    expect(articles[0]?.querySelector("[data-featured-bar]")).not.toBeNull();
+    expect(articles[1]?.querySelector("[data-featured-bar]")).toBeNull();
   });
 
   it("uses the card's own label above the title, else builds one from the real type", async () => {

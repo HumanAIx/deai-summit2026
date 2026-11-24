@@ -253,6 +253,8 @@ export const publicTypeSchema = z.object({
   maxPerOrder: z.number(),
   /** The date sales open, for the "not on sale yet" card (ISO timestamp). */
   saleFrom: nullableString.optional(),
+  /** When sales close (ISO timestamp; the type's own end, else the site's default stop before the event). */
+  closeAt: nullableString.optional(),
   /** Which days / sessions the ticket covers; read by the Tickets block for its auto label. Optional: older answers lack it. */
   scope: scopeSchema.optional(),
   /** A sold-out type takes a waitlist (ep-api DASH-205 F3). Optional for older ep-api builds: absent reads as off. */

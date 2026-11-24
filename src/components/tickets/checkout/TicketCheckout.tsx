@@ -30,7 +30,7 @@ import { PayStep } from "./PayStep";
 import { TicketCards } from "./TicketCards";
 import { StepsBar } from "./ui";
 import { useKeepCartOnNavigation } from "./useKeepCartOnNavigation";
-import type { CheckoutConfig, CheckoutDone, EmbeddedCheckout, OrderState, PublicType, Step } from "./types";
+import type { CheckoutConfig, CheckoutDone, EmbeddedCheckout, OrderState, PublicType, Step, UnlistedType } from "./types";
 
 /** What a holder answered, for the questions the site asks only (empty answers are left out; ep-api refuses the rest). */
 function answersOf({ holder, questions }: { holder: HolderValues; questions: CheckoutConfig["extraQuestions"] }): { answers?: NonNullable<CreateOrderBody["holders"][number]["answers"]> } {
@@ -70,6 +70,8 @@ export interface TicketCheckoutProps {
   initialCart?: Cart | undefined;
   /** Offer only these types (the pop-up: the block's cards of one event). Absent = every type, as on `/tickets`. */
   allowedTypeIds?: readonly string[] | undefined;
+  /** Picked tickets ep-api does not list (hidden, removed): shown as "Unavailable" rows, never in the cart. */
+  unlisted?: readonly UnlistedType[] | undefined;
   /** Inside the Tickets block's pop-up (see `EmbeddedCheckout`). Absent = the `/tickets` page, unchanged. */
   embedded?: EmbeddedCheckout | undefined;
   locale: string;
@@ -77,7 +79,7 @@ export interface TicketCheckoutProps {
   localePrefix: string;
 }
 
-export function TicketCheckout({ types: allTypes, config, linkToken, offerToken, initialQuantity, initialCart, allowedTypeIds, embedded, locale, localePrefix }: TicketCheckoutProps) {
+export function TicketCheckout({ types: allTypes, config, linkToken, offerToken, initialQuantity, initialCart, allowedTypeIds, unlisted = [], embedded, locale, localePrefix }: TicketCheckoutProps) {
   const t = useTranslations("tickets.checkout");
   const te = useTranslations("tickets.errors");
   const format = useFormatter();
@@ -380,15 +382,6 @@ export function TicketCheckout({ types: allTypes, config, linkToken, offerToken,
     ? [shownSource.name, formatEventWhen({ format, source: { startDate: shownSource.startDate ?? null, endDate: shownSource.endDate ?? null, timeZone: shownSource.timeZone ?? "UTC", startsAt: null } })].filter(Boolean).join(" · ")
     : "";
 
-  // Nothing can be bought (sales closed, everything sold out…): show the list as information, with no cart or steps.
-  if (!sellable && !order && !expired) {
-    return (
-      <div className={`${TK_PANEL} mx-auto mt-8 max-w-3xl px-[18px] py-6 sm:px-8 sm:py-8`}>
-        <TicketCards types={types} config={config} cart={{}} flagged={{}} onQuantity={() => undefined} />
-      </div>
-    );
-  }
-
   const notices = (
     <>
       {expired ? (
@@ -404,6 +397,24 @@ export function TicketCheckout({ types: allTypes, config, linkToken, offerToken,
       ) : null}
     </>
   );
+
+  // Nothing can be bought (sales closed, everything sold out…): show the list as information, with no cart or steps.
+  // A refusal that led here (the ticket in the cart was removed or stopped selling, then the list refreshed) keeps its
+  // message, and the buyer is told plainly that nothing can be bought, so the cart never disappears without a word.
+  if (!sellable && !order && !expired) {
+    return (
+      <div className={`${TK_PANEL} mx-auto mt-8 flex max-w-3xl flex-col gap-4 px-[18px] py-6 sm:px-8 sm:py-8`}>
+        {notices}
+        {/* Closed sales already say so above the panel ("Sales are closed"). */}
+        {config.salesOpen && (types.length > 0 || unlisted.length > 0) ? (
+          <p role="status" className="m-0 text-sm text-(--tk-soft)">
+            {t("noneBuyable")}
+          </p>
+        ) : null}
+        <TicketCards types={types} config={config} cart={{}} flagged={{}} onQuantity={() => undefined} unlisted={unlisted} />
+      </div>
+    );
+  }
 
   // Title of each step (design: "Your tickets" with the event line, "Payment" with who is paid and where the receipt goes).
   const header = (
@@ -430,6 +441,7 @@ export function TicketCheckout({ types: allTypes, config, linkToken, offerToken,
         <CartStep
           header={header}
           types={types}
+          unlisted={unlisted}
           config={config}
           cart={cart}
           flagged={flagged}

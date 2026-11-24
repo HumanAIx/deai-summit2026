@@ -15,7 +15,7 @@ import { OrderSummary } from "./OrderSummary";
 import { SelectField } from "./SelectField";
 import { TextField } from "./TextField";
 import { TicketCards } from "./TicketCards";
-import type { CheckoutConfig, PublicType, QuoteState } from "./types";
+import type { CheckoutConfig, PublicType, QuoteState, UnlistedType } from "./types";
 import { CheckoutSection, Icon } from "./ui";
 
 /** True for an IANA zone name the runtime knows. */
@@ -61,6 +61,8 @@ export interface CartStepProps {
   /** The step bar, title and any notice of the page: the top of the left column. */
   header: ReactNode;
   types: readonly PublicType[];
+  /** Picked tickets ep-api does not list: "Unavailable" rows under the others. */
+  unlisted?: readonly UnlistedType[] | undefined;
   config: CheckoutConfig;
   cart: Cart;
   flagged: Readonly<Record<string, string>>;
@@ -190,9 +192,11 @@ export function CartStep(props: CartStepProps) {
   const buyerEmail = useWatch({ control, name: "email" });
   useEffect(() => {
     if (!follows || slots.length === 0) return;
-    setValue("holders.0.name", buyerName ?? "");
-    setValue("holders.0.email", buyerEmail ?? "");
-  }, [follows, buyerName, buyerEmail, slots.length, setValue]);
+    // After a first press, the copied values are checked again too, so a "required" under them goes as the buyer types.
+    const shouldValidate = submitCount > 0;
+    setValue("holders.0.name", buyerName ?? "", { shouldValidate });
+    setValue("holders.0.email", buyerEmail ?? "", { shouldValidate });
+  }, [follows, buyerName, buyerEmail, slots.length, setValue, submitCount]);
 
   const invoiceChecked = useWatch({ control, name: "invoice" });
   const invoice = config.questions.invoice && invoiceChecked;
@@ -231,7 +235,7 @@ export function CartStep(props: CartStepProps) {
         {props.header}
 
         <CheckoutSection number="01" title={t("cart.sectionTickets")} headingId={`${uid}-tickets`}>
-          <TicketCards nested types={props.types} config={config} cart={props.cart} flagged={props.flagged} onQuantity={props.onQuantity} />
+          <TicketCards nested types={props.types} unlisted={props.unlisted} config={config} cart={props.cart} flagged={props.flagged} onQuantity={props.onQuantity} />
           {conflict ? (
             <div role="alertdialog" aria-labelledby="checkout-conflict-heading" aria-describedby="checkout-conflict-body" className="rounded-xl border border-(--tk-ring) bg-(--tk-tint) p-4">
               <h4 id="checkout-conflict-heading" className="m-0 text-base font-semibold">
@@ -501,8 +505,8 @@ export function CartStep(props: CartStepProps) {
             </p>
           ) : null}
         </div>
-        {/* Outside the form (it sits in the order box): it runs the form's own submit, so validation and focus work the same. */}
-        <button type="button" onClick={(event) => void submit(event)} className={`${TK_BUTTON} w-full`} disabled={!props.canOrder || blocked} aria-busy={props.submitting}>
+        {/* Outside the form (it sits in the order box) but its submit button (`form`): Enter in any field places the order too. */}
+        <button type="submit" form={formId} className={`${TK_BUTTON} w-full`} disabled={!props.canOrder || blocked} aria-busy={props.submitting}>
           {props.submitting ? t("placing") : props.placeLabel}
           {props.submitting ? null : <Icon name="arrowRight" size={17} />}
         </button>

@@ -76,6 +76,7 @@ export function PayStep({
                 beforePay={beforePay}
                 onSucceeded={onSucceeded}
                 payLabel={payLabel}
+                onHoldEnded={onExpire}
               />
             </Suspense>
           ) : (

@@ -51,7 +51,8 @@ export function columnCount({ count }: { count: number }): number {
 
 export const MIN_CARD_PX = 260;
 export const MAX_CARD_PX = 380;
-export const GRID_GAP_PX = 16;
+/** 24 px, the gap of DeAI's pass tiles. */
+export const GRID_GAP_PX = 24;
 
 /**
  * Inline grid style: never more than `columnCount` columns, cards never narrower than 260px (fewer columns on
@@ -163,10 +164,11 @@ export interface PricePart {
  * amounts show no decimals (house rule, same as `formatMoney`). The parts stay in the locale's own order, so a
  * trailing currency sign ("99,00 €") still reads right. An unknown currency code degrades to plain text.
  */
-export function priceParts({ cents, currency, locale }: { cents: number; currency: string; locale: string }): PricePart[] {
+export function priceParts({ cents, currency, locale, alwaysDecimals = false }: { cents: number; currency: string; locale: string; alwaysDecimals?: boolean }): PricePart[] {
   const major = centsToMajor({ cents, currency });
   try {
-    const whole = Number.isInteger(major);
+    // DeAI's pass-tile look writes the cents small ("€99.00"); elsewhere whole amounts drop them (€99).
+    const whole = Number.isInteger(major) && !alwaysDecimals;
     const formatter = new Intl.NumberFormat(locale, { style: "currency", currency, ...(whole ? { minimumFractionDigits: 0, maximumFractionDigits: 0 } : {}) });
     return formatter.formatToParts(major).map((part) => ({ text: part.value, small: part.type === "decimal" || part.type === "fraction" }));
   } catch {

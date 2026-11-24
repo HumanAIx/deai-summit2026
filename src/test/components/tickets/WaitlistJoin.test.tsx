@@ -65,6 +65,18 @@ describe("the join form", () => {
     expect(describeViolations(violations)).toEqual([]);
   });
 
+  it("renders at the top of the page, outside the faded sold-out row, so nothing can show through or cover it", () => {
+    cards([soldOut({ waitlistEnabled: true })]);
+    const row = screen.getByRole("button", { name: /Join the waitlist/ }).closest("li");
+    expect(row).toHaveClass("opacity-80");
+    fireEvent.click(screen.getByRole("button", { name: /Join the waitlist/ }));
+    const backdrop = screen.getByRole("dialog").parentElement;
+    expect(backdrop?.parentElement).toBe(document.body);
+    expect(row?.contains(screen.getByRole("dialog"))).toBe(false);
+    // the ticket tokens still apply outside the checkout
+    expect(backdrop).toHaveClass("deai-tickets");
+  });
+
   it("closes with Cancel or Escape", () => {
     open();
     fireEvent.click(screen.getByRole("button", { name: "Cancel" }));

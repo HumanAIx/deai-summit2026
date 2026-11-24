@@ -1,6 +1,7 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
-const { prefetchCMSPage, prefetchCaptchaConfig, prefetchDocumentsGateForms, prefetchSocials, notFound } = vi.hoisted(() => ({
+const { prefetchCMSPage, prefetchCaptchaConfig, prefetchDocumentsGateForms, prefetchSocials, notFound, fetchPublicTypes } = vi.hoisted(() => ({
+  fetchPublicTypes: vi.fn(),
   prefetchCMSPage: vi.fn(),
   prefetchSocials: vi.fn(),
   prefetchCaptchaConfig: vi.fn(),
@@ -12,17 +13,20 @@ const { prefetchCMSPage, prefetchCaptchaConfig, prefetchDocumentsGateForms, pref
 vi.mock("react/jsx-dev-runtime", async () => (await import("../../helpers/jsx-stub")).jsxStub);
 vi.mock("react/jsx-runtime", async () => (await import("../../helpers/jsx-stub")).jsxStub);
 vi.mock("next/navigation", () => ({ notFound }));
+vi.mock("next/headers", () => ({ headers: async () => new Headers() }));
+vi.mock("@/lib/tickets/api", () => ({ fetchPublicTypes }));
+vi.mock("@/lib/tickets/i18n-server", () => ({ getLocale: async () => "en", getTranslations: async () => (key: string) => `t:${key}` }));
 vi.mock("@/lib/prefetch", () => ({ prefetchCMSPage, prefetchCaptchaConfig, prefetchDocumentsGateForms, prefetchSocials }));
 vi.mock("@/components/tickets/TicketsPageBody", () => ({ TicketsPageBody: function TicketsPageBody() { return null; } }));
 vi.mock("@/components/TicketsPageView", () => ({ TicketsPageView: function TicketsPageView() { return null; }, ClosingBanner: function ClosingBanner() { return null; } }));
-vi.mock("@/components/cms/CmsPageRenderer", () => ({ CmsPageRenderer: function CmsPageRenderer() { return null; } }));
+vi.mock("@/components/tickets/TicketsSection", () => ({ TicketsSection: function TicketsSection() { return null; } }));
 vi.mock("@/components/tickets/TicketsIntro", () => ({ TicketsIntro: function TicketsIntro() { return null; } }));
 
 const page = await import("../../../app/tickets/page");
 const { TicketsPageBody } = await import("../../../components/tickets/TicketsPageBody");
-const { TicketsPageView, ClosingBanner } = await import("../../../components/TicketsPageView");
-const { CmsPageRenderer } = await import("../../../components/cms/CmsPageRenderer");
+const { TicketsPageView } = await import("../../../components/TicketsPageView");
 const { TicketsIntro } = await import("../../../components/tickets/TicketsIntro");
+const { TicketsSection } = await import("../../../components/tickets/TicketsSection");
 
 type El = { type: unknown; props: Record<string, unknown> };
 const render = async (params: Record<string, string | string[] | undefined> = {}) => (await page.default({ searchParams: Promise.resolve(params) })) as unknown as El;
@@ -38,6 +42,8 @@ beforeEach(() => {
   prefetchSocials.mockReset();
   prefetchSocials.mockResolvedValue([]);
   notFound.mockClear();
+  fetchPublicTypes.mockReset();
+  fetchPublicTypes.mockRejectedValue(new Error("ep-api not reachable"));
   prefetchCaptchaConfig.mockResolvedValue({ site_key: "cap-key", disabled: false, provider: "turnstile" });
   prefetchDocumentsGateForms.mockResolvedValue({ f1: { id: "f1" } });
 });
@@ -45,8 +51,6 @@ beforeEach(() => {
 const luma = "https://luma.com/phjit31c";
 const lumaPass = { id: "p", type: "simple", title: "VIP Pass", description: "€189.00", buttons: [{ id: "b", text: "Buy Ticket", link: luma }] };
 
-/** The CMS-page branch wraps CmsPageRenderer (and the Luma line) in a dark backdrop. */
-const childrenOf = (wrapper: El) => ([] as unknown[]).concat(wrapper.props.children).filter(Boolean) as El[];
 
 describe("/tickets page", () => {
   it("is dynamic", () => {
@@ -61,52 +65,41 @@ describe("/tickets page", () => {
     expect(prefetchCMSPage).toHaveBeenCalledWith("tickets");
   });
 
-  it("a CMS page with a Tickets section (addon: tickets) renders through CmsPageRenderer with the captcha config", async () => {
-    prefetchCMSPage.mockResolvedValue(cms([heroBlock, ticketsBlock]));
-    const [el, ...rest] = childrenOf(await render());
-    expect(el?.type).toBe(CmsPageRenderer);
-    expect((el?.props.blocks as { id: string }[]).map((b) => b.id)).toEqual(["hero", "tk"]);
-    expect(el?.props).toMatchObject({ pageTitle: "Tickets", captchaSiteKey: "cap-key", captchaDisabled: false, captchaProvider: "turnstile", formConfigs: { f1: { id: "f1" } } });
-    expect(rest).toEqual([]); // no Luma link on the page = no Luma line
-  });
-
-  // DeAI (2026-11-23): "it should look the same, but just the top two tiles should start the ticketing flow of GConf".
-  it("with a Tickets section and the CMS pass tiles, shows the page as it was; each tile opens the checkout for its ticket", async () => {
-    const vip = "8429f0cd-7c27-4ebf-9549-099d6c9ef991";
-    const premium = "90c1b772-ea99-4f9c-b91e-2dfd7f6ff153";
+  // DeAI (2026-11-23): "it should look the same". The page template stays; the section's live cards take the tiles' place.
+  it("a Tickets section (addon: tickets) puts its live cards in the tickets page template, in place of the static tiles", async () => {
     const premiumPass = { ...lumaPass, id: "p0", title: "Premium Pass", description: "€99.00" };
-    const section = { ...ticketsBlock, ticketCards: [{ id: "c1", ticketTypeId: premium, title: "Premium Pass" }, { id: "c2", ticketTypeId: vip, title: "VIP Pass" }] };
+    const section = { ...ticketsBlock, ticketCards: [{ id: "c1", ticketTypeId: "90c1b772-ea99-4f9c-b91e-2dfd7f6ff153", title: "Conference Pass" }] };
     prefetchCMSPage.mockResolvedValue(cms([heroBlock, premiumPass, lumaPass, section]));
     const el = await render();
     expect(el.type).toBe(TicketsPageView);
-    const content = el.props.content as { passes: { title: string; buttonHref: string }[]; closingHref: string };
-    expect(content.passes.map((pass) => [pass.title, pass.buttonHref])).toEqual([
-      ["Premium Pass", `/tickets?type=${premium}&types=${premium},${vip}`],
-      ["VIP Pass", `/tickets?type=${vip}&types=${premium},${vip}`],
-    ]);
-    // the closing banner keeps Luma as the second option
-    expect(content.closingHref).toBe(luma);
+    const cards = el.props.cards as El[];
+    expect(cards).toHaveLength(1);
+    expect(cards[0]?.type).toBe(TicketsSection);
+    expect(cards[0]?.props).toMatchObject({ bare: true, block: { id: "tk" } });
+    // Luma stays the second option: the CMS page's own closing tile, notice included
+    expect(el.props.content).toMatchObject({ closingHref: luma, notice: expect.any(String) });
+    // nothing is matched by title and no catalogue is read on the server
+    expect(fetchPublicTypes).not.toHaveBeenCalled();
   });
 
-  it("with a Tickets section and no Luma link on the CMS page, the site's Luma social link gets the closing Luma tile", async () => {
+  it("with a Tickets section and no Luma link on the CMS page, the site's Luma social link gets the closing Luma tile, without the page's notice", async () => {
     prefetchSocials.mockResolvedValue([{ key: "luma", label: "Luma", url: luma }]);
     prefetchCMSPage.mockResolvedValue(cms([heroBlock, ticketsBlock]));
-    const [, wrapper] = childrenOf(await render());
-    const banner = wrapper?.props.children as El;
-    expect(banner.type).toBe(ClosingBanner);
-    // the CMS page's notice ("PRICE INCREASE FROM …") is not shown under a link that did not come from it
-    expect(banner.props).toMatchObject({ href: luma, notice: "", label: "Buy tickets now on Luma" });
+    const el = await render();
+    expect(el.type).toBe(TicketsPageView);
+    expect(el.props.content).toMatchObject({ closingHref: luma, notice: "" });
   });
 
-  it("a non-Luma 'luma' social link is not offered", async () => {
+  it("no Luma link anywhere (or a 'luma' social that is not Luma): no closing Luma tile", async () => {
     prefetchSocials.mockResolvedValue([{ key: "luma", label: "Luma", url: "https://example.com/x" }]);
     prefetchCMSPage.mockResolvedValue(cms([heroBlock, ticketsBlock]));
-    expect(childrenOf(await render())).toHaveLength(1);
+    expect((await render()).props.content).toMatchObject({ closingHref: "" });
   });
 
   it("a block of type `tickets` counts as a Tickets section too", async () => {
     prefetchCMSPage.mockResolvedValue(cms([{ id: "tk", type: "tickets" }]));
-    expect(childrenOf(await render())[0]?.type).toBe(CmsPageRenderer);
+    const el = await render();
+    expect((el.props.cards as El[])[0]?.type).toBe(TicketsSection);
   });
 
   it("?schedule= shows the built-in checkout even with a Tickets block", async () => {

@@ -27,6 +27,7 @@ export async function TicketsPageBody({
   rawType,
   intro,
   allowedTypeIds = null,
+  pickedNames = {},
 }: {
   rawLink?: string | undefined;
   rawSchedule?: string | undefined;
@@ -40,6 +41,8 @@ export async function TicketsPageBody({
    * `null` = every public type. A private link is never narrowed: it names its one hidden type itself.
    */
   allowedTypeIds?: readonly string[] | null;
+  /** DeAI: the CMS card title per picked ticket type, so a picked ticket ep-api does not list still shows as unavailable. */
+  pickedNames?: Readonly<Record<string, string>>;
 }) {
   const [locale, requestHeaders, ctx] = await Promise.all([getLocale(), headers(), ticketsLocaleCtx()]);
   const localePrefix = localePrefixFor(ctx);
@@ -66,7 +69,8 @@ export async function TicketsPageBody({
     if (error instanceof EpApiError && (error.status === 409 || error.status === 404)) data = NOT_ON_SALE;
     else throw error;
   }
-  if (allowedTypeIds && !link?.success) data = onlyTypes({ data, ids: allowedTypeIds });
+  const narrowed = Boolean(allowedTypeIds) && !link?.success;
+  if (narrowed && allowedTypeIds) data = onlyTypes({ data, ids: allowedTypeIds });
   const type = rawType ? sourceFilterIdSchema.safeParse(rawType) : null;
   return (
     <TicketTypeList
@@ -76,8 +80,22 @@ export async function TicketsPageBody({
       linkToken={link?.success ? link.data : undefined}
       intro={intro}
       preselectTypeId={type?.success ? type.data : undefined}
+      unlisted={narrowed && allowedTypeIds ? unlistedOf({ data, ids: allowedTypeIds, names: pickedNames }) : []}
     />
   );
+}
+
+/**
+ * The picked tickets ep-api did not list (hidden behind a private link, removed, another site's): shown as "not
+ * available" under their CMS card title, so the buyer sees every ticket the page offers. One without a title is left
+ * out (there is no name to show, and the ticket's own name must not leak from a private link).
+ */
+function unlistedOf({ data, ids, names }: { data: PublicTypes; ids: readonly string[]; names: Readonly<Record<string, string>> }): { id: string; name: string }[] {
+  const listed = new Set(data.types.map((type) => type.id));
+  return ids.filter((id) => !listed.has(id)).flatMap((id) => {
+    const name = names[id]?.trim() ?? "";
+    return name ? [{ id, name }] : [];
+  });
 }
 
 /** The catalogue narrowed to `ids`, in that order (the CMS card order); ids the catalogue does not hold are skipped. */

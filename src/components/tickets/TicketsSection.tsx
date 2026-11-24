@@ -27,8 +27,9 @@ function splitHeading(title: string, hl: string): { lead: string; accent: string
  * sale state are read live from `/api/tickets/types` (on mount and when the tab comes back); a card's Buy button
  * goes to the `/tickets` checkout page with that type preselected and only this section's tickets on offer (never a
  * pop-up). Only picked tickets are shown: no cards, or none of them on sale, and the whole section is left out.
+ * `bare`: the cards only, for `/tickets`, where the page template (`TicketsPageView`) draws the heading and backdrop.
  */
-export function TicketsSection({ block }: { block: CMSBlock }) {
+export function TicketsSection({ block, bare = false }: { block: CMSBlock; bare?: boolean }) {
   const kicker = text(block.subtitle);
   const title = text(block.title);
   const meta = text(block.description);
@@ -44,7 +45,7 @@ export function TicketsSection({ block }: { block: CMSBlock }) {
       buyHref="/tickets"
       // The old CMS pass tiles filled the 1180 px column (two ~540 px tiles); the block's default 380 px cap made them tiny.
       maxCardPx={540}
-      frame={(content) => (
+      frame={(content) => bare ? <div className={`deai-tickets ${plexMono.variable} font-body text-text`}>{content}</div> : (
         <section className={`deai-tickets ${plexMono.variable} relative bg-background py-16 font-body text-text md:py-24`} style={TICKETS_BACKDROP_STYLE}>
           <div className="relative mx-auto flex w-full max-w-[1180px] flex-col gap-10 px-4 sm:px-6 md:gap-14 md:px-14">
             {kicker || title || meta ? (

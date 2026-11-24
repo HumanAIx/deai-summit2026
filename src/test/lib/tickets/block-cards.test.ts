@@ -69,12 +69,12 @@ describe("columnCount / gridStyle", () => {
     expect(style.gridTemplateColumns).toContain("260px");
     expect(style.gridTemplateColumns).toContain("min(100%, 260px)");
     expect(style.gridTemplateColumns).toContain("/ 3");
-    expect(style.maxWidth).toBe("1172px");
+    expect(style.maxWidth).toBe("1188px"); // 3 × 380 + 2 × 24 (the pass tiles' gap)
     expect(gridStyle({ count: 1 }).maxWidth).toBe("380px");
-    expect(gridStyle({ count: 4 }).maxWidth).toBe("776px");
+    expect(gridStyle({ count: 4 }).maxWidth).toBe("784px");
   });
   it("a wider card cap when asked (DeAI's /tickets: two ~540px tiles)", () => {
-    expect(gridStyle({ count: 2, maxCardPx: 540 }).maxWidth).toBe("1096px");
+    expect(gridStyle({ count: 2, maxCardPx: 540 }).maxWidth).toBe("1104px");
   });
 });
 

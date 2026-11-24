@@ -144,7 +144,12 @@ export function ClosingBanner({ notice, title, label, href }: { notice: string; 
   );
 }
 
-export function TicketsPageView({ content }: { content: TicketsPageContent }) {
+/**
+ * The CMS `tickets` page in DeAI's look. `cards` (the live GConf.ai ticket cards of the page's Tickets sections) take
+ * the place of the static pass tiles; then the closing Luma tile shows only while there is a Luma link to offer.
+ */
+export function TicketsPageView({ content, cards }: { content: TicketsPageContent; cards?: ReactNode }) {
+  const closing = cards === undefined || (content.closingHref !== '' && content.closingHref !== '#');
   return (
     <section
       className="relative -mt-[140px] min-h-screen bg-[#040A1E] pt-[140px] text-white"
@@ -182,7 +187,9 @@ export function TicketsPageView({ content }: { content: TicketsPageContent }) {
           ) : null}
         </div>
 
-        {content.passes.length > 0 ? (
+        {cards !== undefined ? (
+          <div className="flex flex-col gap-6">{cards}</div>
+        ) : content.passes.length > 0 ? (
           <div className="grid items-stretch gap-6 lg:grid-cols-2">
             {content.passes.map((pass) => (
               <PassCard key={pass.id} pass={pass} />
@@ -191,7 +198,7 @@ export function TicketsPageView({ content }: { content: TicketsPageContent }) {
         ) : null}
 
         <div className="flex flex-col gap-12 sm:gap-16">
-          <ClosingBanner notice={content.notice} title={content.closingTitle} label={content.closingLabel} href={content.closingHref} />
+          {closing ? <ClosingBanner notice={content.notice} title={content.closingTitle} label={content.closingLabel} href={content.closingHref} /> : null}
           <div className={`${plexMono.className} flex flex-wrap items-center justify-between gap-4 border-t border-white/10 py-7 text-[13px] tracking-[0.22em] text-[#9AA3B8]`}>
             <span>VALLETTA, MALTA</span>
             <a href="https://deaisummit.org" className="text-[#9AA3B8] transition hover:text-white">

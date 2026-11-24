@@ -332,6 +332,8 @@
       "feeExtra": "+ {fee} booking fee",
       "left": "{count, plural, one {# left} other {# left}}",
       "maxPerOrder": "Max {count} per order",
+      "salesEnd": "Sales end {date}",
+      "pickUnavailable": "{name} can't be bought right now: {status}.",
       "free": "Free",
       "status": {
         "onSale": "On sale",
@@ -569,6 +571,7 @@
         }
       },
       "getTickets": "Get tickets",
+      "noneBuyable": "None of these tickets can be bought right now.",
       "cart": {
         "title": "Your tickets",
         "sectionTickets": "Tickets",

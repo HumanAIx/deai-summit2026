@@ -80,6 +80,52 @@ describe("TicketTypeList", () => {
     expect(screen.queryByRole("button")).not.toBeInTheDocument();
   });
 
+  it("lists every offered ticket with why it can't be bought: paused, sales ended, sold out, hidden (unlisted)", async () => {
+    const ui = await resolveServerElement(
+      <TicketTypeList
+        data={data({}, [type(), type({ id: "t2", name: "Paused pass", status: "paused" }), type({ id: "t3", name: "Early bird", status: "ended" }), type({ id: "t4", name: "Student", status: "sold_out" })])}
+        unlisted={[{ id: "t5", name: "Conference Pass" }]}
+        locale="en"
+        localePrefix=""
+      />,
+    );
+    render(<>{ui}</>);
+    expect(screen.getByRole("heading", { name: "Paused pass" }).nextElementSibling).toHaveTextContent(/Paused/);
+    expect(screen.getByRole("heading", { name: "Early bird" }).nextElementSibling).toHaveTextContent(/Sales ended/);
+    expect(screen.getByRole("heading", { name: "Student" }).nextElementSibling).toHaveTextContent(/Sold out/);
+    expect(screen.getByRole("heading", { name: "Conference Pass" }).nextElementSibling).toHaveTextContent("Unavailable");
+    // Only the on-sale ticket can be added
+    expect(screen.getAllByRole("button", { name: /^Add one/ })).toHaveLength(1);
+    expect(screen.getByRole("button", { name: "Add one Full pass" })).toBeInTheDocument();
+  });
+
+  it("an on-sale ticket says when its sales end, in the event's time zone", async () => {
+    await renderList(data({}, [type({ closeAt: "2030-11-24T23:30:00.000Z", source: { kind: "event", id: "e1", name: "DeAI Summit", timeZone: "Europe/Malta" } })]));
+    expect(screen.getByText(/Sales end Nov 25, 2030/)).toBeInTheDocument();
+  });
+
+  it("a Buy button for a ticket that can't be bought says why above the list; an on-sale one says nothing", async () => {
+    const value = data({}, [type(), type({ id: "t2", name: "Paused pass", status: "paused" })]);
+    const paused = await resolveServerElement(<TicketTypeList data={value} locale="en" localePrefix="" preselectTypeId="t2" />);
+    const { unmount } = render(<>{paused}</>);
+    expect(screen.getByText("Paused pass can't be bought right now: Paused.")).toBeInTheDocument();
+    unmount();
+    const hidden = await resolveServerElement(<TicketTypeList data={value} unlisted={[{ id: "t5", name: "Conference Pass" }]} locale="en" localePrefix="" preselectTypeId="t5" />);
+    const second = render(<>{hidden}</>);
+    expect(screen.getByText("Conference Pass can't be bought right now: Unavailable.")).toBeInTheDocument();
+    second.unmount();
+    const onSale = await resolveServerElement(<TicketTypeList data={value} locale="en" localePrefix="" preselectTypeId="t1" />);
+    render(<>{onSale}</>);
+    expect(screen.queryByText(/can't be bought right now/)).not.toBeInTheDocument();
+  });
+
+  it("only hidden tickets picked: the list still shows them, with nothing to buy", async () => {
+    const ui = await resolveServerElement(<TicketTypeList data={data({}, [])} unlisted={[{ id: "t5", name: "Conference Pass" }]} locale="en" localePrefix="" />);
+    render(<>{ui}</>);
+    expect(screen.getByRole("heading", { name: "Conference Pass" })).toBeInTheDocument();
+    expect(screen.queryByRole("button", { name: /^Add one/ })).not.toBeInTheDocument();
+  });
+
   it("closed sales say so and offer no buy button; test mode shows the banner", async () => {
     await renderList({ types: [type()], checkout: { salesOpen: false, testMode: true, feePayer: "buyer" } });
     expect(screen.getByText("Sales are closed")).toBeInTheDocument();

@@ -15,7 +15,7 @@ const B = "22222222-2222-4222-8222-222222222222";
 const C = "33333333-3333-4333-8333-333333333333";
 const type = (id: string) => ({ id, name: id.slice(0, 1) });
 const checkout = { salesOpen: true, testMode: true, feePayer: "buyer" };
-type El = { props: { data: { types: Array<{ id: string }> } } };
+type El = { props: { data: { types: Array<{ id: string }> }; unlisted: Array<{ id: string; name: string }> } };
 
 beforeEach(() => {
   fetchPublicTypes.mockReset();
@@ -32,6 +32,19 @@ describe("TicketsPageBody — the CMS-picked ticket types", () => {
   it("skips a picked type the catalogue does not hold (deleted, not public)", async () => {
     const el = (await TicketsPageBody({ allowedTypeIds: ["99999999-9999-4999-8999-999999999999", B] })) as unknown as El;
     expect(el.props.data.types.map((t) => t.id)).toEqual([B]);
+  });
+
+  it("a picked type ep-api does not list (hidden, removed) comes back as unlisted under its CMS card title", async () => {
+    const hidden = "99999999-9999-4999-8999-999999999999";
+    const untitled = "88888888-8888-4888-8888-888888888888";
+    const el = (await TicketsPageBody({ allowedTypeIds: [hidden, B, untitled], pickedNames: { [hidden]: " Conference Pass ", [B]: "B card" } })) as unknown as El;
+    expect(el.props.unlisted).toEqual([{ id: hidden, name: "Conference Pass" }]);
+  });
+
+  it("no unlisted rows without a CMS list or for a private link", async () => {
+    expect(((await TicketsPageBody({ allowedTypeIds: null })) as unknown as El).props.unlisted).toEqual([]);
+    fetchLinkType.mockResolvedValue({ types: [type(C)], checkout });
+    expect(((await TicketsPageBody({ rawLink: "x".repeat(24), allowedTypeIds: [A], pickedNames: { [A]: "A card" } })) as unknown as El).props.unlisted).toEqual([]);
   });
 
   it("an empty list means nothing on sale (only picked tickets are sold)", async () => {
