@@ -235,3 +235,39 @@ describe("waitlist calls (DASH-205 F3)", () => {
     await expect(api.fetchWaitlistOffer({ token: OFFER, locale: "en", ip: undefined })).rejects.toBeInstanceOf(FakeEpApiError);
   });
 });
+
+describe("sign-in session calls (API-266)", () => {
+  const session = { email: "a@b.co", expiresAt: "2026-11-24T10:00:00.000Z", orders: [], tickets: [] };
+
+  it("postSignIn sends the token in the BODY and parses the session; a 404 is the opaque invalid state", async () => {
+    epFetch.mockResolvedValue({ sessionToken: "s".repeat(40), expiresAt: "2026-11-24T10:00:00.000Z" });
+    const ok = await api.postSignIn({ token: TOKEN, locale: "en", ip: undefined });
+    expect(ok).toEqual({ state: "ok", data: { sessionToken: "s".repeat(40), expiresAt: "2026-11-24T10:00:00.000Z" } });
+    expect(epFetch.mock.calls[0]?.[0]).toBe("/tickets/my/sign-in");
+    expect(epFetch.mock.calls[0]?.[1]).toMatchObject({ method: "POST", body: { token: TOKEN }, cache: "no-store" });
+
+    epFetch.mockRejectedValue(new FakeEpApiError(404, "/tickets/my/sign-in", "nf", "tickets.linkNotFound"));
+    expect(await api.postSignIn({ token: TOKEN, locale: "en", ip: undefined })).toEqual({ state: "invalid" });
+    epFetch.mockRejectedValue(new FakeEpApiError(500, "/tickets/my/sign-in", "boom"));
+    await expect(api.postSignIn({ token: TOKEN, locale: "en", ip: undefined })).rejects.toThrow();
+  });
+
+  it("fetchMySession sends x-session-token (header only), parses the overview shape; 401 is 'ended', 5xx throws", async () => {
+    epFetch.mockResolvedValue(session);
+    expect(await api.fetchMySession({ sessionToken: "sess", locale: "en", ip: "203.0.113.9" })).toEqual({ state: "ok", data: session });
+    expect(epFetch.mock.calls[0]?.[0]).toBe("/tickets/my/session");
+    expect(epFetch.mock.calls[0]?.[1]).toMatchObject({ cache: "no-store", headers: { "x-session-token": "sess", "x-gconf-client-ip": "203.0.113.9" } });
+
+    epFetch.mockRejectedValue(new FakeEpApiError(401, "/tickets/my/session", "expired", "tickets.sessionExpired"));
+    expect(await api.fetchMySession({ sessionToken: "sess", locale: "en", ip: undefined })).toEqual({ state: "invalid" });
+    epFetch.mockRejectedValue(new FakeEpApiError(503, "/tickets/my/session", "down"));
+    await expect(api.fetchMySession({ sessionToken: "sess", locale: "en", ip: undefined })).rejects.toThrow();
+  });
+
+  it("postSignOut posts with the session header", async () => {
+    epFetch.mockResolvedValue(undefined);
+    await api.postSignOut({ sessionToken: "sess", locale: "en", ip: undefined });
+    expect(epFetch.mock.calls[0]?.[0]).toBe("/tickets/my/sign-out");
+    expect(epFetch.mock.calls[0]?.[1]).toMatchObject({ method: "POST", headers: { "x-session-token": "sess" } });
+  });
+});

@@ -2,7 +2,7 @@ import { describe, expect, it } from "vitest";
 import { isPrivateTicketPath, isTicketsRootPath, legacyPrivateLinkRedirect, PATHNAME_HEADER, TICKETS_PAGE_SLUG } from "../../../lib/tickets/tickets-route";
 
 describe("isPrivateTicketPath", () => {
-  it.each(["t", "order", "l", "w", "me"])("is true for /tickets/%s/x", (section) => {
+  it.each(["t", "order", "l", "w", "me", "sign-in"])("is true for /tickets/%s/x", (section) => {
     expect(isPrivateTicketPath({ pathname: `/tickets/${section}/x` })).toBe(true);
     expect(isPrivateTicketPath({ pathname: `/tickets/${section}/x/calendar.ics` })).toBe(true);
   });

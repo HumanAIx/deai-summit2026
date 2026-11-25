@@ -213,4 +213,30 @@ describe("POST /api/tickets/orders", () => {
       expect(logged).not.toContain(KEY);
     }
   });
+
+  it("forwards the buyer's phone and address and each holder's sameAddressAsBuyer (API-267), and refuses a bad phone or country", async () => {
+    const body = {
+      ...goodBody,
+      buyer: { name: "Ada", email: "ada@example.com", phone: " +356 2123 4567 ", address: { street: "1 Main St", city: "Valletta", countryCode: "mt" } },
+      holders: [{ ticketTypeId: TYPE_A, name: "Ada", email: "ada@example.com", sameAddressAsBuyer: true }],
+    };
+    const res = await POST(post({ body, ip: "198.51.100.71" }));
+    expect(res.status).toBe(201);
+    const sent = (epFetch.mock.calls[0] as [string, { body: { buyer: object; holders: Record<string, unknown>[] } }])[1].body;
+    expect(sent.buyer).toEqual({ name: "Ada", email: "ada@example.com", phone: "+356 2123 4567", address: { street: "1 Main St", city: "Valletta", countryCode: "MT" } });
+    expect(sent.holders[0]?.sameAddressAsBuyer).toBe(true);
+
+    epFetch.mockClear();
+    for (const buyer of [{ ...body.buyer, phone: "123" }, { ...body.buyer, address: { street: "1 Main St", city: "Valletta", countryCode: "MLT" } }]) {
+      expect((await POST(post({ body: { ...body, buyer }, ip: "198.51.100.72" }))).status).toBe(400);
+    }
+    expect(epFetch).not.toHaveBeenCalled();
+  });
+
+  it("answers ep-api's tickets.contactRequired as its own code", async () => {
+    epFetch.mockRejectedValue(new FakeEpApiError(400, "/tickets/orders", "missing", "tickets.contactRequired"));
+    const res = await POST(post({ body: goodBody, ip: "198.51.100.73" }));
+    expect(res.status).toBe(400);
+    expect((await res.json()).code).toBe("contactRequired");
+  });
 });

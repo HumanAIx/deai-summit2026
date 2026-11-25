@@ -44,7 +44,7 @@ describe("LostLinkForm", () => {
     const { container } = render(<LostLinkForm ticketsHref="/de/tickets" />);
     submit("ada@example.com");
 
-    expect(await screen.findByText("If we found tickets for that email address, we have sent the links to it.")).toBeInTheDocument();
+    expect(await screen.findByText("If we found tickets for that email address, we have emailed a sign-in link (valid for 30 minutes) and your ticket and order links.")).toBeInTheDocument();
     const [url, init] = fetchMock.mock.calls[0] as [string, RequestInit];
     expect(url).toBe("/api/tickets/lost-link");
     expect(init.method).toBe("POST");

@@ -24,7 +24,7 @@ import type { CreateOrderBody } from "@/lib/tickets/schemas";
 import { formatEventWhen } from "@/lib/tickets/format";
 import { TK_PANEL } from "../tickets-classes";
 import { CartStep, type SourceConflict } from "./CartStep";
-import { EMPTY_DETAILS, EMPTY_HOLDER, normalizeVat, type CartFormValues, type DetailsValues, type HolderValues } from "./forms";
+import { EMPTY_DETAILS, EMPTY_HOLDER, hasBuyerAddress, normalizeVat, type CartFormValues, type DetailsValues, type HolderValues } from "./forms";
 import { useCheckoutCaptcha, useCheckoutQuote } from "./hooks";
 import { PayStep } from "./PayStep";
 import { TicketCards } from "./TicketCards";
@@ -214,14 +214,33 @@ export function TicketCheckout({ types: allTypes, config, linkToken, offerToken,
 
   function orderBody({ details, holderValues }: { details: DetailsValues; holderValues: readonly HolderValues[] }): Omit<CreateOrderBody, "idempotencyKey"> {
     const vat = normalizeVat({ value: details.vatNumber });
+    // Phone and address go out ONLY when the site asks for them (an older or stricter API refuses unknown fields).
+    const contactOn = (config.contact ?? "off") !== "off";
+    const phone = details.phone.trim();
+    const address = contactOn && hasBuyerAddress({ values: details }) ? details : null;
     return {
       lines,
-      buyer: { name: details.name.trim(), email: details.email.trim() },
+      buyer: {
+        name: details.name.trim(),
+        email: details.email.trim(),
+        ...(contactOn && phone ? { phone } : {}),
+        ...(address
+          ? {
+              address: {
+                street: address.buyerStreet.trim(),
+                ...(address.buyerPostalCode.trim() ? { postalCode: address.buyerPostalCode.trim() } : {}),
+                city: address.buyerCity.trim(),
+                countryCode: address.buyerCountryCode,
+              },
+            }
+          : {}),
+      },
       holders: slots.map((slot, index) => ({
         ticketTypeId: slot.ticketTypeId,
         name: holderValues[index]?.name.trim() ?? "",
         email: holderValues[index]?.email.trim() ?? "",
         ...answersOf({ holder: holderValues[index] ?? EMPTY_HOLDER, questions: config.extraQuestions }),
+        ...(address && holderValues[index]?.sameAddress ? { sameAddressAsBuyer: true } : {}),
       })),
       ...heardFromOf({ details, questions: config.extraQuestions }),
       ...(details.invoice

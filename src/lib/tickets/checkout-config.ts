@@ -18,5 +18,6 @@ export function configOf({ checkout }: { checkout: CheckoutBlock }): CheckoutCon
     newsletterOffer: checkout.newsletterOffer ?? { on: false, pct: 0 },
     detailsLater: checkout.detailsLater === true,
     holdMinutes: checkout.holdMinutes,
+    contact: checkout.contact ?? "off",
   };
 }

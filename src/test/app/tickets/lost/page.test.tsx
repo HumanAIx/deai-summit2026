@@ -30,4 +30,13 @@ describe("/tickets/lost page", () => {
     const element = await page.default();
     expect(findByType(element, LostLinkForm)?.props.ticketsHref).toBe("/tickets");
   });
+
+  it("shows the expired sign-in notice or the signed-out notice from ?notice=, nothing otherwise", async () => {
+    const text = (node: unknown): string => JSON.stringify(node);
+    expect(text(await page.default({ searchParams: Promise.resolve({ notice: "expired" }) }))).toContain("expired or was already used");
+    expect(text(await page.default({ searchParams: Promise.resolve({ notice: "signedOut" }) }))).toContain("signed out");
+    const plain = text(await page.default({ searchParams: Promise.resolve({}) }));
+    expect(plain).not.toContain("expired or was already used");
+    expect(plain).not.toContain("signed out");
+  });
 });

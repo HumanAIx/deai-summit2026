@@ -290,6 +290,8 @@ export const checkoutBlockSchema = z.object({
   newsletterOffer: z.object({ on: z.boolean(), pct: z.number() }).optional(),
   /** The site's "Ticket pages address" (ep-api ≥ ep-api#522), null = the GConf.ai pages. Absent on older builds. */
   ticketPagesUrl: nullableString.optional(),
+  /** Whether the checkout asks for the buyer's phone and address (ep-api API-267): off / optional / required. Absent (older API) or unknown = off. */
+  contact: z.enum(["off", "optional", "required"]).optional().catch(undefined),
 });
 export type CheckoutBlock = z.infer<typeof checkoutBlockSchema>;
 
@@ -441,8 +443,24 @@ export type QuoteBody = z.infer<typeof quoteBodySchema>;
 export const createOrderBodySchema = z.object({
   idempotencyKey: z.string().trim().min(32).max(128),
   lines: cartLines,
-  buyer: z.object({ name: text(200), email: emailField }),
-  holders: z.array(z.object({ ticketTypeId: uuid, name: text(200), email: emailField, answers: holderAnswers.optional() })).min(1).max(200),
+  buyer: z.object({
+    name: text(200),
+    email: emailField,
+    /** Only when the site asks for contact details (`checkout.contact`): 5-40 characters. */
+    phone: z.string().trim().min(5).max(40).optional(),
+    address: z
+      .object({
+        street: text(200),
+        postalCode: z.string().trim().max(20).optional(),
+        city: text(120),
+        countryCode: z.string().trim().toUpperCase().regex(/^[A-Z]{2}$/),
+      })
+      .optional(),
+  }),
+  holders: z
+    .array(z.object({ ticketTypeId: uuid, name: text(200), email: emailField, answers: holderAnswers.optional(), sameAddressAsBuyer: z.boolean().optional() }))
+    .min(1)
+    .max(200),
   heardFrom: heardFrom.optional(),
   company: z
     .object({
@@ -564,3 +582,13 @@ export const myOverviewSchema = z.object({
   ),
 });
 export type MyOverview = z.infer<typeof myOverviewSchema>;
+
+/** `GET /tickets/my/session` — the signed-in visitor's list: exactly the item shape of the overview (ep-api API-266). */
+export const mySessionSchema = myOverviewSchema;
+
+/** `POST /tickets/my/sign-in` — the session the one-time link was exchanged for. */
+export const signInResultSchema = z.object({ sessionToken: z.string().trim().min(16).max(512), expiresAt: z.string() });
+export type SignInResult = z.infer<typeof signInResultSchema>;
+
+/** The form post of the "Continue" page. */
+export const signInBodySchema = z.object({ token: ticketTokenSchema });
