@@ -25,6 +25,14 @@ describe("isSameOriginRequest", () => {
     expect(isSameOriginRequest({ request: req({ origin: "https://acme.example" }) })).toBe(false);
   });
 
+  it("allows Origin: null only from a same-origin form (no-referrer pages post null)", () => {
+    // Regression: the sign-in Continue and Sign out forms sit on `no-referrer` pages, so the browser sends `Origin: null`.
+    expect(isSameOriginRequest({ request: req({ host: "acme.example", origin: "null", "sec-fetch-site": "same-origin" }) })).toBe(true);
+    expect(isSameOriginRequest({ request: req({ host: "acme.example", origin: "null", "sec-fetch-site": "cross-site" }) })).toBe(false);
+    expect(isSameOriginRequest({ request: req({ host: "acme.example", origin: "null", "sec-fetch-site": "same-site" }) })).toBe(false);
+    expect(isSameOriginRequest({ request: req({ host: "acme.example", origin: "null", "sec-fetch-site": "none" }) })).toBe(false);
+  });
+
   it("compares hosts case-insensitively and ignores the scheme", () => {
     expect(isSameOriginRequest({ request: req({ host: "Acme.Example", origin: "http://acme.example" }) })).toBe(true);
   });
