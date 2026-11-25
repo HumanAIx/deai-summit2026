@@ -428,8 +428,10 @@
 
   /* Hide every direct child of <body> that isn't our print portal. This
    * keeps Next.js scripts/styles in the tree while suppressing the live
-   * UI (nav, hero, dark gradients, fullscreen overlay, etc.). */
-  body > *:not(.schedule-print-portal) {
+   * UI (nav, hero, dark gradients, fullscreen overlay, etc.).
+   * Only on a page that HAS the portal (the schedule): unscoped, this rule
+   * blanked every other printed page, the ticket's "Save as PDF" included. */
+  body:has(> .schedule-print-portal) > *:not(.schedule-print-portal) {
     display: none !important;
   }
 
