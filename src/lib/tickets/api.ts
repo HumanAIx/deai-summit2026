@@ -194,6 +194,14 @@ export async function fetchTicketCalendar({ token, ...common }: Common & { token
   });
 }
 
+/** `GET /tickets/my/ticket/ticket.pdf` — the same designed PDF the ticket email attaches (holder token, header only). */
+export async function fetchTicketPdf({ token, ...common }: Common & { token: string }): Promise<EpRawResponse> {
+  return epFetchRaw("/tickets/my/ticket/ticket.pdf", {
+    ...base(common),
+    headers: { ...clientIpHeaders({ ip: common.ip }), "x-ticket-token": token },
+  });
+}
+
 export async function fetchOrderDocument({ token, documentId, ...common }: Common & { token: string; documentId: string }): Promise<EpRawResponse> {
   return epFetchRaw(`/tickets/my/order/documents/${encodeURIComponent(documentId)}`, {
     ...base(common),

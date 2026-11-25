@@ -3,13 +3,12 @@ import { formatEventWhen, formatPlainDate } from "@/lib/tickets/format";
 import type { MyTicket } from "@/lib/tickets/schemas";
 import { CancelTicket } from "./CancelTicket";
 import { CompleteDetailsButton } from "./CompleteDetailsButton";
-import { PrintTicketButton } from "./PrintTicketButton";
 import { SellerFooter } from "./SellerFooter";
 import { TicketDetailsForm } from "./TicketDetailsForm";
 import { TicketSelfService } from "./TicketSelfService";
 import { TicketsShell } from "./TicketsShell";
-import { BrightnessIcon, CalendarIcon, ChevronLeftIcon, Dot } from "./ticket-page-icons";
-import { TP_BACK_LINK, TP_BUTTON_WHITE, TP_FOCUS, TP_GRADIENT_TEXT, TP_LABEL, TP_PILL, TP_PILL_OFF, TP_TEST_PILL, TP_TICKET_CARD } from "./ticket-page-classes";
+import { BrightnessIcon, CalendarIcon, ChevronLeftIcon, Dot, DownloadIcon } from "./ticket-page-icons";
+import { TP_BACK_LINK, TP_BUTTON_OUTLINE, TP_BUTTON_WHITE, TP_FOCUS, TP_GRADIENT_TEXT, TP_LABEL, TP_PILL, TP_PILL_OFF, TP_TEST_PILL, TP_TICKET_CARD } from "./ticket-page-classes";
 
 type Translator = Awaited<ReturnType<typeof getTranslations>>;
 
@@ -151,11 +150,11 @@ function PassedOnCard({ ticket, t }: { ticket: MyTicket; t: Translator }) {
  * stacked on a phone, the ticket (type, holder, QR, when / where / access, what it includes) with "Add to calendar" and
  * "Save as PDF" under it, and "Your details" (badge, dietary, address, contact), "Pass this ticket on" and "Cancel my
  * ticket". It shows NEVER the price, the order or the buyer (ep-api does not send them). The QR is ep-api's hosted PNG
- * (its own signed URL): a plain `<img>` with no referrer, because the page URL carries the token. Printing (Save as PDF)
- * prints the ticket card alone. A passed-on ticket is one card: who has it now. A refunded or void ticket keeps the card
+ * (its own signed URL): a plain `<img>` with no referrer, because the page URL carries the token. "Save as PDF" downloads the same designed PDF the ticket email carries (`pdfHref`);
+ * Ctrl+P still prints the ticket card alone. A passed-on ticket is one card: who has it now. A refunded or void ticket keeps the card
  * with its status, without QR or forms.
  */
-export async function TicketView({ ticket, calendarHref, token, orderHref }: { ticket: MyTicket; calendarHref: string; token?: string; orderHref?: string | null }) {
+export async function TicketView({ ticket, calendarHref, pdfHref, token, orderHref }: { ticket: MyTicket; calendarHref: string; pdfHref: string; token?: string; orderHref?: string | null }) {
   const [t, format] = await Promise.all([getTranslations("tickets.ticket"), getFormatter()]);
 
   if (ticket.status === "passed_on") {
@@ -319,7 +318,10 @@ export async function TicketView({ ticket, calendarHref, token, orderHref }: { t
                   <CalendarIcon />
                   {t("addToCalendar")}
                 </a>
-                <PrintTicketButton label={t("savePdf")} />
+                <a href={pdfHref} download className={`${TP_BUTTON_OUTLINE} min-h-12 w-full`}>
+                  <DownloadIcon />
+                  {t("savePdf")}
+                </a>
               </div>
             ) : null}
             {valid ? (

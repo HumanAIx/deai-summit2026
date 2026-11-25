@@ -1,7 +1,7 @@
 import { describe, expect, it, vi } from "vitest";
 import { axeViolations, describeViolations } from "../../helpers/axe";
 import { resolveServerElement } from "../../helpers/resolve-server";
-import { fireEvent, render, screen } from "../../test-utils";
+import { render, screen } from "../../test-utils";
 import type { MyTicket } from "../../../lib/tickets/schemas";
 
 vi.mock("next/navigation", () => ({ useRouter: () => ({ push: vi.fn(), refresh: vi.fn() }) }));
@@ -25,7 +25,7 @@ function withoutQr(ticket: MyTicket): MyTicket {
 }
 
 async function renderTicket(ticket: MyTicket, token?: string, orderHref?: string) {
-  const ui = await resolveServerElement(<TicketView ticket={ticket} calendarHref="/tickets/t/tok/calendar.ics" {...(token ? { token } : {})} {...(orderHref ? { orderHref } : {})} />);
+  const ui = await resolveServerElement(<TicketView ticket={ticket} calendarHref="/tickets/t/tok/calendar.ics" pdfHref="/tickets/t/tok/ticket.pdf" {...(token ? { token } : {})} {...(orderHref ? { orderHref } : {})} />);
   return render(<>{ui}</>);
 }
 
@@ -87,12 +87,12 @@ describe("TicketView", () => {
     expect(screen.queryByRole("link", { name: "Back to your order" })).not.toBeInTheDocument();
   });
 
-  it("offers Save as PDF next to Add to calendar, which opens the print dialog", async () => {
-    const print = vi.spyOn(window, "print").mockImplementation(() => undefined);
+  it("offers Save as PDF next to Add to calendar, a download of the same designed PDF the email carries", async () => {
     await renderTicket(TICKET);
-    fireEvent.click(screen.getByRole("button", { name: "Save as PDF" }));
-    expect(print).toHaveBeenCalledTimes(1);
-    print.mockRestore();
+    const link = screen.getByRole("link", { name: "Save as PDF" });
+    expect(link).toHaveAttribute("href", "/tickets/t/tok/ticket.pdf");
+    expect(link).toHaveAttribute("download");
+    expect(link.parentElement).toBe(screen.getByRole("link", { name: "Add to calendar" }).parentElement);
   });
 
   it("shows the test badge beside the back link only for a test ticket", async () => {
@@ -109,7 +109,7 @@ describe("TicketView", () => {
     expect(screen.queryByRole("img")).not.toBeInTheDocument();
     expect(screen.queryByRole("link", { name: "Add to calendar" })).not.toBeInTheDocument();
     expect(screen.getByText("Refunded")).toBeInTheDocument();
-    expect(screen.queryByRole("button", { name: "Save as PDF" })).not.toBeInTheDocument();
+    expect(screen.queryByRole("link", { name: "Save as PDF" })).not.toBeInTheDocument();
   });
 
   it("a void ticket the organiser blocked says blocked; one the holder cancelled says cancelled", async () => {
