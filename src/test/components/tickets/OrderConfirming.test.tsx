@@ -129,16 +129,20 @@ describe("OrderConfirming", () => {
     expect(refresh).toHaveBeenCalledTimes(1);
   });
 
-  it("an expired order stops polling and links back to the tickets", async () => {
+  it("an expired order is final only after a 90-second grace, then stops polling and links back to the tickets", async () => {
     const fetchMock = vi.fn().mockImplementation(async () => answer("expired"));
     vi.stubGlobal("fetch", fetchMock);
     const { container } = mountComponent();
     await tickFor(0);
+    // Right after paying the hold can end while Stripe confirms: keep checking instead of saying "expired".
+    expect(screen.queryByText("Your reservation expired")).not.toBeInTheDocument();
+    await tickFor(95_000);
 
     expect(screen.getByText("Your reservation expired")).toBeInTheDocument();
     expect(screen.getByRole("link", { name: "Back to tickets" })).toHaveAttribute("href", "/tickets");
-    await tickFor(10_000);
-    expect(fetchMock).toHaveBeenCalledTimes(1);
+    const calls = fetchMock.mock.calls.length;
+    await tickFor(30_000);
+    expect(fetchMock).toHaveBeenCalledTimes(calls);
     expect(replace).not.toHaveBeenCalled();
     vi.useRealTimers(); // axe-core schedules with real timers
     const violations = await axeViolations({ container });
@@ -158,18 +162,44 @@ describe("OrderConfirming", () => {
     expect(screen.getByText("Your order was not completed")).toBeInTheDocument();
   });
 
-  it("gives up after 60 seconds with 'not confirmed yet'; 'Check again' starts polling again", async () => {
+  it("an order that turns from expired to paid within the grace still opens the order", async () => {
+    const fetchMock = vi.fn().mockImplementationOnce(async () => answer("expired")).mockImplementation(async () => answer("paid"));
+    vi.stubGlobal("fetch", fetchMock);
+    mountComponent();
+    await tickFor(0);
+    await tickFor(2000);
+    expect(screen.queryByText("Your reservation expired")).not.toBeInTheDocument();
+    await tickFor(2000);
+    expect(replace).toHaveBeenCalledWith(expect.stringContaining("?paid=1"));
+  });
+
+  it("keeps checking past a minute and slows down (2 s, then 5 s, then 15 s)", async () => {
+    const fetchMock = vi.fn().mockImplementation(async () => answer("pending"));
+    vi.stubGlobal("fetch", fetchMock);
+    mountComponent();
+    await tickFor(0);
+    await tickFor(60_000);
+    expect(screen.queryByRole("heading", { level: 1, name: "We couldn’t confirm your payment yet" })).not.toBeInTheDocument();
+    const atMinute = fetchMock.mock.calls.length; // ~16 calls in the first 30 s at 2 s, ~6 more at 5 s
+    expect(atMinute).toBeGreaterThan(15);
+    expect(atMinute).toBeLessThan(25);
+    await tickFor(3 * 60_000);
+    // from 2 minutes on: one call every 15 s
+    expect(fetchMock.mock.calls.length - atMinute).toBeLessThan(25);
+  });
+
+  it("gives up after 10 minutes with 'not confirmed yet'; 'Check again' starts polling again", async () => {
     const fetchMock = vi.fn().mockImplementation(async () => answer("pending"));
     vi.stubGlobal("fetch", fetchMock);
     const { container } = mountComponent();
     await tickFor(0);
-    await tickFor(60_000);
+    await tickFor(10 * 60_000);
 
     expect(screen.getByRole("heading", { level: 1, name: "We couldn’t confirm your payment yet" })).toBeInTheDocument();
     expect(screen.getByRole("link", { name: "Contact us about this order" })).toHaveAttribute("href", "/contact");
     const calls = fetchMock.mock.calls.length;
-    expect(calls).toBeLessThanOrEqual(32);
-    await tickFor(10_000);
+    expect(calls).toBeLessThanOrEqual(70);
+    await tickFor(60_000);
     expect(fetchMock).toHaveBeenCalledTimes(calls);
 
     await act(async () => screen.getByRole("button", { name: "Check again" }).click());

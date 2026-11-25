@@ -1,16 +1,25 @@
 "use client";
 
-// Interactive: polls our own status route handler every 2 s (up to 60 s) after a payment and refreshes the
-// server-rendered order page once the order is paid — needs timers, fetch and the router.
+// Interactive: polls our own status route handler after a payment (every 2 s at first, then slower, for up to 10 min) and
+// refreshes the server-rendered order page once the order is paid — needs timers, fetch and the router.
 
 import { useTranslations } from "@/lib/tickets/i18n";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 
-const POLL_MS = 2000;
 const SLOW_MS = 15_000;
-const GIVE_UP_MS = 60_000;
+// DECISION (25 Nov prod, 3-4 min to "paid"): the buyer was charged, so the page keeps checking well past a minute instead
+// of giving up. Every status call also makes ep-api ask Stripe directly, so a slow webhook no longer keeps the buyer waiting.
+const GIVE_UP_MS = 10 * 60_000;
+/** Poll fast while it is likely to finish, then back off so a long wait does not hammer the API. */
+function pollDelay(elapsedMs: number): number {
+  if (elapsedMs < 30_000) return 2000;
+  if (elapsedMs < 2 * 60_000) return 5000;
+  return 15_000;
+}
+/** Right after paying, `expired` can still turn into `paid` (the hold ended while Stripe was confirming): wait this long first. */
+const EXPIRED_GRACE_MS = 90_000;
 /** "Payment received" ticks after this beat: Stripe already accepted the payment when the buyer lands here. */
 const RECEIVED_MS = 1500;
 /** How long the "you're going" screen shows before the order (`?paid=1`) replaces it. */
@@ -40,7 +49,8 @@ function statusOf(body: unknown): string | null {
  * Secure return). The buyer token is sent to our handler in the `x-order-token` header (never a URL or query), the
  * handler forwards it. `pending` keeps waiting (after 15 s it says it is taking longer); `paid` shows the confirmed
  * state, then opens the order at `?paid=1` (the page itself, minus `?o`, plus the "just paid" note); `expired` and
- * anything else final show a clear message and a way back. After 60 s it stops and offers "Check again", which starts a
+ * anything else final show a clear message and a way back (`expired` only after a 90 s grace, since a hold can end while
+ * Stripe confirms). It slows from every 2 s to every 15 s and stops after 10 minutes with "Check again", which starts a
  * new round of polling. `paid` (the server already knows the order as paid) starts on the confirmed state, no polling.
  */
 export function OrderConfirming({
@@ -109,7 +119,7 @@ export function OrderConfirming({
         timer = setTimeout(() => router.replace(`${pathname}?paid=1`), PAID_HOLD_MS);
         return;
       }
-      if (next === "expired" || next === "failed") {
+      if (next === "failed" || (next === "expired" && Date.now() - startedAt >= EXPIRED_GRACE_MS)) {
         setPhase(next);
         return; // final: stop polling
       }
@@ -117,7 +127,7 @@ export function OrderConfirming({
         setPhase("timeout");
         return;
       }
-      timer = setTimeout(tick, POLL_MS);
+      timer = setTimeout(tick, pollDelay(Date.now() - startedAt));
     }
 
     void tick();
