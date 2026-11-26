@@ -1,13 +1,14 @@
 import { z } from "zod";
 import { NO_EXTRA_QUESTIONS, type ExtraQuestions } from "@/lib/tickets/checkout-questions";
 import { ANSWER_LIMITS } from "@/lib/tickets/schemas";
+import type { ContactMode } from "./types";
 
 /**
  * The checkout's form (rule 37: react-hook-form + zod). Messages are TOKENS, not prose — the components map
  * them to `tickets.checkout.validation.*` in the visitor's language (WCAG 3.3.1 / 3.3.3). Limits mirror ep-api's
  * `createOrderBodySchema`, so a value that passes here is never refused there for its shape.
  */
-export type ValidationToken = "required" | "email" | "tooLong" | "terms" | "vat";
+export type ValidationToken = "required" | "email" | "tooLong" | "terms" | "vat" | "phone";
 
 export interface DetailsValues {
   name: string;
@@ -23,6 +24,12 @@ export interface DetailsValues {
   /** "How did you hear about us?" (an option value, or "" for no answer) and its free text for "other". */
   heardFrom: string;
   heardFromText: string;
+  /** The buyer's phone and address (asked only when the site's `checkout.contact` is optional / required). */
+  phone: string;
+  buyerStreet: string;
+  buyerPostalCode: string;
+  buyerCity: string;
+  buyerCountryCode: string;
 }
 
 export const EMPTY_DETAILS: DetailsValues = {
@@ -38,6 +45,11 @@ export const EMPTY_DETAILS: DetailsValues = {
   acceptTerms: false,
   heardFrom: "",
   heardFromText: "",
+  phone: "",
+  buyerStreet: "",
+  buyerPostalCode: "",
+  buyerCity: "",
+  buyerCountryCode: "",
 };
 
 /** A VAT number as ep-api stores it: no spaces, dots or dashes, upper case. */
@@ -61,10 +73,37 @@ const detailsShape = {
   acceptTerms: z.boolean(),
   heardFrom: z.string().trim(),
   heardFromText: z.string().trim().max(ANSWER_LIMITS.other, "tooLong"),
+  phone: z.string().trim().max(40, "tooLong"),
+  buyerStreet: z.string().trim().max(200, "tooLong"),
+  buyerPostalCode: z.string().trim().max(20, "tooLong"),
+  buyerCity: z.string().trim().max(120, "tooLong"),
+  buyerCountryCode: z.string().trim(),
 };
 
-function checkDetails({ values, context, termsRequired }: { values: DetailsValues; context: z.RefinementCtx; termsRequired: boolean }) {
+/** The buyer's address fields that must all be present once any is (and always when contact is required). */
+const BUYER_ADDRESS_REQUIRED = ["buyerStreet", "buyerCity", "buyerCountryCode"] as const;
+
+/** Whether the buyer has typed an address (street, city and country: the three ep-api requires). */
+export function hasBuyerAddress({ values }: { values: Pick<DetailsValues, "buyerStreet" | "buyerCity" | "buyerCountryCode"> }): boolean {
+  return Boolean(values.buyerStreet?.trim() && values.buyerCity?.trim() && values.buyerCountryCode?.trim());
+}
+
+function checkContact({ values, context, contact }: { values: DetailsValues; context: z.RefinementCtx; contact: ContactMode }) {
+  if (contact === "off") return;
+  const phone = String(values.phone ?? "").trim();
+  if (contact === "required" && !phone) context.addIssue({ code: "custom", path: ["phone"], message: "required" });
+  else if (phone && phone.length < 5) context.addIssue({ code: "custom", path: ["phone"], message: "phone" });
+  const touched = [values.buyerStreet, values.buyerPostalCode, values.buyerCity, values.buyerCountryCode].some((value) => String(value ?? "").trim() !== "");
+  if (contact === "required" || touched) {
+    for (const field of BUYER_ADDRESS_REQUIRED) {
+      if (!String(values[field] ?? "").trim()) context.addIssue({ code: "custom", path: [field], message: "required" });
+    }
+  }
+}
+
+function checkDetails({ values, context, termsRequired, contact }: { values: DetailsValues; context: z.RefinementCtx; termsRequired: boolean; contact: ContactMode }) {
   if (termsRequired && !values.acceptTerms) context.addIssue({ code: "custom", path: ["acceptTerms"], message: "terms" });
+  checkContact({ values, context, contact });
   if (!values.invoice) return;
   for (const field of ["companyName", "street", "city", "countryCode"] as const) {
     if (!values[field]) context.addIssue({ code: "custom", path: [field], message: "required" });
@@ -82,9 +121,11 @@ export interface HolderValues {
   dietary: string;
   dietaryOther: string;
   tshirt: string;
+  /** "Same address as me" (only offered when contact is on and the buyer entered an address). */
+  sameAddress: boolean;
 }
 
-export const EMPTY_HOLDER: HolderValues = { name: "", email: "", company: "", jobTitle: "", dietary: "", dietaryOther: "", tshirt: "" };
+export const EMPTY_HOLDER: HolderValues = { name: "", email: "", company: "", jobTitle: "", dietary: "", dietaryOther: "", tshirt: "", sameAddress: false };
 
 function holderSchema({ questions }: { questions: ExtraQuestions }) {
   const optionalText = (max: number) => z.string().trim().max(max, "tooLong");
@@ -97,6 +138,7 @@ function holderSchema({ questions }: { questions: ExtraQuestions }) {
       dietary: z.string().trim(),
       dietaryOther: optionalText(ANSWER_LIMITS.other),
       tshirt: z.string().trim(),
+      sameAddress: z.boolean(),
     })
     .superRefine((values, context) => {
       if (questions.dietary && !questions.dietary.some((option) => option.value === values.dietary)) context.addIssue({ code: "custom", path: ["dietary"], message: "required" });
@@ -109,8 +151,8 @@ function holderSchema({ questions }: { questions: ExtraQuestions }) {
  * one holder per ticket. Company and job title are optional; dietary needs and T-shirt size are required when asked
  * (their selects have no empty choice that means "none": "No dietary needs" is its own option). Limits mirror ep-api.
  */
-export function buildCartSchema({ termsRequired, questions }: { termsRequired: boolean; questions: ExtraQuestions }) {
-  return z.object({ ...detailsShape, holders: z.array(holderSchema({ questions })) }).superRefine((values, context) => checkDetails({ values, context, termsRequired }), {
+export function buildCartSchema({ termsRequired, questions, contact = "off" }: { termsRequired: boolean; questions: ExtraQuestions; contact?: ContactMode }) {
+  return z.object({ ...detailsShape, holders: z.array(holderSchema({ questions })) }).superRefine((values, context) => checkDetails({ values, context, termsRequired, contact }), {
     // Also when another field failed: one press of the button shows every missing field at once (terms, invoice too).
     when: (payload) => typeof payload.value === "object" && payload.value !== null,
   });

@@ -37,5 +37,5 @@ export default async function MyTicketPage({ params }: { params: Promise<{ token
 
   // The holder bought this order (ep-api sends its buyer link only then): "View my order".
   const orderHref = result.data.orderToken ? localizeHref({ href: `/tickets/order/${encodeURIComponent(result.data.orderToken)}`, ctx }) : null;
-  return <TicketView ticket={result.data} calendarHref={`/tickets/t/${encodeURIComponent(token.data)}/calendar.ics`} token={token.data} orderHref={orderHref} />;
+  return <TicketView ticket={result.data} calendarHref={`/tickets/t/${encodeURIComponent(token.data)}/calendar.ics`} pdfHref={`/tickets/t/${encodeURIComponent(token.data)}/ticket.pdf`} token={token.data} orderHref={orderHref} />;
 }

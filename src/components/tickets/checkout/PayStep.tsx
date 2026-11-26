@@ -70,6 +70,7 @@ export function PayStep({
             >
               <StripePayment
                 publishableKey={order.publishableKey ?? ""}
+                stripeAccount={order.stripeAccount ?? null}
                 clientSecret={order.clientSecret ?? ""}
                 locale={locale}
                 returnUrl={returnUrl}

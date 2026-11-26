@@ -57,3 +57,10 @@ describe("ticketPageRedirect", () => {
     expect(ticketPageRedirect({ pathname: "/tickets/t/abc", basePath: "/tickets" })).toBeNull();
   });
 });
+
+describe("sign-in links (API-266)", () => {
+  it("a /sign-in/{token} path under another address is redirected to the canonical page", () => {
+    expect(mayBeTicketPage("/buy/sign-in/abc")).toBe(true);
+    expect(ticketPageRedirect({ pathname: "/buy/sign-in/abc", basePath: "/buy" })).toBe("/tickets/sign-in/abc");
+  });
+});

@@ -307,6 +307,28 @@
       "paidAmountOnShort": "paid {amount} on {date}",
       "welcome": "Payment received. Bookmark this page — it's where you manage your order. We've also emailed you the link.",
       "eventFacts": "Event date and venue",
+      "refundedOf": "{refunded} refunded of {total}",
+      "netPaid": "You paid {amount}",
+      "refunds": {
+        "intro": "Refunds go back to your original payment method, usually within 5–10 business days.",
+        "listLabel": "Refunds made",
+        "refundOn": "Refund on {date}",
+        "tickets": "Tickets",
+        "fee": "Booking fee",
+        "feeKept": "Booking fee {amount} not refunded",
+        "processing": "Processing",
+        "creditNote": "Credit note {number}",
+        "total": "Refunded {refunded}",
+        "totalNet": "Refunded {refunded} · You paid {net}",
+        "asked": "You asked on {date}: {reason}",
+        "askedWithMessage": "You asked on {date}: {reason} — “{message}”",
+        "approved": "Approved on {date}",
+        "approvedAmount": "Approved on {date}: {amount} refunded",
+        "declined": "Declined on {date}",
+        "waiting": "Waiting for the organiser",
+        "staysValid": "Your tickets stay valid until then.",
+        "askAgain": "You can ask again below."
+      },
       "refundRequestedPill": "Refund requested",
       "asideLabel": "Invoice and refunds",
       "noDocumentsHint": "Your invoice appears here once it's issued."
@@ -352,10 +374,12 @@
       "submit": "Send my links",
       "sending": "Sending…",
       "successHeading": "Check your inbox",
-      "successBody": "If we found tickets for that email address, we have sent the links to it.",
+      "successBody": "If we found tickets for that email address, we have emailed a sign-in link (valid for 30 minutes) and your ticket and order links.",
       "backToTickets": "Back to tickets",
       "kicker": "My tickets",
-      "introList": "No password needed. Enter the email your ticket was sent to and we email you a link to all your tickets and orders on this site.",
+      "introList": "No password needed. Enter the email your ticket was sent to and we email you a sign-in link (valid for 30 minutes) to see all your tickets and orders on this site, plus the link to each ticket and order.",
+      "noticeExpired": "This sign-in link has expired or was already used. Request a new one below.",
+      "noticeSignedOut": "You're signed out.",
       "emailPlaceholder": "you@company.com"
     },
     "list": {
@@ -397,6 +421,7 @@
       "priceChanged": "The price changed. Please review your order.",
       "codeInvalid": "That discount code cannot be used.",
       "codeUnknown": "We don't recognise that code. Check the spelling.",
+      "contactRequired": "Please enter your phone number and address to continue.",
       "tooManyOpenOrders": "You already have open orders. Finish or wait for them to expire first.",
       "linkNotFound": "This link is not valid.",
       "orderNotFound": "We could not find that order.",
@@ -523,6 +548,11 @@
         "city": "City",
         "country": "Country",
         "countryPlaceholder": "Select a country",
+        "contactLegend": "Contact details",
+        "contactHintOptional": "Optional. The organiser may use these to reach you about your order.",
+        "contactHintRequired": "Required by the organiser.",
+        "phone": "Phone number",
+        "addressLegend": "Your address",
         "acceptTerms": "I accept the terms and conditions and the privacy policy.",
         "readTerms": "Terms and conditions",
         "readPrivacy": "Privacy policy",
@@ -534,6 +564,7 @@
         "name": "Holder name",
         "email": "Holder email address",
         "sameAsBuyer": "Same as buyer",
+        "sameAddress": "Same address as me",
         "detailsLater": "Each ticket holder adds their job title, company and dietary needs on their own ticket page after the purchase. We email them the link.",
         "follows": "for you, unless changed"
       },
@@ -566,7 +597,8 @@
         "email": "Enter a valid email address.",
         "tooLong": "This is too long.",
         "terms": "Please accept the terms to continue.",
-        "vat": "Enter a valid VAT number (letters and digits only)."
+        "vat": "Enter a valid VAT number (letters and digits only).",
+        "phone": "Enter a phone number of 5 to 40 characters."
       },
       "expired": {
         "heading": "Your reservation expired",
@@ -633,7 +665,24 @@
       "openTicketFor": "Open ticket {code}",
       "openOrder": "Open order",
       "openOrderFor": "Open order {number}",
-      "note": "Each ticket and order also has its own link in your emails; those keep working after this list link ends."
+      "note": "Each ticket and order also has its own link in your emails; those keep working after this list link ends.",
+      "noteSession": "Each ticket and order also has its own link in your emails; those keep working after you sign out.",
+      "signedInAs": "Signed in as {email}",
+      "signOut": "Sign out",
+      "signOutBusy": "Signing out…",
+      "signIn": {
+        "metaTitle": "Sign in to see your tickets",
+        "heading": "Sign in to see your tickets",
+        "body": "No password needed. Enter your email and we send you a sign-in link, valid for 30 minutes.",
+        "ended": "Your session has ended. Enter your email to get a new sign-in link."
+      }
+    },
+    "signIn": {
+      "metaTitle": "Sign in",
+      "kicker": "My tickets",
+      "heading": "Continue to your tickets",
+      "body": "Press Continue to sign in and see your tickets and orders. The link works once and for 30 minutes.",
+      "cta": "Continue"
     }
   },
   "block": {

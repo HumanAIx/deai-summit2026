@@ -6,8 +6,8 @@ function parsePath(pathname: string): { segments: string[]; isDefaultLocale: tru
   return { segments: pathname.split("/").filter(Boolean), isDefaultLocale: true, locale: "en" };
 }
 
-/** Ticket pages whose URL carries a secret: the holder link, the buyer link, a private link, a waitlist offer, "My tickets". */
-const PRIVATE_TICKET_SECTIONS = new Set(["t", "order", "l", "w", "me"]);
+/** Ticket pages whose URL carries a secret: the holder link, the buyer link, a private link, a waitlist offer, "My tickets", a sign-in link. */
+const PRIVATE_TICKET_SECTIONS = new Set(["t", "order", "l", "w", "me", "sign-in"]);
 
 /**
  * Whether `pathname` (with or without a locale prefix) is a ticket page whose URL is a secret —

@@ -18,7 +18,12 @@ export interface CheckoutConfig {
   detailsLater?: boolean;
   /** How long ep-api holds the tickets while the buyer pays (the cart's "held for N minutes" note); absent = not said. */
   holdMinutes?: number | undefined;
+  /** Whether the buyer's phone and address are asked (ep-api API-267). Absent = off: the checkout renders and sends exactly as before. */
+  contact?: ContactMode | undefined;
 }
+
+/** `checkout.contact` of the catalogue answer. */
+export type ContactMode = "off" | "optional" | "required";
 
 /** 1 = Tickets & details (one page), 2 = Payment. The confirmation (3) is the order page the buyer is sent to. */
 export type Step = 1 | 2;
@@ -47,6 +52,8 @@ export interface OrderState {
   holdMaxAt?: string | undefined;
   clientSecret: string | null;
   publishableKey: string | null;
+  /** Stripe Connect: the connected account Stripe.js runs on; null / absent with the organiser's own API keys. */
+  stripeAccount?: string | null | undefined;
   fingerprint: string;
   totals: PricedCart;
   currency: string;

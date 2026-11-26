@@ -63,6 +63,8 @@ export const TICKET_ERROR_CODES = [
   "badgeFrozen",
   // Cancel my ticket on a free order (ep-api DASH-205 IM-04)
   "cancelNotAllowed",
+  // Buyer phone / address when the site requires them (ep-api API-267)
+  "contactRequired",
 ] as const;
 export type TicketErrorCode = (typeof TICKET_ERROR_CODES)[number];
 

@@ -60,6 +60,7 @@ describe("ticketErrorCode", () => {
       typeMismatch: "holdersMismatch",
       stripeNotConnected: "paymentUnavailable",
       siteNotConfigured: "salesClosed",
+      contactRequired: "contactRequired",
     };
     const messages = (await import("@/lib/tickets/messages.en.json")).default as { tickets: { errors: Record<string, string> } };
     for (const [key, expected] of Object.entries(mapped)) {

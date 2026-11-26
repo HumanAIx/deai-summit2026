@@ -32,11 +32,14 @@ export async function MyTicketsView({
   ticketHrefs,
   orderHrefs,
   lostLinkHref,
+  signOutAction,
 }: {
   overview: MyOverview;
   ticketHrefs: Readonly<Record<string, string>>;
   orderHrefs: Readonly<Record<string, string>>;
   lostLinkHref: string;
+  /** Set for a signed-in session (`/tickets/me`): shows "Signed in as …" and a Sign out button posting here. Absent = an older list link. */
+  signOutAction?: string | undefined;
 }) {
   const [t, tOrder, format] = await Promise.all([getTranslations("tickets.me"), getTranslations("tickets.order"), getFormatter()]);
   const expires = format.dateTime(new Date(overview.expiresAt), { year: "numeric", month: "short", day: "numeric", hour: "numeric", minute: "2-digit", timeZone: "UTC", timeZoneName: "short" });
@@ -53,7 +56,18 @@ export async function MyTicketsView({
           <h1 id="me-heading" className="font-heading text-[clamp(28px,5vw,36px)] leading-tight font-medium tracking-[-0.01em]">
             {t("heading")}
           </h1>
-          <p className="text-[15px] text-muted [overflow-wrap:anywhere]">{t("intro", { email: overview.email, date: expires })}</p>
+          {signOutAction ? (
+            <div className="flex flex-wrap items-center gap-x-4 gap-y-2">
+              <p className="text-[15px] text-muted [overflow-wrap:anywhere]">{t("signedInAs", { email: overview.email })}</p>
+              <form method="post" action={signOutAction}>
+                <button type="submit" className={MT_BUTTON_OUTLINE}>
+                  {t("signOut")}
+                </button>
+              </form>
+            </div>
+          ) : (
+            <p className="text-[15px] text-muted [overflow-wrap:anywhere]">{t("intro", { email: overview.email, date: expires })}</p>
+          )}
         </header>
 
         {empty ? (
@@ -124,7 +138,7 @@ export async function MyTicketsView({
           </section>
         ) : null}
 
-        <p className="text-[13px] leading-normal text-muted">{t("note")}</p>
+        <p className="text-[13px] leading-normal text-muted">{t(signOutAction ? "noteSession" : "note")}</p>
       </article>
     </TicketsShell>
   );

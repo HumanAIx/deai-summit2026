@@ -57,3 +57,17 @@ describe("MyTicketsView", () => {
     expect(describeViolations(await axeViolations({ container }))).toEqual([]);
   });
 });
+
+describe("MyTicketsView (signed in)", () => {
+  it("shows 'Signed in as …' and a Sign out form instead of the link expiry", async () => {
+    const ui = await resolveServerElement(<MyTicketsView overview={OVERVIEW} ticketHrefs={{ [T1]: "/tickets/t/x" }} orderHrefs={{ [O1]: "/tickets/order/y" }} lostLinkHref="/tickets/lost" signOutAction="/api/tickets/sign-out" />);
+    const { container } = render(<>{ui}</>);
+    expect(screen.getByText("Signed in as priya@example.com")).toBeInTheDocument();
+    expect(screen.queryByText(/This link works until/)).not.toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "Sign out" })).toBeInTheDocument();
+    const form = container.querySelector("form") as HTMLFormElement;
+    expect(form).toHaveAttribute("method", "post");
+    expect(form).toHaveAttribute("action", "/api/tickets/sign-out");
+    expect(screen.getByRole("link", { name: "Open ticket DEAI-T-1" })).toBeInTheDocument();
+  });
+});

@@ -123,6 +123,25 @@ describe("holder self-service (DASH-205 F1)", () => {
     expect(myOrderSchema.safeParse({ ...base, holders: [{ id: "not-a-uuid", name: null, email: null, status: "valid", ticketCode: "T-1" }] }).success).toBe(false);
   });
 
+  it("myOrderSchema reads the refund fields (API-269) and defaults them away on an older ep-api", () => {
+    const base = { orderNo: 1, status: "refunded", paidAt: null, currency: "EUR", lines: [], holders: [], documents: [], seller: { name: null, vatNumber: null, replyTo: null } };
+    const rich = myOrderSchema.parse({
+      ...base,
+      totals: { totalCents: 19188, vatCents: 0, feeCents: 288, refundedCents: 18900, feeRefundedCents: 0 },
+      refunds: [{ createdAt: "2026-11-20T10:00:00.000Z", status: "succeeded", amountCents: 18900, ticketsCents: 18900, feeCents: 0, ticketCount: 1, feeOnly: false, creditNoteNumber: "CN-1" }, { createdAt: "2026-11-21T10:00:00.000Z", status: "pending", amountCents: 288 }],
+      refundRequest: { status: "approved", createdAt: "2026-11-18T10:00:00.000Z", ticketCount: 1, reason: "other", message: "Sick", decidedAt: "2026-11-20T09:00:00.000Z", reply: "Ok", refundedCents: 18900 },
+    });
+    expect(rich.totals).toMatchObject({ refundedCents: 18900, feeRefundedCents: 0 });
+    expect(rich.refunds?.[0]).toMatchObject({ ticketsCents: 18900, creditNoteNumber: "CN-1" });
+    expect(rich.refunds?.[1]).toMatchObject({ ticketsCents: 0, feeCents: 0, ticketCount: 0, feeOnly: false });
+    expect(rich.refundRequest).toMatchObject({ message: "Sick", decidedAt: "2026-11-20T09:00:00.000Z", refundedCents: 18900 });
+    const old = myOrderSchema.parse({ ...base, totals: { totalCents: 1, vatCents: 0, feeCents: 0 }, refundRequest: { status: "open", createdAt: "x", ticketCount: 1, reason: "other" } });
+    expect(old.totals.refundedCents).toBeUndefined();
+    expect(old.refunds).toBeUndefined();
+    expect(old.refundRequest?.decidedAt).toBeUndefined();
+    expect(refundRequestResultSchema.parse({ refundRequest: { status: "open", createdAt: "x", ticketCount: 1, reason: "other", message: "Hi", decidedAt: null, reply: null, refundedCents: null } }).refundRequest.message).toBe("Hi");
+  });
+
   it("nameBodySchema and passOnBodySchema trim, lower-case the email and enforce ep-api's limits", () => {
     expect(nameBodySchema.parse({ name: "  Ada  " })).toEqual({ name: "Ada" });
     expect(nameBodySchema.safeParse({ name: "   " }).success).toBe(false);
@@ -280,6 +299,10 @@ describe("isTest, canCancel and holdMaxAt (DASH-236)", () => {
     const base = { orderId: "5c1f7a1e-2f4a-4a53-9a3e-0e6f6a4c1b11", buyerToken: "t".repeat(43), holdExpiresAt: "2030-01-01T00:15:00Z", totals: cart, clientSecret: null, publishableKey: null, free: true };
     expect(createOrderResultSchema.parse({ ...base, holdMaxAt: "2030-01-01T00:30:00Z" }).holdMaxAt).toBe("2030-01-01T00:30:00Z");
     expect(createOrderResultSchema.parse(base).holdMaxAt).toBeUndefined();
+    // API-268: stripeAccount is optional (older ep-api builds) and nullable (the organiser's own API keys)
+    expect(createOrderResultSchema.parse(base).stripeAccount).toBeUndefined();
+    expect(createOrderResultSchema.parse({ ...base, stripeAccount: null }).stripeAccount).toBeNull();
+    expect(createOrderResultSchema.parse({ ...base, stripeAccount: "acct_1Organiser" }).stripeAccount).toBe("acct_1Organiser");
     expect(extendResultSchema.parse({ holdExpiresAt: "2030-01-01T00:25:00Z", holdMaxAt: "2030-01-01T00:30:00Z" }).holdMaxAt).toBe("2030-01-01T00:30:00Z");
   });
 });

@@ -170,6 +170,35 @@ const holderAnswersShape = z.object({
 });
 export type HolderAnswersView = z.infer<typeof holderAnswersShape>;
 
+/** One refund on the order page (ep-api API-269). `amountCents` = `ticketsCents` + `feeCents`; `feeOnly` = the booking fee alone. */
+export const orderRefundSchema = z.object({
+  createdAt: z.string(),
+  status: z.string(),
+  amountCents: z.number(),
+  ticketsCents: z.number().default(0),
+  feeCents: z.number().default(0),
+  ticketCount: z.number().default(0),
+  feeOnly: z.boolean().default(false),
+  creditNoteNumber: nullableString.optional(),
+});
+export type OrderRefundView = z.infer<typeof orderRefundSchema>;
+
+/**
+ * The buyer's latest refund request. `message` is the buyer's own words, `reply` the organiser's message (a decline
+ * reason, or an optional approval note), `decidedAt` / `refundedCents` the outcome. All optional for older ep-api builds.
+ */
+export const refundRequestViewSchema = z.object({
+  status: z.string(),
+  createdAt: z.string(),
+  ticketCount: z.number(),
+  reason: z.string(),
+  message: nullableString.optional(),
+  decidedAt: nullableString.optional(),
+  reply: nullableString.optional(),
+  refundedCents: z.number().nullable().optional(),
+});
+export type RefundRequestView = z.infer<typeof refundRequestViewSchema>;
+
 /** `GET /tickets/my/order` */
 export const myOrderSchema = z.object({
   orderNo: z.number(),
@@ -187,7 +216,15 @@ export const myOrderSchema = z.object({
       grossCents: z.number(),
     }),
   ),
-  totals: z.object({ totalCents: z.number(), vatCents: z.number(), feeCents: z.number() }),
+  totals: z.object({
+    totalCents: z.number(),
+    vatCents: z.number(),
+    feeCents: z.number(),
+    /** Paid back so far, tickets + booking fee (ep-api API-269); absent on older builds = nothing shown. */
+    refundedCents: z.number().optional(),
+    /** The booking-fee part of that, given back by succeeded refunds. */
+    feeRefundedCents: z.number().optional(),
+  }),
   holders: z.array(
     z.object({
       /** The ticket id the holder edit route takes (ep-api F1); absent on older builds, so nothing is editable there. */
@@ -214,10 +251,9 @@ export const myOrderSchema = z.object({
   changesCloseAt: nullableString.optional(),
   /** The event's IANA time zone (ep-api ≥ DASH-205 F1): the cut-off is shown in it. */
   timeZone: z.string().optional(),
-  refundRequest: z
-    .object({ status: z.string(), createdAt: z.string(), ticketCount: z.number(), reason: z.string(), reply: nullableString.optional() })
-    .nullable()
-    .optional(),
+  /** The refunds made on this order, oldest first, failed ones hidden (ep-api API-269); absent on older builds. */
+  refunds: z.array(orderRefundSchema).optional(),
+  refundRequest: refundRequestViewSchema.nullable().optional(),
   canRequestRefund: z.boolean().optional(),
 });
 export type MyOrder = z.infer<typeof myOrderSchema>;
@@ -290,6 +326,8 @@ export const checkoutBlockSchema = z.object({
   newsletterOffer: z.object({ on: z.boolean(), pct: z.number() }).optional(),
   /** The site's "Ticket pages address" (ep-api ≥ ep-api#522), null = the GConf.ai pages. Absent on older builds. */
   ticketPagesUrl: nullableString.optional(),
+  /** Whether the checkout asks for the buyer's phone and address (ep-api API-267): off / optional / required. Absent (older API) or unknown = off. */
+  contact: z.enum(["off", "optional", "required"]).optional().catch(undefined),
 });
 export type CheckoutBlock = z.infer<typeof checkoutBlockSchema>;
 
@@ -378,6 +416,9 @@ export const createOrderResultSchema = z.object({
   totals: pricedCartSchema,
   clientSecret: nullableString,
   publishableKey: nullableString,
+  /** Stripe Connect only: the organiser's connected account the payment is taken on — Stripe.js starts with
+   *  `loadStripe(publishableKey, { stripeAccount })`. Null with the organiser's own API keys; absent on older ep-api builds. */
+  stripeAccount: nullableString.optional(),
   testMode: z.boolean().optional(),
   free: z.boolean(),
 });
@@ -441,8 +482,24 @@ export type QuoteBody = z.infer<typeof quoteBodySchema>;
 export const createOrderBodySchema = z.object({
   idempotencyKey: z.string().trim().min(32).max(128),
   lines: cartLines,
-  buyer: z.object({ name: text(200), email: emailField }),
-  holders: z.array(z.object({ ticketTypeId: uuid, name: text(200), email: emailField, answers: holderAnswers.optional() })).min(1).max(200),
+  buyer: z.object({
+    name: text(200),
+    email: emailField,
+    /** Only when the site asks for contact details (`checkout.contact`): 5-40 characters. */
+    phone: z.string().trim().min(5).max(40).optional(),
+    address: z
+      .object({
+        street: text(200),
+        postalCode: z.string().trim().max(20).optional(),
+        city: text(120),
+        countryCode: z.string().trim().toUpperCase().regex(/^[A-Z]{2}$/),
+      })
+      .optional(),
+  }),
+  holders: z
+    .array(z.object({ ticketTypeId: uuid, name: text(200), email: emailField, answers: holderAnswers.optional(), sameAddressAsBuyer: z.boolean().optional() }))
+    .min(1)
+    .max(200),
   heardFrom: heardFrom.optional(),
   company: z
     .object({
@@ -533,7 +590,7 @@ export const holderEditResultSchema = z.object({
   emailSent: z.boolean(),
 });
 export const refundRequestResultSchema = z.object({
-  refundRequest: z.object({ status: z.string(), createdAt: z.string(), ticketCount: z.number(), reason: z.string(), reply: nullableString.optional() }),
+  refundRequest: refundRequestViewSchema,
 });
 
 /** `GET /tickets/my/overview` — "My tickets": everything behind one list link (ep-api DASH-205). */
@@ -564,3 +621,13 @@ export const myOverviewSchema = z.object({
   ),
 });
 export type MyOverview = z.infer<typeof myOverviewSchema>;
+
+/** `GET /tickets/my/session` — the signed-in visitor's list: exactly the item shape of the overview (ep-api API-266). */
+export const mySessionSchema = myOverviewSchema;
+
+/** `POST /tickets/my/sign-in` — the session the one-time link was exchanged for. */
+export const signInResultSchema = z.object({ sessionToken: z.string().trim().min(16).max(512), expiresAt: z.string() });
+export type SignInResult = z.infer<typeof signInResultSchema>;
+
+/** The form post of the "Continue" page. */
+export const signInBodySchema = z.object({ token: ticketTokenSchema });

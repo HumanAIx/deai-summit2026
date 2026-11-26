@@ -8,7 +8,7 @@ import { safeHttpUrl } from "@/lib/tickets/checkout-cart";
 import { countryOptions } from "@/lib/tickets/countries";
 import { ANSWER_LIMITS } from "@/lib/tickets/schemas";
 import { TK_BUTTON, TK_BUTTON_OUTLINE, TK_BUTTON_TEXT, TK_CHECKBOX, TK_INPUT, TK_LABEL } from "../tickets-classes";
-import { buildCartSchema, EMPTY_HOLDER, type CartFormValues } from "./forms";
+import { buildCartSchema, EMPTY_HOLDER, hasBuyerAddress, type CartFormValues } from "./forms";
 import type { CaptchaProvider } from "./hooks";
 import { HolderQuestions, useOptionLabel } from "./HolderQuestions";
 import { OrderSummary } from "./OrderSummary";
@@ -159,7 +159,9 @@ export function CartStep(props: CartStepProps) {
   const locale = useLocale();
   const optionLabel = useOptionLabel();
   const countries = useMemo(() => countryOptions({ locale }), [locale]);
-  const schema = useMemo(() => buildCartSchema({ termsRequired: config.questions.terms, questions: config.extraQuestions }), [config.questions.terms, config.extraQuestions]);
+  // Phone and address of the buyer: asked only when the site turned them on (absent on an older API = off).
+  const contact = config.contact ?? "off";
+  const schema = useMemo(() => buildCartSchema({ termsRequired: config.questions.terms, questions: config.extraQuestions, contact }), [config.questions.terms, config.extraQuestions, contact]);
   const {
     register,
     handleSubmit,
@@ -198,6 +200,11 @@ export function CartStep(props: CartStepProps) {
     setValue("holders.0.email", buyerEmail ?? "", { shouldValidate });
   }, [follows, buyerName, buyerEmail, slots.length, setValue, submitCount]);
 
+  const buyerStreet = useWatch({ control, name: "buyerStreet" });
+  const buyerCity = useWatch({ control, name: "buyerCity" });
+  const buyerCountry = useWatch({ control, name: "buyerCountryCode" });
+  // "Same address as me" is offered only once an address is entered.
+  const canShareAddress = contact !== "off" && hasBuyerAddress({ values: { buyerStreet, buyerCity, buyerCountryCode: buyerCountry } });
   const invoiceChecked = useWatch({ control, name: "invoice" });
   const invoice = config.questions.invoice && invoiceChecked;
   const heardFromOptions = config.extraQuestions.heardFrom;
@@ -223,7 +230,9 @@ export function CartStep(props: CartStepProps) {
       invoice: config.questions.invoice && submitted.invoice,
       heardFrom: heardFromOptions ? submitted.heardFrom : "",
       heardFromText: heardFromOptions && submitted.heardFrom === "other" ? submitted.heardFromText : "",
-      holders: submitted.holders.slice(0, slots.length),
+      // Contact details of a site that does not ask for them are never kept, so they cannot reach the order.
+      ...(contact === "off" ? { phone: "", buyerStreet: "", buyerPostalCode: "", buyerCity: "", buyerCountryCode: "" } : {}),
+      holders: submitted.holders.slice(0, slots.length).map((holder) => ({ ...holder, sameAddress: canShareAddress && holder.sameAddress })),
     }),
   );
 
@@ -267,6 +276,51 @@ export function CartStep(props: CartStepProps) {
               </div>
             </div>
 
+            {contact !== "off" ? (
+              <fieldset className="m-0 min-w-0 border-0 p-0">
+                <legend className="sr-only">{t("details.contactLegend")}</legend>
+                <p className="m-0 mb-3 text-xs leading-normal text-(--tk-mut)">{contact === "required" ? t("details.contactHintRequired") : t("details.contactHintOptional")}</p>
+                <div className="grid grid-cols-2 items-start gap-x-3.5 gap-y-3 sm:grid-cols-6">
+                  <div className={span.half}>
+                    <TextField variant="checkout" id={`${uid}-buyer-phone`} label={t("details.phone")} error={message("phone")} registration={register("phone")} type="tel" inputMode="tel" autoComplete="tel" />
+                  </div>
+                  <div className={span.half}>
+                    <TextField variant="checkout" id={`${uid}-buyer-street`} label={t("details.street")} error={message("buyerStreet")} registration={register("buyerStreet")} autoComplete="address-line1" />
+                  </div>
+                  <div className={span.tiny}>
+                    <TextField variant="checkout" id={`${uid}-buyer-postal`} label={t("details.postalCode")} error={message("buyerPostalCode")} registration={register("buyerPostalCode")} autoComplete="postal-code" />
+                  </div>
+                  <div className={span.small}>
+                    <TextField variant="checkout" id={`${uid}-buyer-city`} label={t("details.city")} error={message("buyerCity")} registration={register("buyerCity")} autoComplete="address-level2" />
+                  </div>
+                  <div className={span.half}>
+                    <div className="flex flex-col gap-1.5">
+                      <label htmlFor={`${uid}-buyer-country`} className={TK_LABEL}>
+                        {t("details.country")}
+                      </label>
+                      <select
+                        id={`${uid}-buyer-country`}
+                        autoComplete="country"
+                        aria-invalid={message("buyerCountryCode") ? true : undefined}
+                        aria-describedby={message("buyerCountryCode") ? `${uid}-buyer-country-error` : undefined}
+                        className={TK_INPUT}
+                        {...register("buyerCountryCode")}
+                      >
+                        <option value="">{t("details.countryPlaceholder")}</option>
+                        {countries.map((country) => (
+                          <option key={country.value} value={country.value} suppressHydrationWarning>
+                            {country.label}
+                          </option>
+                        ))}
+                      </select>
+                      <p id={`${uid}-buyer-country-error`} role="alert" className="m-0 text-[13px] text-(--tk-err) empty:hidden">
+                        {message("buyerCountryCode")}
+                      </p>
+                    </div>
+                  </div>
+                </div>
+              </fieldset>
+            ) : null}
             {config.newsletterOffer.on ? (
               <label htmlFor={`${uid}-checkout-newsletter`} className={`flex cursor-pointer items-start gap-2.5 rounded-[10px] border px-3 py-2.5 ${props.newsletter ? "border-(--tk-ring) bg-(--tk-tint)" : "border-(--tk-line)"}`}>
                 <input id={`${uid}-checkout-newsletter`} type="checkbox" aria-labelledby={`${uid}-checkout-newsletter-label`} aria-describedby={`${uid}-checkout-newsletter-note`} checked={props.newsletter} onChange={(event) => props.onNewsletter(event.target.checked)} className={`${TK_CHECKBOX} mt-0.5`} />
@@ -431,6 +485,12 @@ export function CartStep(props: CartStepProps) {
                         />
                       </div>
                       <HolderQuestions index={index} questions={config.extraQuestions} register={register} control={control} message={holderMessage} />
+                      {canShareAddress ? (
+                        <label htmlFor={`${uid}-holder-${index}-same-address`} className="flex min-h-9 cursor-pointer items-center gap-2.5 text-[14px]">
+                          <input id={`${uid}-holder-${index}-same-address`} type="checkbox" className={TK_CHECKBOX} {...register(`holders.${index}.sameAddress`)} />
+                          <span>{t("holders.sameAddress")}</span>
+                        </label>
+                      ) : null}
                     </div>
                   </fieldset>
                 ))}

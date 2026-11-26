@@ -14,6 +14,8 @@ import {
   linkTypeSchema,
   myOrderSchema,
   myOverviewSchema,
+  mySessionSchema,
+  signInResultSchema,
   myTicketSchema,
   profileBlockSchema,
   orderStatusSchema,
@@ -26,6 +28,7 @@ import {
   type HolderEditBody,
   type MyOrder,
   type MyOverview,
+  type SignInResult,
   type MyTicket,
   type ProfileBlock,
   type ProfileBody,
@@ -116,6 +119,41 @@ export async function fetchMyOverview({ token, ...common }: Common & { token: st
   }
 }
 
+/** `POST /tickets/my/sign-in` — exchange the one-time emailed token for a session (404 = used, expired, other site or bad). */
+export async function postSignIn({ token, ...common }: Common & { token: string }): Promise<TokenRead<SignInResult>> {
+  try {
+    const raw = await epFetch<unknown>("/tickets/my/sign-in", { ...base(common), method: "POST", body: { token } });
+    return { state: "ok", data: signInResultSchema.parse(raw) };
+  } catch (error) {
+    if (isInvalidLink({ error })) return { state: "invalid" };
+    throw error;
+  }
+}
+
+/** `GET /tickets/my/session` — the signed-in list (`x-session-token`); 401 (or 404) = the session has ended. */
+export async function fetchMySession({ sessionToken, ...common }: Common & { sessionToken: string }): Promise<TokenRead<MyOverview>> {
+  try {
+    const raw = await epFetch<unknown>("/tickets/my/session", {
+      ...base(common),
+      headers: { ...clientIpHeaders({ ip: common.ip }), "x-session-token": sessionToken },
+    });
+    return { state: "ok", data: mySessionSchema.parse(raw) };
+  } catch (error) {
+    if (error instanceof EpApiError && error.status === 401) return { state: "invalid" };
+    if (isInvalidLink({ error })) return { state: "invalid" };
+    throw error;
+  }
+}
+
+/** `POST /tickets/my/sign-out` — ends the session at ep-api (204). */
+export async function postSignOut({ sessionToken, ...common }: Common & { sessionToken: string }): Promise<void> {
+  await epFetch<unknown>("/tickets/my/sign-out", {
+    ...base(common),
+    method: "POST",
+    headers: { ...clientIpHeaders({ ip: common.ip }), "x-session-token": sessionToken },
+  });
+}
+
 export async function fetchOrderStatus({ orderId, token, ...common }: Common & { orderId: string; token: string }): Promise<OrderStatusAnswer> {
   const raw = await epFetch<unknown>(`/tickets/orders/${encodeURIComponent(orderId)}/status`, {
     ...base(common),
@@ -189,6 +227,14 @@ export async function postLostLink({ email, ...common }: Common & { email: strin
 
 export async function fetchTicketCalendar({ token, ...common }: Common & { token: string }): Promise<EpRawResponse> {
   return epFetchRaw("/tickets/my/ticket/calendar.ics", {
+    ...base(common),
+    headers: { ...clientIpHeaders({ ip: common.ip }), "x-ticket-token": token },
+  });
+}
+
+/** `GET /tickets/my/ticket/ticket.pdf` — the same designed PDF the ticket email attaches (holder token, header only). */
+export async function fetchTicketPdf({ token, ...common }: Common & { token: string }): Promise<EpRawResponse> {
+  return epFetchRaw("/tickets/my/ticket/ticket.pdf", {
     ...base(common),
     headers: { ...clientIpHeaders({ ip: common.ip }), "x-ticket-token": token },
   });

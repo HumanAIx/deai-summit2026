@@ -58,7 +58,7 @@ describe("POST /api/tickets/orders", () => {
     expect(res.headers.get("cache-control")).toBe("no-store");
     expect(await res.json()).toEqual({
       success: true,
-      data: { orderId: ORDER_ID, buyerToken: TOKEN, holdExpiresAt: paid.holdExpiresAt, totals, clientSecret: "pi_123_secret_abc", publishableKey: "pk_test_123", testMode: true, free: false },
+      data: { orderId: ORDER_ID, buyerToken: TOKEN, holdExpiresAt: paid.holdExpiresAt, totals, clientSecret: "pi_123_secret_abc", publishableKey: "pk_test_123", stripeAccount: null, testMode: true, free: false },
     });
     const [path, options] = epFetch.mock.calls[0] as [string, { body: Record<string, unknown>; headers: object; method: string; cache: string }];
     expect(path).toBe("/tickets/orders");
@@ -121,7 +121,14 @@ describe("POST /api/tickets/orders", () => {
     epFetch.mockResolvedValue({ ...paid, totals: { ...totals, totalCents: 0 }, clientSecret: null, publishableKey: null, free: true });
     const res = await POST(post({ body: goodBody, ip: "198.51.100.8" }));
     expect(res.status).toBe(201);
-    expect((await res.json()).data).toMatchObject({ free: true, clientSecret: null, publishableKey: null, buyerToken: TOKEN });
+    expect((await res.json()).data).toMatchObject({ free: true, clientSecret: null, publishableKey: null, stripeAccount: null, buyerToken: TOKEN });
+  });
+
+  it("Stripe Connect (API-268): passes the connected account on to the browser with the platform key", async () => {
+    epFetch.mockResolvedValue({ ...paid, publishableKey: "pk_test_platform", stripeAccount: "acct_1Organiser" });
+    const res = await POST(post({ body: goodBody, ip: "198.51.100.9" }));
+    expect(res.status).toBe(201);
+    expect((await res.json()).data).toMatchObject({ publishableKey: "pk_test_platform", stripeAccount: "acct_1Organiser", free: false });
   });
 
   it("a payable order without its client secret or key is 'payment unavailable', not a half-working checkout", async () => {
@@ -212,5 +219,31 @@ describe("POST /api/tickets/orders", () => {
       expect(logged).not.toContain("pi_123_secret_abc");
       expect(logged).not.toContain(KEY);
     }
+  });
+
+  it("forwards the buyer's phone and address and each holder's sameAddressAsBuyer (API-267), and refuses a bad phone or country", async () => {
+    const body = {
+      ...goodBody,
+      buyer: { name: "Ada", email: "ada@example.com", phone: " +356 2123 4567 ", address: { street: "1 Main St", city: "Valletta", countryCode: "mt" } },
+      holders: [{ ticketTypeId: TYPE_A, name: "Ada", email: "ada@example.com", sameAddressAsBuyer: true }],
+    };
+    const res = await POST(post({ body, ip: "198.51.100.71" }));
+    expect(res.status).toBe(201);
+    const sent = (epFetch.mock.calls[0] as [string, { body: { buyer: object; holders: Record<string, unknown>[] } }])[1].body;
+    expect(sent.buyer).toEqual({ name: "Ada", email: "ada@example.com", phone: "+356 2123 4567", address: { street: "1 Main St", city: "Valletta", countryCode: "MT" } });
+    expect(sent.holders[0]?.sameAddressAsBuyer).toBe(true);
+
+    epFetch.mockClear();
+    for (const buyer of [{ ...body.buyer, phone: "123" }, { ...body.buyer, address: { street: "1 Main St", city: "Valletta", countryCode: "MLT" } }]) {
+      expect((await POST(post({ body: { ...body, buyer }, ip: "198.51.100.72" }))).status).toBe(400);
+    }
+    expect(epFetch).not.toHaveBeenCalled();
+  });
+
+  it("answers ep-api's tickets.contactRequired as its own code", async () => {
+    epFetch.mockRejectedValue(new FakeEpApiError(400, "/tickets/orders", "missing", "tickets.contactRequired"));
+    const res = await POST(post({ body: goodBody, ip: "198.51.100.73" }));
+    expect(res.status).toBe(400);
+    expect((await res.json()).code).toBe("contactRequired");
   });
 });

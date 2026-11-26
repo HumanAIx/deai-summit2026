@@ -10,7 +10,7 @@
 export const CANONICAL_TICKETS_BASE = '/tickets';
 
 /** The pages ep-api links to under the address: token pages and the lost-link form. */
-const TOKEN_SECTIONS = new Set(['t', 'order', 'w', 'l', 'me']);
+const TOKEN_SECTIONS = new Set(['t', 'order', 'w', 'l', 'me', 'sign-in']);
 
 /**
  * The path part of the configured address: `https://deaisummit.org/buy` → `/buy`, the bare domain → `''` (pages at the
@@ -34,7 +34,7 @@ export function basePathOf(address: string | null | undefined): string | null {
  */
 export function mayBeTicketPage(pathname: string): boolean {
   if (pathname === CANONICAL_TICKETS_BASE || pathname.startsWith(`${CANONICAL_TICKETS_BASE}/`)) return false;
-  return /\/(t|order|w|l|me)\/[^/]+/.test(pathname) || /\/lost$/.test(pathname);
+  return /\/(t|order|w|l|me|sign-in)\/[^/]+/.test(pathname) || /\/lost$/.test(pathname);
 }
 
 /**
