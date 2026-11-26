@@ -34,6 +34,7 @@ describe("/tickets/t/[token] page", () => {
     expect(element.type).toBe(TicketView);
     expect(element.props.ticket).toBe(ticket);
     expect(element.props.calendarHref).toBe(`/tickets/t/${TOKEN}/calendar.ics`);
+    expect(element.props.pdfHref).toBe(`/tickets/t/${TOKEN}/ticket.pdf`);
     // The holder's own forms (correct my name, pass on) need the token for their handler calls.
     expect(element.props.token).toBe(TOKEN);
   });

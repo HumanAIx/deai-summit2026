@@ -95,6 +95,10 @@ describe("tickets ep-api calls", () => {
     await api.fetchTicketCalendar({ token: TOKEN, locale: "en", ip: undefined });
     expect(epFetchRaw.mock.calls[1]?.[0]).toBe("/tickets/my/ticket/calendar.ics");
     expect(epFetchRaw.mock.calls[1]?.[1]).toMatchObject({ headers: { "x-ticket-token": TOKEN } });
+
+    await api.fetchTicketPdf({ token: TOKEN, locale: "en", ip: undefined });
+    expect(epFetchRaw.mock.calls[2]?.[0]).toBe("/tickets/my/ticket/ticket.pdf");
+    expect(epFetchRaw.mock.calls[2]?.[1]).toMatchObject({ cache: "no-store", headers: { "x-ticket-token": TOKEN } });
   });
   describe("checkout calls", () => {
     const type = { id: "t1", name: "Full", description: null, priceCents: 100, currency: "EUR", bookingFeeCents: 0, status: "on_sale", left: null, maxPerOrder: 10, source: { kind: "event", id: "e1", name: "Summit" } };
