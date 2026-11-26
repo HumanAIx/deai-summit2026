@@ -3,6 +3,7 @@ import { getFormatter, getTranslations } from "@/lib/tickets/i18n-server";
 import { formatEventWhen, formatMoney, formatPlainDate } from "@/lib/tickets/format";
 import type { HolderAnswersView, MyOrder, MyTicket } from "@/lib/tickets/schemas";
 import { HolderEditor } from "./HolderEditor";
+import { OrderRefunds, documentAnchor } from "./OrderRefunds";
 import { RefundRequestPanel, RefundRequestProvider, RefundRequestTrigger } from "./RefundRequestForm";
 import { SellerFooter } from "./SellerFooter";
 import { TicketsShell } from "./TicketsShell";
@@ -105,7 +106,9 @@ export async function OrderView({
   const request = order.refundRequest ?? null;
   const requestStatus = request && ["open", "approved", "declined", "cancelled"].includes(request.status) ? request.status : "open";
   const canAsk = order.canRequestRefund === true && refundable.length > 0;
-  const showRefund = Boolean(request) || canAsk;
+  const showRefund = Boolean(request) || canAsk || (Array.isArray(order.refunds) && order.refunds.length > 0);
+  const refundedCents = order.totals.refundedCents ?? 0;
+  const netCents = Math.max(order.totals.totalCents - refundedCents, 0);
   const documents = Array.isArray(order.documents) ? order.documents : [];
   const statusTone = orderStatus === "paid" ? "border-(--tk-accent)/35 bg-(--tk-accent)/10 text-(--tk-accent)" : orderStatus === "partial" ? "border-(--mt-warn)/35 bg-(--mt-warn)/8 text-(--mt-warn)" : "border-(--mt-err)/35 bg-(--mt-err)/8 text-(--mt-err)";
   const requestTone =
@@ -195,7 +198,14 @@ export async function OrderView({
               </span>
             ) : null}
           </div>
-          <p className="text-[clamp(32px,4vw,40px)] leading-none font-semibold tracking-[-0.04em] tabular-nums">{money(order.totals.totalCents)}</p>
+          {refundedCents > 0 ? (
+            <>
+              <p className="text-[clamp(22px,3vw,28px)] leading-tight font-semibold tracking-[-0.03em] tabular-nums">{t("refundedOf", { refunded: money(refundedCents), total: money(order.totals.totalCents) })}</p>
+              {netCents > 0 ? <p className="text-sm text-(--mt-mut) tabular-nums">{t("netPaid", { amount: money(netCents) })}</p> : null}
+            </>
+          ) : (
+            <p className="text-[clamp(32px,4vw,40px)] leading-none font-semibold tracking-[-0.04em] tabular-nums">{money(order.totals.totalCents)}</p>
+          )}
           {order.paidAt ? <p className="text-sm text-(--mt-mut)">{t("paidOn", { date: formatPlainDate({ format, value: order.paidAt }) })}</p> : null}
         </div>
       </header>
@@ -332,7 +342,7 @@ export async function OrderView({
                 {documents.map((doc) => {
                   const label = t(doc.kind === "invoice" ? "invoice" : doc.kind === "credit_note" ? "creditNote" : "documentOther", { number: doc.number });
                   return (
-                    <li key={doc.id} className="flex flex-col gap-3">
+                    <li key={doc.id} id={documentAnchor({ id: doc.id })} className="flex flex-col gap-3 scroll-mt-6">
                       <div className="flex items-center gap-4 rounded-[14px] bg-(--mt-well) p-4">
                         <span aria-hidden className="flex h-12 w-[42px] shrink-0 items-end justify-center rounded-lg border border-(--tk-accent)/40 bg-(--tk-accent)/8 pb-[7px] font-mono text-[10px] font-semibold tracking-[0.08em] text-(--tk-accent)">
                           PDF
@@ -376,17 +386,9 @@ export async function OrderView({
               <h2 id="order-refund-heading" className={TP_H2}>
                 {t("refundHeading")}
               </h2>
-              {request ? (
-                <div role="status" className={`flex flex-col gap-1.5 rounded-[14px] border p-4 ${requestTone}`}>
-                  <p className="flex items-start gap-2 text-[15px] leading-normal font-semibold">
-                    <Dot className="mt-2 size-2" />
-                    {t(`refundStatus.${requestStatus}`, { date: formatPlainDate({ format, value: request.createdAt }) })}
-                  </p>
-                  <p className="text-sm text-(--mt-soft)">{t("refundRequestSummary", { count: request.ticketCount })}</p>
-                  {requestStatus === "declined" && request.reply ? <p className="text-sm text-(--mt-soft) [overflow-wrap:anywhere]">{t("refundReply", { reply: request.reply })}</p> : null}
-                </div>
-              ) : null}
-              {canAsk ? <RefundRequestTrigger /> : null}
+              <OrderRefunds order={order} canAsk={canAsk}>
+                {canAsk ? <RefundRequestTrigger /> : null}
+              </OrderRefunds>
             </section>
           ) : null}
         </aside>

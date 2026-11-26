@@ -170,6 +170,35 @@ const holderAnswersShape = z.object({
 });
 export type HolderAnswersView = z.infer<typeof holderAnswersShape>;
 
+/** One refund on the order page (ep-api API-269). `amountCents` = `ticketsCents` + `feeCents`; `feeOnly` = the booking fee alone. */
+export const orderRefundSchema = z.object({
+  createdAt: z.string(),
+  status: z.string(),
+  amountCents: z.number(),
+  ticketsCents: z.number().default(0),
+  feeCents: z.number().default(0),
+  ticketCount: z.number().default(0),
+  feeOnly: z.boolean().default(false),
+  creditNoteNumber: nullableString.optional(),
+});
+export type OrderRefundView = z.infer<typeof orderRefundSchema>;
+
+/**
+ * The buyer's latest refund request. `message` is the buyer's own words, `reply` the organiser's message (a decline
+ * reason, or an optional approval note), `decidedAt` / `refundedCents` the outcome. All optional for older ep-api builds.
+ */
+export const refundRequestViewSchema = z.object({
+  status: z.string(),
+  createdAt: z.string(),
+  ticketCount: z.number(),
+  reason: z.string(),
+  message: nullableString.optional(),
+  decidedAt: nullableString.optional(),
+  reply: nullableString.optional(),
+  refundedCents: z.number().nullable().optional(),
+});
+export type RefundRequestView = z.infer<typeof refundRequestViewSchema>;
+
 /** `GET /tickets/my/order` */
 export const myOrderSchema = z.object({
   orderNo: z.number(),
@@ -187,7 +216,15 @@ export const myOrderSchema = z.object({
       grossCents: z.number(),
     }),
   ),
-  totals: z.object({ totalCents: z.number(), vatCents: z.number(), feeCents: z.number() }),
+  totals: z.object({
+    totalCents: z.number(),
+    vatCents: z.number(),
+    feeCents: z.number(),
+    /** Paid back so far, tickets + booking fee (ep-api API-269); absent on older builds = nothing shown. */
+    refundedCents: z.number().optional(),
+    /** The booking-fee part of that, given back by succeeded refunds. */
+    feeRefundedCents: z.number().optional(),
+  }),
   holders: z.array(
     z.object({
       /** The ticket id the holder edit route takes (ep-api F1); absent on older builds, so nothing is editable there. */
@@ -214,10 +251,9 @@ export const myOrderSchema = z.object({
   changesCloseAt: nullableString.optional(),
   /** The event's IANA time zone (ep-api ≥ DASH-205 F1): the cut-off is shown in it. */
   timeZone: z.string().optional(),
-  refundRequest: z
-    .object({ status: z.string(), createdAt: z.string(), ticketCount: z.number(), reason: z.string(), reply: nullableString.optional() })
-    .nullable()
-    .optional(),
+  /** The refunds made on this order, oldest first, failed ones hidden (ep-api API-269); absent on older builds. */
+  refunds: z.array(orderRefundSchema).optional(),
+  refundRequest: refundRequestViewSchema.nullable().optional(),
   canRequestRefund: z.boolean().optional(),
 });
 export type MyOrder = z.infer<typeof myOrderSchema>;
@@ -554,7 +590,7 @@ export const holderEditResultSchema = z.object({
   emailSent: z.boolean(),
 });
 export const refundRequestResultSchema = z.object({
-  refundRequest: z.object({ status: z.string(), createdAt: z.string(), ticketCount: z.number(), reason: z.string(), reply: nullableString.optional() }),
+  refundRequest: refundRequestViewSchema,
 });
 
 /** `GET /tickets/my/overview` — "My tickets": everything behind one list link (ep-api DASH-205). */
