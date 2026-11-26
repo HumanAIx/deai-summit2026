@@ -52,6 +52,8 @@ export interface OrderState {
   holdMaxAt?: string | undefined;
   clientSecret: string | null;
   publishableKey: string | null;
+  /** Stripe Connect: the connected account Stripe.js runs on; null / absent with the organiser's own API keys. */
+  stripeAccount?: string | null | undefined;
   fingerprint: string;
   totals: PricedCart;
   currency: string;

@@ -12,6 +12,8 @@ import { TICKETS_STRIPE_DANGER, TICKETS_STRIPE_MUTED, TK_BUTTON } from "../ticke
 export interface StripePaymentProps {
   /** From the ORDER answer of ep-api (never env). Public by design. */
   publishableKey: string;
+  /** Stripe Connect: the organiser's connected account (from the ORDER answer too); null = the organiser's own keys. */
+  stripeAccount?: string | null | undefined;
   clientSecret: string;
   locale: string;
   /** `${origin}${localePrefix}/tickets/order/${buyerToken}?o=${orderId}` — where 3-D Secure / a wallet returns to. */
@@ -38,7 +40,7 @@ function stripeLocale({ locale }: { locale: string }): StripeElementLocale {
   return STRIPE_LOCALES.has(base) ? (base as StripeElementLocale) : "auto";
 }
 
-function PayForm({ returnUrl, beforePay, onSucceeded, payLabel, onHoldEnded }: Omit<StripePaymentProps, "publishableKey" | "locale" | "clientSecret">) {
+function PayForm({ returnUrl, beforePay, onSucceeded, payLabel, onHoldEnded }: Omit<StripePaymentProps, "publishableKey" | "stripeAccount" | "locale" | "clientSecret">) {
   const t = useTranslations("tickets.checkout");
   const stripe = useStripe();
   const elements = useElements();
@@ -128,9 +130,14 @@ function PayForm({ returnUrl, beforePay, onSucceeded, payLabel, onHoldEnded }: O
  * Stripe's own default look and loader (no `appearance`): Stripe keeps its Elements current, legible and familiar to
  * buyers, so the site does not restyle them. PayStep sets them on a white panel, which the default theme is made for.
  */
-export default function StripePayment({ publishableKey, locale, ...rest }: StripePaymentProps) {
-  // Stripe.js is requested once per key; `loadStripe` loads js.stripe.com on first call only.
-  const stripePromise = useMemo<Promise<Stripe | null>>(() => loadStripe(publishableKey, { locale: stripeLocale({ locale }) }), [publishableKey, locale]);
+export default function StripePayment({ publishableKey, stripeAccount, locale, ...rest }: StripePaymentProps) {
+  // Stripe.js is requested once per key; `loadStripe` loads js.stripe.com on first call only. Stripe Connect (API-268):
+  // the payment lives on the organiser's connected account, so Stripe.js runs on it (`stripeAccount`) with the
+  // platform's publishable key; without it Stripe cannot find the payment and the form never loads.
+  const stripePromise = useMemo<Promise<Stripe | null>>(
+    () => loadStripe(publishableKey, { locale: stripeLocale({ locale }), ...(stripeAccount ? { stripeAccount } : {}) }),
+    [publishableKey, stripeAccount, locale],
+  );
   const options = useMemo(() => ({ clientSecret: rest.clientSecret }), [rest.clientSecret]);
   return (
     <Elements stripe={stripePromise} options={options}>

@@ -280,6 +280,10 @@ describe("isTest, canCancel and holdMaxAt (DASH-236)", () => {
     const base = { orderId: "5c1f7a1e-2f4a-4a53-9a3e-0e6f6a4c1b11", buyerToken: "t".repeat(43), holdExpiresAt: "2030-01-01T00:15:00Z", totals: cart, clientSecret: null, publishableKey: null, free: true };
     expect(createOrderResultSchema.parse({ ...base, holdMaxAt: "2030-01-01T00:30:00Z" }).holdMaxAt).toBe("2030-01-01T00:30:00Z");
     expect(createOrderResultSchema.parse(base).holdMaxAt).toBeUndefined();
+    // API-268: stripeAccount is optional (older ep-api builds) and nullable (the organiser's own API keys)
+    expect(createOrderResultSchema.parse(base).stripeAccount).toBeUndefined();
+    expect(createOrderResultSchema.parse({ ...base, stripeAccount: null }).stripeAccount).toBeNull();
+    expect(createOrderResultSchema.parse({ ...base, stripeAccount: "acct_1Organiser" }).stripeAccount).toBe("acct_1Organiser");
     expect(extendResultSchema.parse({ holdExpiresAt: "2030-01-01T00:25:00Z", holdMaxAt: "2030-01-01T00:30:00Z" }).holdMaxAt).toBe("2030-01-01T00:30:00Z");
   });
 });

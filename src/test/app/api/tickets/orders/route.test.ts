@@ -58,7 +58,7 @@ describe("POST /api/tickets/orders", () => {
     expect(res.headers.get("cache-control")).toBe("no-store");
     expect(await res.json()).toEqual({
       success: true,
-      data: { orderId: ORDER_ID, buyerToken: TOKEN, holdExpiresAt: paid.holdExpiresAt, totals, clientSecret: "pi_123_secret_abc", publishableKey: "pk_test_123", testMode: true, free: false },
+      data: { orderId: ORDER_ID, buyerToken: TOKEN, holdExpiresAt: paid.holdExpiresAt, totals, clientSecret: "pi_123_secret_abc", publishableKey: "pk_test_123", stripeAccount: null, testMode: true, free: false },
     });
     const [path, options] = epFetch.mock.calls[0] as [string, { body: Record<string, unknown>; headers: object; method: string; cache: string }];
     expect(path).toBe("/tickets/orders");
@@ -121,7 +121,14 @@ describe("POST /api/tickets/orders", () => {
     epFetch.mockResolvedValue({ ...paid, totals: { ...totals, totalCents: 0 }, clientSecret: null, publishableKey: null, free: true });
     const res = await POST(post({ body: goodBody, ip: "198.51.100.8" }));
     expect(res.status).toBe(201);
-    expect((await res.json()).data).toMatchObject({ free: true, clientSecret: null, publishableKey: null, buyerToken: TOKEN });
+    expect((await res.json()).data).toMatchObject({ free: true, clientSecret: null, publishableKey: null, stripeAccount: null, buyerToken: TOKEN });
+  });
+
+  it("Stripe Connect (API-268): passes the connected account on to the browser with the platform key", async () => {
+    epFetch.mockResolvedValue({ ...paid, publishableKey: "pk_test_platform", stripeAccount: "acct_1Organiser" });
+    const res = await POST(post({ body: goodBody, ip: "198.51.100.9" }));
+    expect(res.status).toBe(201);
+    expect((await res.json()).data).toMatchObject({ publishableKey: "pk_test_platform", stripeAccount: "acct_1Organiser", free: false });
   });
 
   it("a payable order without its client secret or key is 'payment unavailable', not a half-working checkout", async () => {

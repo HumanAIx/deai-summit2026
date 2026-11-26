@@ -380,6 +380,9 @@ export const createOrderResultSchema = z.object({
   totals: pricedCartSchema,
   clientSecret: nullableString,
   publishableKey: nullableString,
+  /** Stripe Connect only: the organiser's connected account the payment is taken on — Stripe.js starts with
+   *  `loadStripe(publishableKey, { stripeAccount })`. Null with the organiser's own API keys; absent on older ep-api builds. */
+  stripeAccount: nullableString.optional(),
   testMode: z.boolean().optional(),
   free: z.boolean(),
 });

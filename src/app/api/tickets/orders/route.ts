@@ -35,6 +35,7 @@ export async function POST(request: NextRequest) {
           totals: order.totals,
           clientSecret: order.free ? null : order.clientSecret,
           publishableKey: order.free ? null : order.publishableKey,
+          stripeAccount: order.free ? null : (order.stripeAccount ?? null),
           testMode: order.testMode ?? false,
           free: order.free,
         },

@@ -363,6 +363,13 @@ describe("creating the order", () => {
     expect(loadStripe).toHaveBeenCalledWith("pk_test_order", { locale: "en" });
   });
 
+  it("Stripe Connect (API-268): Stripe.js runs on the organiser's connected account from the order answer", async () => {
+    api.order = () => ({ status: 201, body: { success: true, data: orderAnswer({ stripeAccount: "acct_1Organiser" }) } });
+    mountCheckout();
+    await reachPayStep();
+    expect(loadStripe).toHaveBeenCalledWith("pk_test_order", { locale: "en", stripeAccount: "acct_1Organiser" });
+  });
+
   it("a free order (total 0) goes straight to the order page: no Stripe, no payment step", async () => {
     api.quote = (body) => ({ status: 200, body: { success: true, data: quoteAnswer({ body: body as never, total: 0 }) } });
     api.order = () => ({ status: 201, body: { success: true, data: orderAnswer({ free: true }) } });

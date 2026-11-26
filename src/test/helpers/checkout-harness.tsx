@@ -55,7 +55,12 @@ export function quoteAnswer({ body, total = 12345 }: { body: { lines: { ticketTy
   };
 }
 
-export function orderAnswer({ free = false, total = 12345, holdMs = 10 * 60_000 }: { free?: boolean; total?: number; holdMs?: number } = {}) {
+export function orderAnswer({
+  free = false,
+  total = 12345,
+  holdMs = 10 * 60_000,
+  stripeAccount = null,
+}: { free?: boolean; total?: number; holdMs?: number; stripeAccount?: string | null } = {}) {
   return {
     orderId: ORDER_ID,
     buyerToken: BUYER_TOKEN,
@@ -63,6 +68,7 @@ export function orderAnswer({ free = false, total = 12345, holdMs = 10 * 60_000 
     totals: { lines: [], subtotalCents: 30000, discountCents: 0, feeCents: 500, totalCents: free ? 0 : total, vatCents: 2222 },
     clientSecret: free ? null : "pi_1_secret_x",
     publishableKey: free ? null : "pk_test_order",
+    stripeAccount: free ? null : stripeAccount,
     testMode: true,
     free,
   };
